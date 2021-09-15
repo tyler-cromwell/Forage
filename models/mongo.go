@@ -14,65 +14,66 @@ type MongoClient struct {
 }
 
 func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
-	logger := logrus.WithFields(logrus.Fields{
-		"method": "GET",
-		"filter": filter,
-	})
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"filter": filter})
 
+	// Ask MongoDB to find the document
 	var doc bson.M
 	err := mc.Collection.FindOne(ctx, filter).Decode(&doc)
 	if err != nil {
-		logger.WithError(err).Error("FindOne failed")
+		log.WithError(err).Error("Decode failed")
 		return nil, err
 	} else {
-		logrus.WithFields(logrus.Fields{"document": doc}).Info("FindOne succeeded")
+		log.WithFields(logrus.Fields{"document": doc}).Info("Decode succeeded")
 		return &doc, err
 	}
 }
 
-func (mc *MongoClient) GetManyDocuments(ctx context.Context, logger *logrus.Entry, filter bson.D) ([]bson.M, error) {
+func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.D) ([]bson.M, error) {
 	// Specify common fields
-	logger = logrus.WithFields(logrus.Fields{"filter": filter})
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "mongo.GetManyDocuments",
+		"filter": filter,
+	})
 
 	// Ask MongoDB to find the documents
 	docs := make([]bson.M, 0)
 	cursor, err := mc.Collection.Find(ctx, filter)
 	if err != nil {
-		logger.WithError(err).Error("GetManyDocuments failed")
+		log.WithError(err).Error("Failure: Find")
 		return nil, err
 	}
 
 	// Extract documents from MongoDB's response
 	err = cursor.All(ctx, &docs)
 	if err != nil {
-		logger.WithError(err).Error("GetManyDocuments failed")
+		log.WithError(err).Error("Failure: All")
 		return nil, err
 	}
 
 	// Cleanup
 	err = cursor.Close(ctx)
 	if err != nil {
-		logger.WithError(err).Error("GetManyDocuments failed")
-		return nil, err // return results anyway???
+		log.WithError(err).Error("Failure: Close")
+		return nil, err // maybe return results anyway???
+	} else {
+		return docs, nil
 	}
-
-	logger.WithFields(logrus.Fields{"quantity": len(docs)}).Info("GetManyDocuments succeeded")
-	return docs, err
 }
 
 func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) error {
-	logger := logrus.WithFields(logrus.Fields{
-		"method":   "POST",
-		"document": doc,
-	})
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"document": doc})
 
+	// Ask MongoDB to insert the document
 	_, err := mc.Collection.InsertOne(ctx, doc, nil)
 	if err != nil {
-		logger.WithError(err).Error("PostOneDocument failed")
+		log.WithError(err).Error("InsertOne failed")
+		return err
 	} else {
-		logger.Info("PostOneDocument succeeded")
+		log.Info("InsertOne succeeded")
+		return nil
 	}
-	return err
 }
 
 /*
@@ -84,16 +85,16 @@ func (mc *Collection) putDocument(ctx) error {
 */
 
 func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) error {
-	logger := logrus.WithFields(logrus.Fields{
-		"method": "DELETE",
-		"filter": filter,
-	})
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"filter": filter})
 
+	// Ask MongoDB to insert the document
 	_, err := mc.Collection.DeleteOne(ctx, filter)
 	if err != nil {
-		logger.WithError(err).Error("DeleteOneDocument failed")
+		log.WithError(err).Error("DeleteOne failed")
+		return err
 	} else {
-		logger.Info("DeleteOneDocument succeeded")
+		log.Info("DeleteOne succeeded")
+		return nil
 	}
-	return err
 }

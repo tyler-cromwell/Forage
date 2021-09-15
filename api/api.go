@@ -17,24 +17,32 @@ import (
 	"github.com/tyler-cromwell/forage/models"
 )
 
-func getManyDocuments(response http.ResponseWriter, request *http.Request, mc *models.MongoClient) {
+var mongoClient *models.MongoClient
+
+func getManyDocuments(response http.ResponseWriter, request *http.Request) {
+	filter := bson.D{{}} // Effectively gets ALL documents
+
 	// Specify common fields
-	logger := logrus.WithFields(logrus.Fields{"method": "GET"})
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getManyDocuments",
+		"filter": filter,
+		"method": "GET",
+	})
 
 	// Attempt to get the documents
-	filter := bson.D{{}} // Effectively gets ALL documents
-	documents, err := mc.GetManyDocuments(request.Context(), logger, filter)
+	documents, err := mongoClient.GetManyDocuments(request.Context(), filter)
 	if err != nil {
-		logger.WithError(err).Error("GetManyDocuments failed")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failure: GetManyDocuments")
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
+		//log.WithFields(logrus.Fields{"quantity": len(documents)}).Debug("Success: GetManyDocuments")
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
-			logger.WithError(err).Error("json.Marshal failed")
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failure: Marshal")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			logger.Debug("json.Marshal succeeded")
+			//log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success: Marshal")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -42,36 +50,36 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request, mc *m
 }
 
 func ListenAndServe(tcpSocket string) {
-	// Specify common fields
-	logger := logrus.WithFields(logrus.Fields{})
+	uri := "mongodb://127.0.0.1:27017"
 
 	// Initialize context/timeout
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	// Initialize MongoDB client
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://127.0.0.1:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure: NewClient")
 	}
 
 	// Connect to database instance
 	err = client.Connect(ctx)
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure: Connect")
 	}
 	defer client.Disconnect(ctx)
 
 	// Specify database & collection
 	database := client.Database("forage")
 	collection := database.Collection("data")
-	mc := models.MongoClient{Collection: collection}
+	mongoClient = &models.MongoClient{Collection: collection}
 
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		getManyDocuments(response, request, &mc)
-	})).Methods("GET")
+	router.HandleFunc("/", getManyDocuments).Methods("GET")
 
-	logger.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
-	http.ListenAndServe(tcpSocket, router)
+	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
+	err = http.ListenAndServe(tcpSocket, router)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"socket": tcpSocket}).WithError(err).Fatal("Failure: ListenAndServe")
+	}
 }

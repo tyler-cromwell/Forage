@@ -12,7 +12,7 @@ import (
 func main() {
 	// Configure logrus logging
 	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
-	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(logrus.InfoLevel)
 	logrus.SetOutput(os.Stdout)
 	//    logrus.SetReportCaller(true)
 

@@ -32,17 +32,16 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Attempt to get the documents
 	documents, err := mongoClient.GetManyDocuments(request.Context(), filter)
 	if err != nil {
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failure: GetManyDocuments")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find documents")
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
-		//log.WithFields(logrus.Fields{"quantity": len(documents)}).Debug("Success: GetManyDocuments")
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failure: Marshal")
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			//log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success: Marshal")
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Info("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -58,13 +57,13 @@ func ListenAndServe(tcpSocket string) {
 	// Initialize MongoDB client
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure: NewClient")
+		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure initialize MongoDB client")
 	}
 
 	// Connect to database instance
 	err = client.Connect(ctx)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure: Connect")
+		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failed to connect to MongoDB instance")
 	}
 	defer client.Disconnect(ctx)
 
@@ -80,6 +79,6 @@ func ListenAndServe(tcpSocket string) {
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
 	err = http.ListenAndServe(tcpSocket, router)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"socket": tcpSocket}).WithError(err).Fatal("Failure: ListenAndServe")
+		logrus.WithFields(logrus.Fields{"socket": tcpSocket}).WithError(err).Fatal("Failed to listen for and serve requests")
 	}
 }

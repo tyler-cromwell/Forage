@@ -14,11 +14,32 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
-                value: 1,
-                unit: 'week'
+                refrigerator: {
+                    value: 1,
+                    unit: 'week'
+                }
             },
             name: 'Apples',
-            refrigerate: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'count'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 1,
+                    unit: 'month'
+                },
+                shelf: {
+                    value: 3,
+                    unit: 'day'
+                }
+            },
+            name: 'Bagel',
+            type: "Ingredient",
             updated: dateUpdated
         },
         {
@@ -27,11 +48,75 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
-                value: 4,
-                unit: 'day'
+                shelf: {
+                    value: 4,
+                    unit: 'day'
+                }
             },
             name: 'Bananas',
-            shelved: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'loaf'
+            },
+            lifespan: {
+                shelf: {
+                    value: 10,
+                    unit: 'days'
+                }
+            },
+            lowHumidity: true,
+            name: 'Bread',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'stick'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 3,
+                    unit: 'month'
+                }
+            },
+            name: 'Butter',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'count'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 1,
+                    unit: 'month'
+                }
+            },
+            name: 'Carrots',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'count'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'week'
+                }
+            },
+            name: 'Celery',
+            type: "Ingredient",
             updated: dateUpdated
         },
         {
@@ -40,11 +125,73 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
-                value: 1,
-                unit: 'month'
+                refrigerator: {
+                    value: 1,
+                    unit: 'month'
+                }
             },
             name: 'Eggs',
-            refrigerate: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'clove'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'month'
+                }
+            },
+            name: 'Garlic',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'piece'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Gyoza',
+            type: "Meal",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'jar'
+            },
+            lifespan: {
+                shelf: {
+                    value: 2,
+                    unit: 'month'
+                }
+            },
+            name: 'Jelly',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'head'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 1,
+                    unit: 'week'
+                }
+            },
+            name: 'Lettuce',
+            type: "Ingredient",
             updated: dateUpdated
         },
         {
@@ -53,13 +200,20 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'pound'
             },
             cooked: false,
-            freeze: true,
             lifespan: {
-                value: 3,
-                unit: 'month'
+                freezer: {
+                    value: 3,
+                    unit: 'month'
+                },
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
             },
             name: 'Meat',
+            refreeze: false,
             sealed: true,
+            type: "Ingredient",
             updated: dateUpdated
         },
         {
@@ -69,12 +223,14 @@ let resultInsertMany = database.data.insertMany(
             },
             cooked: true,
             lifespan: {
-                value: 2,
-                unit: 'day'
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
             },
             name: 'Meat',
-            refrigerate: true,
             sealed: true,
+            type: "Ingredient",
             updated: dateUpdated
         },
         {
@@ -83,11 +239,129 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'gallon'
             },
             lifespan: {
-                value: 10,
-                unit: 'day'
+                refrigerator: {
+                    value: 10,
+                    unit: 'day'
+                }
             },
             name: 'Milk',
-            refrigerate: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'head'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'week'
+                }
+            },
+            name: 'Onion',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'box'
+            },
+            cooked: false,
+            lifespan: {
+                shelf: {
+                    value: 6,
+                    unit: 'month'
+                }
+            },
+            name: 'Pasta',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: true,
+            lifespan: {
+                refrigerator: {
+                    value: 3,
+                    unit: 'day'
+                }
+            },
+            name: 'Pasta',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'jar'
+            },
+            lifespan: {
+                shelf: {
+                    value: 4,
+                    unit: 'month'
+                }
+            },
+            name: 'Peanut Butter',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'jar'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 3,
+                    unit: 'week'
+                }
+            },
+            name: 'Ranch Dressing',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            cooked: false,
+            lifespan: {
+                shelf: {
+                    value: 6,
+                    unit: 'month'
+                }
+            },
+            lowHumidity: true,
+            name: 'Rice',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            cooked: true,
+            lifespan: {
+                refrigerator: {
+                    value: 3,
+                    unit: 'day'
+                }
+            },
+            lowHumidity: true,
+            name: 'Rice',
+            sealed: true,
+            type: "Ingredient",
             updated: dateUpdated
         }
     ]

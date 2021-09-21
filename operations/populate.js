@@ -60,6 +60,45 @@ let resultInsertMany = database.data.insertMany(
         {
             amount: {
                 value: 1,
+                unit: 'pound'
+            },
+            cooked: false,
+            lifespan: {
+                freezer: {
+                    value: 3,
+                    unit: 'month'
+                },
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Beef',
+            refreeze: false,
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: true,
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Beef',
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
                 unit: 'loaf'
             },
             lifespan: {
@@ -116,6 +155,45 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Celery',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: false,
+            lifespan: {
+                freezer: {
+                    value: 3,
+                    unit: 'month'
+                },
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Chicken',
+            refreeze: false,
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: true,
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Chicken',
+            sealed: true,
             type: "Ingredient",
             updated: dateUpdated
         },
@@ -182,6 +260,21 @@ let resultInsertMany = database.data.insertMany(
         {
             amount: {
                 value: 1,
+                unit: 'count'
+            },
+            lifespan: {
+                shelf: {
+                    value: Infinity,
+                    unit: 'day'
+                }
+            },
+            name: 'Kosher Salt',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
                 unit: 'head'
             },
             lifespan: {
@@ -191,45 +284,6 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Lettuce',
-            type: "Ingredient",
-            updated: dateUpdated
-        },
-        {
-            amount: {
-                value: 1,
-                unit: 'pound'
-            },
-            cooked: false,
-            lifespan: {
-                freezer: {
-                    value: 3,
-                    unit: 'month'
-                },
-                refrigerator: {
-                    value: 2,
-                    unit: 'day'
-                }
-            },
-            name: 'Meat',
-            refreeze: false,
-            sealed: true,
-            type: "Ingredient",
-            updated: dateUpdated
-        },
-        {
-            amount: {
-                value: 1,
-                unit: 'pound'
-            },
-            cooked: true,
-            lifespan: {
-                refrigerator: {
-                    value: 2,
-                    unit: 'day'
-                }
-            },
-            name: 'Meat',
-            sealed: true,
             type: "Ingredient",
             updated: dateUpdated
         },
@@ -309,6 +363,45 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Peanut Butter',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: false,
+            lifespan: {
+                freezer: {
+                    value: 3,
+                    unit: 'month'
+                },
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Pork',
+            refreeze: false,
+            sealed: true,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'pound'
+            },
+            cooked: true,
+            lifespan: {
+                refrigerator: {
+                    value: 2,
+                    unit: 'day'
+                }
+            },
+            name: 'Pork',
+            sealed: true,
             type: "Ingredient",
             updated: dateUpdated
         },

@@ -57,7 +57,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			log.WithFields(logrus.Fields{"document": document, "size": len(marshalled), "status": http.StatusOK}).Info("Success")
+			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -67,6 +67,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Extract query parameters
 	queryParams := request.URL.Query()
+	qpName := queryParams.Get("name")
 	qpType := queryParams.Get("type")
 
 	// Specify common fields
@@ -75,11 +76,19 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"method": "GET",
 	})
 
-	filter := bson.D{{}} // Effectively gets ALL documents
+	filterName := bson.D{{}}
+	filterType := bson.D{{}}
+	if qpName != "" {
+		filterName = bson.D{{"name", qpName}}
+	}
 	if qpType != "" {
-		filter = bson.D{{"type", qpType}}
+		filterType = bson.D{{"type", qpType}}
 	}
 
+	filter := bson.D{{"$and", []bson.D{
+		filterName,
+		filterType,
+	}}}
 	log = log.WithFields(logrus.Fields{
 		"filter": filter,
 	})

@@ -76,6 +76,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"method": "GET",
 	})
 
+	// Check if query parameters are present
 	filterName := bson.D{{}}
 	filterType := bson.D{{}}
 	if qpName != "" {
@@ -85,6 +86,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		filterType = bson.D{{"type", qpType}}
 	}
 
+	// Create filter
 	filter := bson.D{{"$and", []bson.D{
 		filterName,
 		filterType,

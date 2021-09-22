@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -19,14 +20,68 @@ import (
 
 var mongoClient *models.MongoClient
 
+func getOneDocument(response http.ResponseWriter, request *http.Request) {
+	// Extract route parameter
+	vars := mux.Vars(request)
+	id := vars["id"]
+
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getOneDocument",
+		"method": "GET",
+	})
+
+	// Parse document id
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Create filter
+	filter := bson.D{{"_id", oid}}
+	log = log.WithFields(logrus.Fields{
+		"filter": filter,
+	})
+
+	// Attempt to get the document
+	document, err := mongoClient.GetOneDocument(request.Context(), filter)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find document")
+		response.WriteHeader(http.StatusInternalServerError)
+	} else {
+		// Prepare to respond with document
+		marshalled, err := json.Marshal(document)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
+			response.WriteHeader(http.StatusInternalServerError)
+		} else {
+			log.WithFields(logrus.Fields{"document": document, "size": len(marshalled), "status": http.StatusOK}).Info("Success")
+			response.WriteHeader(http.StatusOK)
+			response.Write(marshalled)
+		}
+	}
+}
+
 func getManyDocuments(response http.ResponseWriter, request *http.Request) {
-	filter := bson.D{{}} // Effectively gets ALL documents
+	// Extract query parameters
+	queryParams := request.URL.Query()
+	qpType := queryParams.Get("type")
 
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getManyDocuments",
-		"filter": filter,
 		"method": "GET",
+	})
+
+	filter := bson.D{{}} // Effectively gets ALL documents
+	if qpType != "" {
+		filter = bson.D{{"type", qpType}}
+	}
+
+	log = log.WithFields(logrus.Fields{
+		"filter": filter,
 	})
 
 	// Attempt to get the documents
@@ -74,7 +129,8 @@ func ListenAndServe(tcpSocket string) {
 
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/", getManyDocuments).Methods("GET")
+	router.HandleFunc("/documents/{id}", getOneDocument).Methods("GET")
+	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
 	err = http.ListenAndServe(tcpSocket, router)

@@ -264,7 +264,7 @@ let resultInsertMany = database.data.insertMany(
             },
             lifespan: {
                 shelf: {
-                    value: Infinity,
+                    value: 0,
                     unit: 'day'
                 }
             },

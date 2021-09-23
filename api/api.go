@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -67,8 +68,10 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Extract query parameters
 	queryParams := request.URL.Query()
+	qpFrom := queryParams.Get("from")
 	qpName := queryParams.Get("name")
 	qpType := queryParams.Get("type")
+	qpTo := queryParams.Get("to")
 
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
@@ -77,20 +80,62 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	})
 
 	// Check if query parameters are present
-	filterName := bson.D{{}}
-	filterType := bson.D{{}}
+	var timeFrom time.Time
+	var timeTo time.Time
+	filterExpires := bson.M{}
+	filterName := bson.M{}
+	filterType := bson.M{}
+
+	if qpFrom != "" {
+		from, err := strconv.ParseInt(qpFrom, 10, 64)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse from date")
+			response.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		timeFrom = time.Unix(0, from*int64(time.Millisecond))
+		filterExpires = bson.M{
+			"expires": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+			},
+		}
+	}
 	if qpName != "" {
-		filterName = bson.D{{"name", qpName}}
+		filterName = bson.M{"name": qpName}
 	}
 	if qpType != "" {
-		filterType = bson.D{{"type", qpType}}
+		filterType = bson.M{"type": qpType}
+	}
+	if qpTo != "" {
+		to, err := strconv.ParseInt(qpTo, 10, 64)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse to date")
+			response.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		timeTo = time.Unix(0, to*int64(time.Millisecond))
+		filterExpires = bson.M{
+			"expires": bson.M{
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
+	}
+
+	if qpFrom != "" && qpTo != "" {
+		filterExpires = bson.M{
+			"expires": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
 	}
 
 	// Create filter
-	filter := bson.D{{"$and", []bson.D{
+	filter := bson.M{"$and": []bson.M{
 		filterName,
 		filterType,
-	}}}
+		filterExpires,
+	}}
 	log = log.WithFields(logrus.Fields{
 		"filter": filter,
 	})

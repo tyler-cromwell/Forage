@@ -31,7 +31,7 @@ func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson
 	}
 }
 
-func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.D) ([]bson.M, error) {
+func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.GetManyDocuments",

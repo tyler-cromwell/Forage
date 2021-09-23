@@ -44,6 +44,22 @@ let resultInsertMany = database.data.insertMany(
         },
         {
             amount: {
+                value: 1,
+                unit: 'piece'
+            },
+            lifespan: {
+                shelf: {
+                    value: 3,
+                    unit: 'day'
+                }
+            },
+            name: 'Bacon',
+            sealed: false,
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
                 value: 4,
                 unit: 'count'
             },
@@ -155,6 +171,21 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Celery',
+            type: "Ingredient",
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'box'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 10,
+                    unit: 'month'
+                }
+            },
+            name: 'Cheerios',
             type: "Ingredient",
             updated: dateUpdated
         },

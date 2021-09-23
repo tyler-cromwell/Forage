@@ -321,6 +321,78 @@ let resultInsertMany = database.data.insertMany(
         {
             amount: {
                 value: 1,
+                unit: 'cup'
+            },
+            genuine: true,
+            lifespan: {
+                freezer: {
+                    value: 0,
+                    unit: 'day'
+                },
+                shelf: {
+                    value: 1,
+                    unit: 'year'
+                }
+            },
+            name: 'Maple Syrup',
+            sealed: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            genuine: true,
+            lifespan: {
+                refrigerator: {
+                    value: 10,
+                    unit: 'month'
+                }
+            },
+            name: 'Maple Syrup',
+            sealed: false,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            lifespan: {
+                shelf: {
+                    value: 3,
+                    unit: 'month'
+                }
+            },
+            name: 'Mayonnaise',
+            sealed: true,
+            store: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 6,
+                    unit: 'weeks'
+                }
+            },
+            name: 'Mayonnaise',
+            sealed: false,
+            store: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
                 unit: 'gallon'
             },
             lifespan: {

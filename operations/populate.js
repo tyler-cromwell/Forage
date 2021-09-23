@@ -20,7 +20,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Apples',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -39,7 +39,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Bagel',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -55,7 +55,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Bacon',
             sealed: false,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -70,7 +70,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Bananas',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -92,7 +92,7 @@ let resultInsertMany = database.data.insertMany(
             name: 'Beef',
             refreeze: false,
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -109,7 +109,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Beef',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -126,7 +126,7 @@ let resultInsertMany = database.data.insertMany(
             lowHumidity: true,
             name: 'Bread',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -141,7 +141,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Butter',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -156,7 +156,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Carrots',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -171,7 +171,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Celery',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -186,7 +186,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Cheerios',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -208,7 +208,7 @@ let resultInsertMany = database.data.insertMany(
             name: 'Chicken',
             refreeze: false,
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -225,7 +225,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Chicken',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -240,7 +240,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Eggs',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -255,7 +255,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Garlic',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -270,7 +270,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Gyoza',
-            type: "Meal",
+            type: 'Meal',
             updated: dateUpdated
         },
         {
@@ -285,7 +285,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Jelly',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -300,7 +300,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Kosher Salt',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -315,7 +315,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Lettuce',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -402,7 +402,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Milk',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -417,7 +417,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Onion',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -434,7 +434,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Pasta',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -451,7 +451,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Pasta',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -466,7 +466,7 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Peanut Butter',
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -488,7 +488,7 @@ let resultInsertMany = database.data.insertMany(
             name: 'Pork',
             refreeze: false,
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -505,7 +505,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Pork',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -521,7 +521,7 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Ranch Dressing',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -539,7 +539,7 @@ let resultInsertMany = database.data.insertMany(
             lowHumidity: true,
             name: 'Rice',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         },
         {
@@ -557,7 +557,7 @@ let resultInsertMany = database.data.insertMany(
             lowHumidity: true,
             name: 'Rice',
             sealed: true,
-            type: "Ingredient",
+            type: 'Ingredient',
             updated: dateUpdated
         }
     ]

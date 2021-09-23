@@ -29,13 +29,13 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
+                pantry: {
+                    value: 3,
+                    unit: 'day'
+                },
                 refrigerator: {
                     value: 1,
                     unit: 'month'
-                },
-                shelf: {
-                    value: 3,
-                    unit: 'day'
                 }
             },
             name: 'Bagel',
@@ -48,7 +48,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'piece'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 3,
                     unit: 'day'
                 }
@@ -64,7 +64,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 4,
                     unit: 'day'
                 }
@@ -118,7 +118,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'loaf'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 10,
                     unit: 'days'
                 }
@@ -279,7 +279,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'jar'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 2,
                     unit: 'month'
                 }
@@ -294,7 +294,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'count'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 0,
                     unit: 'day'
                 }
@@ -329,7 +329,7 @@ let resultInsertMany = database.data.insertMany(
                     value: 0,
                     unit: 'day'
                 },
-                shelf: {
+                pantry: {
                     value: 1,
                     unit: 'year'
                 }
@@ -362,7 +362,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'cup'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 3,
                     unit: 'month'
                 }
@@ -427,7 +427,7 @@ let resultInsertMany = database.data.insertMany(
             },
             cooked: false,
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 6,
                     unit: 'month'
                 }
@@ -460,7 +460,7 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'jar'
             },
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 4,
                     unit: 'month'
                 }
@@ -531,7 +531,7 @@ let resultInsertMany = database.data.insertMany(
             },
             cooked: false,
             lifespan: {
-                shelf: {
+                pantry: {
                     value: 6,
                     unit: 'month'
                 }

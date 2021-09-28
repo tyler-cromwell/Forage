@@ -48,6 +48,26 @@ let resultInsertMany = database.data.insertMany(
                 unit: 'piece'
             },
             lifespan: {
+                freezer: {
+                    value: 8,
+                    unit: 'month'
+                },
+                refrigerator: {
+                    value: 2,
+                    unit: 'week'
+                }
+            },
+            name: 'Bacon',
+            sealed: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'piece'
+            },
+            lifespan: {
                 pantry: {
                     value: 3,
                     unit: 'day'
@@ -109,6 +129,21 @@ let resultInsertMany = database.data.insertMany(
             },
             name: 'Beef',
             sealed: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'oz'
+            },
+            lifespan: {
+                pantry: {
+                    value: 3,
+                    unit: 'year'
+                }
+            },
+            name: 'Black Pepper',
             type: 'Ingredient',
             updated: dateUpdated
         },
@@ -275,6 +310,38 @@ let resultInsertMany = database.data.insertMany(
         },
         {
             amount: {
+                value: 8,
+                unit: 'fl oz'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 6,
+                    unit: 'year'
+                }
+            },
+            name: 'Hot Sauce',
+            sealed: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 8,
+                unit: 'fl oz'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 3,
+                    unit: 'year'
+                }
+            },
+            name: 'Hot Sauce',
+            sealed: false,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
                 value: 1,
                 unit: 'jar'
             },
@@ -402,6 +469,21 @@ let resultInsertMany = database.data.insertMany(
                 }
             },
             name: 'Milk',
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'cup'
+            },
+            lifespan: {
+                refrigerator: {
+                    value: 1,
+                    unit: 'week'
+                }
+            },
+            name: 'Napa Cabbage',
             type: 'Ingredient',
             updated: dateUpdated
         },
@@ -556,6 +638,28 @@ let resultInsertMany = database.data.insertMany(
             },
             lowHumidity: true,
             name: 'Rice',
+            sealed: true,
+            type: 'Ingredient',
+            updated: dateUpdated
+        },
+        {
+            amount: {
+                value: 1,
+                unit: 'group'
+            },
+            lifespan: {
+                pantry: {
+                    value: 3,
+                    unit: 'day'
+                },
+                refrigerator: {
+                    comment: 'Store in a ziplock bag with paper towels',
+                    value: 10,
+                    unit: 'day'
+                }
+            },
+            lowHumidity: true,
+            name: 'Scallions',
             sealed: true,
             type: 'Ingredient',
             updated: dateUpdated

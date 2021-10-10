@@ -166,6 +166,26 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'oz'
+        },
+        lifespan: {
+            freezer: {
+                value: 1,
+                unit: 'year'
+            },
+            refrigerator: {
+                value: 5,
+                unit: 'day'
+            }
+        },
+        name: 'Brussel Sprouts',
+        type: 'Ingredient',
+        updated: dateUpdated,
+        wrapped: true
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'stick'
         },
         lifespan: {
@@ -660,6 +680,25 @@ let documents = [
         lowHumidity: true,
         name: 'Scallions',
         sealed: true,
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'oz'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 2,
+                unit: 'month'
+            },
+            pantry: {
+                value: 6,
+                unit: 'week'
+            }
+        },
+        name: 'Shallot',
         type: 'Ingredient',
         updated: dateUpdated
     },

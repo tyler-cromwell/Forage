@@ -58,7 +58,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Success")
+			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -152,7 +152,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Info("Success")
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}

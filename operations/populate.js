@@ -46,6 +46,9 @@ let documents = [
             value: 1,
             unit: 'piece'
         },
+        attributes: {
+            sealed: true
+        },
         lifespan: {
             freezer: {
                 value: 8,
@@ -57,7 +60,6 @@ let documents = [
             }
         },
         name: 'Bacon',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -66,6 +68,9 @@ let documents = [
             value: 1,
             unit: 'piece'
         },
+        attributes: {
+            sealed: false
+        },
         lifespan: {
             pantry: {
                 value: 3,
@@ -73,7 +78,6 @@ let documents = [
             }
         },
         name: 'Bacon',
-        sealed: false,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -97,7 +101,11 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: false,
+        attributes: {
+            cooked: false,
+            refreeze: false,
+            sealed: true
+        },
         lifespan: {
             freezer: {
                 value: 3,
@@ -109,8 +117,6 @@ let documents = [
             }
         },
         name: 'Beef',
-        refreeze: false,
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -119,7 +125,10 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: true,
+        attributes: {
+            cooked: true,
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 2,
@@ -127,7 +136,6 @@ let documents = [
             }
         },
         name: 'Beef',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -151,15 +159,17 @@ let documents = [
             value: 1,
             unit: 'loaf'
         },
+        attributes: {
+            lowHumidity: true,
+            sealed: true
+        },
         lifespan: {
             pantry: {
                 value: 10,
                 unit: 'days'
             }
         },
-        lowHumidity: true,
         name: 'Bread',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -167,6 +177,9 @@ let documents = [
         amount: {
             value: 1,
             unit: 'oz'
+        },
+        attributes: {
+            wrapped: true
         },
         lifespan: {
             freezer: {
@@ -180,8 +193,7 @@ let documents = [
         },
         name: 'Brussel Sprouts',
         type: 'Ingredient',
-        updated: dateUpdated,
-        wrapped: true
+        updated: dateUpdated
     },
     {
         amount: {
@@ -248,7 +260,11 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: false,
+        attributes: {
+            cooked: false,
+            refreeze: false,
+            sealed: true
+        },
         lifespan: {
             freezer: {
                 value: 3,
@@ -260,8 +276,6 @@ let documents = [
             }
         },
         name: 'Chicken',
-        refreeze: false,
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -270,7 +284,10 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: true,
+        attributes: {
+            cooked: true,
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 2,
@@ -278,7 +295,6 @@ let documents = [
             }
         },
         name: 'Chicken',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -332,6 +348,9 @@ let documents = [
             value: 8,
             unit: 'fl oz'
         },
+        attributes: {
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 6,
@@ -339,7 +358,6 @@ let documents = [
             }
         },
         name: 'Hot Sauce',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -348,6 +366,9 @@ let documents = [
             value: 8,
             unit: 'fl oz'
         },
+        attributes: {
+            sealed: false
+        },
         lifespan: {
             refrigerator: {
                 value: 3,
@@ -355,7 +376,6 @@ let documents = [
             }
         },
         name: 'Hot Sauce',
-        sealed: false,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -409,7 +429,10 @@ let documents = [
             value: 1,
             unit: 'cup'
         },
-        genuine: true,
+        attributes: {
+            genuine: true,
+            sealed: true
+        },
         lifespan: {
             freezer: {
                 value: 0,
@@ -421,7 +444,6 @@ let documents = [
             }
         },
         name: 'Maple Syrup',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -430,7 +452,10 @@ let documents = [
             value: 1,
             unit: 'cup'
         },
-        genuine: true,
+        attributes: {
+            genuine: true,
+            sealed: false
+        },
         lifespan: {
             refrigerator: {
                 value: 10,
@@ -438,7 +463,6 @@ let documents = [
             }
         },
         name: 'Maple Syrup',
-        sealed: false,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -446,6 +470,10 @@ let documents = [
         amount: {
             value: 1,
             unit: 'cup'
+        },
+        attributes: {
+            sealed: true,
+            store: true
         },
         lifespan: {
             pantry: {
@@ -454,8 +482,6 @@ let documents = [
             }
         },
         name: 'Mayonnaise',
-        sealed: true,
-        store: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -464,6 +490,10 @@ let documents = [
             value: 1,
             unit: 'cup'
         },
+        attributes: {
+            sealed: false,
+            store: true
+        },
         lifespan: {
             refrigerator: {
                 value: 6,
@@ -471,8 +501,6 @@ let documents = [
             }
         },
         name: 'Mayonnaise',
-        sealed: false,
-        store: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -526,7 +554,10 @@ let documents = [
             value: 1,
             unit: 'box'
         },
-        cooked: false,
+        attributes: {
+            cooked: false,
+            sealed: true
+        },
         lifespan: {
             pantry: {
                 value: 6,
@@ -534,7 +565,6 @@ let documents = [
             }
         },
         name: 'Pasta',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -543,7 +573,10 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: true,
+        attributes: {
+            cooked: true,
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 3,
@@ -551,7 +584,6 @@ let documents = [
             }
         },
         name: 'Pasta',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -575,7 +607,11 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: false,
+        attributes: {
+            cooked: false,
+            refreeze: false,
+            sealed: true
+        },
         lifespan: {
             freezer: {
                 value: 3,
@@ -587,8 +623,6 @@ let documents = [
             }
         },
         name: 'Pork',
-        refreeze: false,
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -597,7 +631,10 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        cooked: true,
+        attributes: {
+            cooked: true,
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 2,
@@ -605,7 +642,6 @@ let documents = [
             }
         },
         name: 'Pork',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -614,6 +650,9 @@ let documents = [
             value: 1,
             unit: 'jar'
         },
+        attributes: {
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 3,
@@ -621,7 +660,6 @@ let documents = [
             }
         },
         name: 'Ranch Dressing',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -630,16 +668,18 @@ let documents = [
             value: 1,
             unit: 'cup'
         },
-        cooked: false,
+        attributes: {
+            cooked: false,
+            lowHumidity: true,
+            sealed: true
+        },
         lifespan: {
             pantry: {
                 value: 6,
                 unit: 'month'
             }
         },
-        lowHumidity: true,
         name: 'Rice',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -648,16 +688,18 @@ let documents = [
             value: 1,
             unit: 'cup'
         },
-        cooked: true,
+        attributes: {
+            cooked: true,
+            lowHumidity: true,
+            sealed: true
+        },
         lifespan: {
             refrigerator: {
                 value: 3,
                 unit: 'day'
             }
         },
-        lowHumidity: true,
         name: 'Rice',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -665,6 +707,10 @@ let documents = [
         amount: {
             value: 1,
             unit: 'group'
+        },
+        attributes: {
+            lowHumidity: true,
+            sealed: true
         },
         lifespan: {
             pantry: {
@@ -677,9 +723,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        lowHumidity: true,
         name: 'Scallions',
-        sealed: true,
         type: 'Ingredient',
         updated: dateUpdated
     },

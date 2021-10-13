@@ -29,7 +29,7 @@ let documents = [
         },
         lifespan: {
             pantry: {
-                value: 3,
+                value: 2,
                 unit: 'day'
             },
             refrigerator: {

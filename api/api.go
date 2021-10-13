@@ -164,11 +164,48 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
+	// Extract route parameter
+	vars := mux.Vars(request)
+	id := vars["id"]
+
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getOneDocument",
+		"method": "GET",
+	})
+
+	// Parse document id
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		response.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Create filter
+	filter := bson.D{{"_id", oid}}
+	log = log.WithFields(logrus.Fields{
+		"filter": filter,
+	})
+
+	// Attempt to delete the document
+	err = mongoClient.DeleteOneDocument(request.Context(), filter)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete document")
+		response.WriteHeader(http.StatusInternalServerError)
+	} else {
+		log.WithFields(logrus.Fields{"filter": filter, "status": http.StatusOK}).Debug("Success")
+		response.WriteHeader(http.StatusOK)
+	}
+}
+
 func ListenAndServe(tcpSocket string) {
 	uri := "mongodb://127.0.0.1:27017"
 
 	// Initialize context/timeout
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	// Initialize MongoDB client
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
@@ -191,6 +228,7 @@ func ListenAndServe(tcpSocket string) {
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/documents/{id}", getOneDocument).Methods("GET")
+	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")
 	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")

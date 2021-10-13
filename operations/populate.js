@@ -176,6 +176,24 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'head'
+        },
+        attributes: {
+           wrapped: true
+        },
+        lifespan: {
+            refrigerator: {
+                value: 1,
+                unit: 'week'
+            }
+        },
+        name: 'Broccoli',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'oz'
         },
         attributes: {

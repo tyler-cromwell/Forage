@@ -22,7 +22,20 @@ func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson
 
 	// Ask MongoDB to find the document
 	var doc bson.M
-	err := mc.Collection.FindOne(ctx, filter).Decode(&doc)
+	result := mc.Collection.FindOne(ctx, filter)
+	err := result.Err()
+	if err != nil && err.Error() == "mongo: no documents in result" {
+		// Search completed but no document was found
+		log.WithFields(logrus.Fields{"filter": filter}).WithError(err).Warn("Failed to find document")
+		return nil, err
+	} else if err != nil {
+		// Search failed
+		log.WithError(err).Error("Failed to find document")
+		return nil, err
+	}
+
+	// MongoDB found the document
+	err = result.Decode(&doc)
 	if err != nil {
 		log.WithError(err).Error("Failed to decode document")
 		return nil, err

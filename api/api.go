@@ -48,7 +48,12 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to get the document
 	document, err := mongoClient.GetOneDocument(request.Context(), filter)
-	if err != nil {
+	if err != nil && err.Error() == "mongo: no documents in result" {
+		// Search completed but no document was found
+		log.WithFields(logrus.Fields{"filter": filter, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find document")
+		response.WriteHeader(http.StatusNotFound)
+	} else if err != nil {
+		// Search failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find document")
 		response.WriteHeader(http.StatusInternalServerError)
 	} else {
@@ -58,7 +63,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
 			response.WriteHeader(http.StatusInternalServerError)
 		} else {
-			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			log.WithFields(logrus.Fields{"filter": filter, "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}

@@ -34,9 +34,15 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
-		response.WriteHeader(http.StatusInternalServerError)
+	if err != nil && err.Error() == "the provided hex string is not a valid ObjectID" {
+		// Invalid document id provided
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		return
+	} else if err != nil {
+		// Something else failed
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -51,17 +57,17 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == "mongo: no documents in result" {
 		// Search completed but no document was found
 		log.WithFields(logrus.Fields{"filter": filter, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find document")
-		response.WriteHeader(http.StatusNotFound)
+		RespondWithError(response, log, http.StatusNotFound, err.Error())
 	} else if err != nil {
 		// Search failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find document")
-		response.WriteHeader(http.StatusInternalServerError)
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
 		// Prepare to respond with document
 		marshalled, err := json.Marshal(document)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
-			response.WriteHeader(http.StatusInternalServerError)
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		} else {
 			log.WithFields(logrus.Fields{"filter": filter, "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)

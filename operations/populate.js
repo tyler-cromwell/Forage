@@ -623,6 +623,46 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'jar'
+        },
+        attributes: {
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'year'
+            },
+            refrigerator: {
+                value: 3,
+                unit: 'year'
+            }
+        },
+        name: 'Pickles',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'jar'
+        },
+        attributes: {
+            sealed: false
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Pickles',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'pound'
         },
         attributes: {

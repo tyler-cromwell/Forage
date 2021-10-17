@@ -909,8 +909,9 @@ documents.forEach((document) => {
     }
 
     // Update document
-    document.storeIn = maxEnv
     document.expirationDate = expirationDate
+    document.haveStocked = false
+    document.storeIn = maxEnv
 })
 
 let resultInsertMany = database.data.insertMany(documents)

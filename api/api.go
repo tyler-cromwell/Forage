@@ -31,17 +31,26 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Filter by food expiring within 2 days
 	now := time.Now()
 	lookahead := time.Now().Add(time.Hour * 24 * 2)
-	filter := bson.M{"$or": []bson.M{
+	filter := bson.M{"$and": []bson.M{
 		{
-			"expirationDate": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(now),
-				"$lte": primitive.NewDateTimeFromTime(lookahead),
+			"$or": []bson.M{
+				{
+					"expirationDate": bson.M{
+						"$gte": primitive.NewDateTimeFromTime(now),
+						"$lte": primitive.NewDateTimeFromTime(lookahead),
+					},
+				},
+				{
+					"sellBy": bson.M{
+						"$gte": primitive.NewDateTimeFromTime(now),
+						"$lte": primitive.NewDateTimeFromTime(lookahead),
+					},
+				},
 			},
 		},
 		{
-			"sellBy": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(now),
-				"$lte": primitive.NewDateTimeFromTime(lookahead),
+			"haveStocked": bson.M{
+				"$eq": true,
 			},
 		},
 	}}
@@ -144,6 +153,11 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	filterExpires := bson.M{}
 	filterName := bson.M{}
 	filterType := bson.M{}
+	haveStockedFilter := bson.M{
+		"haveStocked": bson.M{
+			"$eq": true,
+		},
+	}
 
 	if qpFrom != "" {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
@@ -191,6 +205,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	// Create filter
 	filter := bson.M{"$and": []bson.M{
+		haveStockedFilter,
 		filterName,
 		filterType,
 		filterExpires,

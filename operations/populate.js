@@ -349,6 +349,50 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            sealed: true
+        },
+        lifespan: {
+            freezer: {
+                value: 2,
+                unit: 'month'
+            },
+            refrigerator: {
+                value: 2,
+                unit: 'week'
+            }
+        },
+        name: 'Greek Yogurt',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            sealed: false
+        },
+        lifespan: {
+            freezer: {
+                value: 1,
+                unit: 'month'
+            },
+            refrigerator: {
+                value: 1,
+                unit: 'week'
+            }
+        },
+        name: 'Greek Yogurt',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'piece'
         },
         lifespan: {

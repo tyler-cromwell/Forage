@@ -21,6 +21,54 @@ import (
 
 var mongoClient *models.MongoClient
 
+func getExpiring(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.expirationJob",
+		"method": "GET",
+	})
+
+	// Filter by food expiring within 2 days
+	now := time.Now()
+	lookahead := time.Now().Add(time.Hour * 24 * 2)
+	filter := bson.M{"$or": []bson.M{
+		{
+			"expirationDate": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(now),
+				"$lte": primitive.NewDateTimeFromTime(lookahead),
+			},
+		},
+		{
+			"sellBy": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(now),
+				"$lte": primitive.NewDateTimeFromTime(lookahead),
+			},
+		},
+	}}
+
+	// Define sorting criteria
+	opts := options.Find()
+	opts.SetSort(bson.D{{"expirationDate", -1}})
+
+	// Grab the documents
+	documents, err := mongoClient.GetManyDocuments(context.Background(), filter, opts)
+	if err != nil {
+		log.WithError(err).Error("Failed to identify expiring items")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+	} else {
+		// Prepare to respond with documents
+		marshalled, err := json.Marshal(documents)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
+			response.WriteHeader(http.StatusInternalServerError)
+		} else {
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			response.WriteHeader(http.StatusOK)
+			response.Write(marshalled)
+		}
+	}
+}
+
 func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Extract route parameter
 	vars := mux.Vars(request)
@@ -106,7 +154,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		}
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
-			"expires": bson.M{
+			"expirationDate": bson.M{
 				"$gte": primitive.NewDateTimeFromTime(timeFrom),
 			},
 		}
@@ -126,7 +174,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		}
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
 		filterExpires = bson.M{
-			"expires": bson.M{
+			"expirationDate": bson.M{
 				"$lte": primitive.NewDateTimeFromTime(timeTo),
 			},
 		}
@@ -134,7 +182,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	if qpFrom != "" && qpTo != "" {
 		filterExpires = bson.M{
-			"expires": bson.M{
+			"expirationDate": bson.M{
 				"$gte": primitive.NewDateTimeFromTime(timeFrom),
 				"$lte": primitive.NewDateTimeFromTime(timeTo),
 			},
@@ -152,7 +200,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	})
 
 	// Attempt to get the documents
-	documents, err := mongoClient.GetManyDocuments(request.Context(), filter)
+	documents, err := mongoClient.GetManyDocuments(request.Context(), filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find documents")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -231,11 +279,57 @@ func ListenAndServe(tcpSocket string) {
 	collection := database.Collection("data")
 	mongoClient = &models.MongoClient{Collection: collection}
 
+	// Launch job to periodically check for expiring food
+	ticker := time.NewTicker(24 * time.Hour)
+	quit := make(chan struct{})
+	go func() {
+		logrus.WithFields(logrus.Fields{}).Info("Expiration watch job started")
+		for {
+			select {
+			case <-ticker.C:
+				// Specify common fields
+				log := logrus.WithFields(logrus.Fields{
+					"at": "api.expirationJob",
+				})
+
+				// Filter by food expiring within 2 days
+				now := time.Now()
+				lookahead := time.Now().Add(time.Hour * 24 * 2)
+				filter := bson.M{"$or": []bson.M{
+					{
+						"expirationDate": bson.M{
+							"$gte": primitive.NewDateTimeFromTime(now),
+							"$lte": primitive.NewDateTimeFromTime(lookahead),
+						},
+					},
+					{
+						"sellBy": bson.M{
+							"$gte": primitive.NewDateTimeFromTime(now),
+							"$lte": primitive.NewDateTimeFromTime(lookahead),
+						},
+					},
+				}}
+
+				// Grab the documents
+				documents, err := mongoClient.GetManyDocuments(context.Background(), filter, nil)
+				if err != nil {
+					log.WithError(err).Error("Failed to identify expiring items")
+				} else {
+					log.WithFields(logrus.Fields{"quantity": len(documents)}).Info("Items expiring")
+				}
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/documents/{id}", getOneDocument).Methods("GET")
 	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")
 	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
+	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
 	err = http.ListenAndServe(tcpSocket, router)

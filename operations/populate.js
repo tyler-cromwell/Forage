@@ -821,6 +821,54 @@ let documents = [
         updated: dateUpdated
     }
 ]
+
+documents.forEach((document) => {
+    let lifespan = document.lifespan
+    let maxDays = 1
+    let maxEnv = ""
+
+    // For each storage environment
+    Object.keys(lifespan).forEach((env) => {
+        let {value, unit} = lifespan[env]
+        let days = value
+
+        // Convert all units to days
+        if (unit === 'year') {
+            days *= 365
+        } else if (unit === 'month') {
+            days *= 30
+        } else if (unit === 'week') {
+            days *= 7
+        }
+
+        // Determine the maximum storage time
+        if (days === 0) {
+            maxDays = days
+            maxEnv = env
+        } else if (maxDays >= 1 && maxDays < days) {
+            maxDays = days
+            maxEnv = env
+        }
+    })
+
+    // Calculate max expiration date
+    // Since this is before insertMany, updated is also created date
+    let expirationDate = new Date(
+        document.updated.getFullYear(),
+        document.updated.getMonth(),
+        document.updated.getDate()+maxDays
+    )
+
+    if (maxDays == 0) {
+        print(document.name)
+        expirationDate = new Date(8640000000000000).getHours()
+    }
+
+    // Update document
+    document.storeIn = maxEnv
+    document.expirationDate = expirationDate
+})
+
 let resultInsertMany = database.data.insertMany(documents)
 print('Inserted', documents.length, 'of', resultInsertMany.insertedIds.length, 'documents')
 /*

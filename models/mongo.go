@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	//"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
@@ -44,7 +45,7 @@ func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson
 	}
 }
 
-func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M) ([]bson.M, error) {
+func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.GetManyDocuments",
@@ -53,7 +54,7 @@ func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M) ([]b
 
 	// Ask MongoDB to find the documents
 	docs := make([]bson.M, 0)
-	cursor, err := mc.Collection.Find(ctx, filter)
+	cursor, err := mc.Collection.Find(ctx, filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to find documents")
 		return nil, err

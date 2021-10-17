@@ -860,8 +860,7 @@ documents.forEach((document) => {
     )
 
     if (maxDays == 0) {
-        print(document.name)
-        expirationDate = new Date(8640000000000000).getHours()
+        expirationDate = new Date(8640000000000000)
     }
 
     // Update document

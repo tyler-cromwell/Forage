@@ -904,7 +904,8 @@ documents.forEach((document) => {
     )
 
     if (maxDays == 0) {
-        expirationDate = new Date(8640000000000000)
+        // Go cannot marshal dates with a year greater than 9999
+        expirationDate = new Date('9999/12/31')
     }
 
     // Update document

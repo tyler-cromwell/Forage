@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
@@ -97,10 +98,30 @@ func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) err
 /*
 func (mc *Collection) postManyDocuments(ctx context.Context) error {
 }
-
-func (mc *Collection) putDocument(ctx) error {
-}
 */
+
+func (mc *MongoClient) PutOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "mongo.PutOneDocument",
+		"filter": filter,
+	})
+
+	// Ask MongoDB to update the document
+	result, err := mc.Collection.UpdateOne(ctx, filter, update, nil)
+	if result.MatchedCount == 0 {
+		// Update completed but no document was found
+		customError := fmt.Errorf("no document matching filter")
+		log.WithError(customError).Warn("Failed to update document")
+		return result.MatchedCount, result.ModifiedCount, customError
+	} else if err != nil {
+		// Update failed
+		log.WithError(err).Error("Failed to update document")
+		return result.MatchedCount, result.ModifiedCount, err
+	} else {
+		return result.MatchedCount, result.ModifiedCount, nil
+	}
+}
 
 func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 	// Specify common fields

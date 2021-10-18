@@ -28,7 +28,7 @@ func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson
 	err := result.Err()
 	if err != nil && err.Error() == "mongo: no documents in result" {
 		// Search completed but no document was found
-		log.WithFields(logrus.Fields{"filter": filter}).WithError(err).Warn("Failed to find document")
+		log.WithError(err).Warn("Failed to find document")
 		return nil, err
 	} else if err != nil {
 		// Search failed

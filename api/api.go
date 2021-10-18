@@ -26,7 +26,7 @@ var mongoClient *models.MongoClient
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.expirationJob",
+		"at":     "api.getExpiring",
 		"method": "GET",
 	})
 
@@ -71,7 +71,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			response.WriteHeader(http.StatusInternalServerError)
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		} else {
 			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -107,15 +107,13 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Create filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{
-		"filter": filter,
-	})
+	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the document
 	document, err := mongoClient.GetOneDocument(request.Context(), filter)
 	if err != nil && err.Error() == "mongo: no documents in result" {
 		// Search completed but no document was found
-		log.WithFields(logrus.Fields{"filter": filter, "status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		RespondWithError(response, log, http.StatusNotFound, err.Error())
 	} else if err != nil {
 		// Search failed
@@ -128,7 +126,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
 			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		} else {
-			log.WithFields(logrus.Fields{"filter": filter, "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -155,7 +153,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	filterExpires := bson.M{}
 	filterName := bson.M{}
 	filterType := bson.M{}
-	haveStockedFilter := bson.M{
+	filterHaveStocked := bson.M{
 		"haveStocked": bson.M{
 			"$eq": true,
 		},
@@ -165,7 +163,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse from date")
-			response.WriteHeader(http.StatusInternalServerError)
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 			return
 		}
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
@@ -185,7 +183,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse to date")
-			response.WriteHeader(http.StatusInternalServerError)
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 			return
 		}
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
@@ -207,26 +205,24 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	// Create filter
 	filter := bson.M{"$and": []bson.M{
-		haveStockedFilter,
+		filterHaveStocked,
 		filterName,
 		filterType,
 		filterExpires,
 	}}
-	log = log.WithFields(logrus.Fields{
-		"filter": filter,
-	})
+	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the documents
 	documents, err := mongoClient.GetManyDocuments(request.Context(), filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find documents")
-		response.WriteHeader(http.StatusInternalServerError)
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			response.WriteHeader(http.StatusInternalServerError)
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		} else {
 			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -262,9 +258,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Construct filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{
-		"filter": filter,
-	})
+	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Get document fields from body
 	bytes, err := ioutil.ReadAll(request.Body)
@@ -320,7 +314,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.getOneDocument",
+		"at":     "api.deleteOneDocument",
 		"method": "GET",
 	})
 
@@ -328,23 +322,21 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
-		response.WriteHeader(http.StatusInternalServerError)
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// Create filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{
-		"filter": filter,
-	})
+	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to delete the document
 	err = mongoClient.DeleteOneDocument(request.Context(), filter)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete document")
-		response.WriteHeader(http.StatusInternalServerError)
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
-		log.WithFields(logrus.Fields{"filter": filter, "status": http.StatusOK}).Debug("Success")
+		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
 	}
 }

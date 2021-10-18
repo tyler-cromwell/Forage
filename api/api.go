@@ -367,10 +367,12 @@ func ListenAndServe(tcpSocket string) {
 	mongoClient = &models.MongoClient{Collection: collection}
 
 	// Launch job to periodically check for expiring food
-	ticker := time.NewTicker(24 * time.Hour)
+	interval := 24 * time.Hour
+	ticker := time.NewTicker(interval)
 	quit := make(chan struct{})
 	go func() {
-		logrus.WithFields(logrus.Fields{}).Info("Expiration watch job started")
+		lookahead := time.Hour * 24 * 2
+		logrus.WithFields(logrus.Fields{"interval": interval, "lookahead": lookahead}).Info("Expiration watch job started")
 		for {
 			select {
 			case <-ticker.C:
@@ -381,18 +383,18 @@ func ListenAndServe(tcpSocket string) {
 
 				// Filter by food expiring within 2 days
 				now := time.Now()
-				lookahead := time.Now().Add(time.Hour * 24 * 2)
+				later := time.Now().Add(time.Hour * 24 * 2)
 				filter := bson.M{"$or": []bson.M{
 					{
 						"expirationDate": bson.M{
 							"$gte": primitive.NewDateTimeFromTime(now),
-							"$lte": primitive.NewDateTimeFromTime(lookahead),
+							"$lte": primitive.NewDateTimeFromTime(later),
 						},
 					},
 					{
 						"sellBy": bson.M{
 							"$gte": primitive.NewDateTimeFromTime(now),
-							"$lte": primitive.NewDateTimeFromTime(lookahead),
+							"$lte": primitive.NewDateTimeFromTime(later),
 						},
 					},
 				}}

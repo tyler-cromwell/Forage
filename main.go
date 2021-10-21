@@ -15,7 +15,6 @@ func main() {
 	//    logrus.SetReportCaller(true)
 
 	// Decide what port to listen on
-	port := os.Getenv("PORT")
-	tcpSocket := ":" + port
+	tcpSocket := os.Getenv("LISTEN_SOCKET")
 	api.ListenAndServe(tcpSocket)
 }

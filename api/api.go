@@ -357,7 +357,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 */
 
 func ListenAndServe(tcpSocket string) {
-	uri := "mongodb://127.0.0.1:27017"
+	uri := os.Getenv("DATABASE_URI")
 
 	// Initialize context/timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

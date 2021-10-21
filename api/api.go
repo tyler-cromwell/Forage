@@ -3,8 +3,10 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +20,7 @@ import (
 
 	//"go.mongodb.org/mongo-driver/mongo/readpref"
 
+	"github.com/tyler-cromwell/forage/clients"
 	"github.com/tyler-cromwell/forage/models"
 )
 
@@ -416,6 +419,26 @@ func ListenAndServe(tcpSocket string) {
 				} else {
 					log.WithFields(logrus.Fields{"quantity": len(documents)}).Info("Items expiring")
 					// if > 0, push an event (SMS via Twilio? Email? Schedule shopping in Google Calendar?, Prepare a Peapod order?)
+
+					// Get message participants
+					phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
+					phoneTo := os.Getenv("TWILIO_PHONE_TO")
+
+					// Compose message
+					var message string
+					if len(documents) == 1 {
+						message = fmt.Sprint(len(documents), " item expiring soon")
+					} else {
+						message = fmt.Sprint(len(documents), " items expiring soon")
+					}
+
+					// Send the message
+					_, err := clients.SendMessage(phoneFrom, phoneTo, message)
+					if err != nil {
+						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo, "message": message}).WithError(err).Error("Failed to send Twilio message")
+					} else {
+						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo, "message": message}).Debug("Sent Twilio message")
+					}
 				}
 			case <-quit:
 				ticker.Stop()

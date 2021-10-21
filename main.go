@@ -13,6 +13,7 @@ func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.SetOutput(os.Stdout)
 	//    logrus.SetReportCaller(true)
+	logrus.Info("Logging configured")
 
 	// Decide what port to listen on
 	tcpSocket := os.Getenv("LISTEN_SOCKET")

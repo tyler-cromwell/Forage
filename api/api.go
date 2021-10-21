@@ -448,6 +448,7 @@ func ListenAndServe(tcpSocket string) {
 				}
 			case <-quit:
 				ticker.Stop()
+				logrus.WithFields(logrus.Fields{"interval": interval, "lookahead": lookahead}).Info("Expiration watch job stopped")
 				return
 			}
 		}
@@ -463,7 +464,7 @@ func ListenAndServe(tcpSocket string) {
 	//router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 
-	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")
+	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening for HTTP requests")
 	err = http.ListenAndServe(tcpSocket, router)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"socket": tcpSocket}).WithError(err).Fatal("Failed to listen for and serve requests")

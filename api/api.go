@@ -417,8 +417,14 @@ func ListenAndServe(tcpSocket string) {
 				if err != nil {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {
-					log.WithFields(logrus.Fields{"quantity": len(documents)}).Info("Items expiring")
+					quantity := len(documents)
+					log.WithFields(logrus.Fields{"quantity": quantity}).Info("Items expiring")
 					// if > 0, push an event (SMS via Twilio? Email? Schedule shopping in Google Calendar?, Prepare a Peapod order?)
+
+					// Skip if nothing is expiring
+					if quantity == 0 {
+						continue
+					}
 
 					// Get message participants
 					phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
@@ -426,10 +432,10 @@ func ListenAndServe(tcpSocket string) {
 
 					// Compose message
 					var message string
-					if len(documents) == 1 {
-						message = fmt.Sprint(len(documents), " item expiring soon")
+					if quantity == 1 {
+						message = fmt.Sprint(quantity, " item expiring soon")
 					} else {
-						message = fmt.Sprint(len(documents), " items expiring soon")
+						message = fmt.Sprint(quantity, " items expiring soon")
 					}
 
 					// Send the message

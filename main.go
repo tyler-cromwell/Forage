@@ -4,8 +4,6 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	//"go.mongodb.org/mongo-driver/mongo/readpref"
-
 	"github.com/tyler-cromwell/forage/api"
 )
 

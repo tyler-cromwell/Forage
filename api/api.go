@@ -231,6 +231,12 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
+/*
+func postManyDocuments(response http.ResponseWriter, request *http.Request) {
+
+}
+*/
+
 func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Extract route parameter
 	vars := mux.Vars(request)
@@ -341,6 +347,12 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
+/*
+func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
+
+}
+*/
+
 func ListenAndServe(tcpSocket string) {
 	uri := "mongodb://127.0.0.1:27017"
 
@@ -377,9 +389,7 @@ func ListenAndServe(tcpSocket string) {
 			select {
 			case <-ticker.C:
 				// Specify common fields
-				log := logrus.WithFields(logrus.Fields{
-					"at": "api.expirationJob",
-				})
+				log := logrus.WithFields(logrus.Fields{"at": "api.expirationJob"})
 
 				// Filter by food expiring within 2 days
 				now := time.Now()
@@ -405,6 +415,7 @@ func ListenAndServe(tcpSocket string) {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {
 					log.WithFields(logrus.Fields{"quantity": len(documents)}).Info("Items expiring")
+					// if > 0, push an event (SMS via Twilio? Email? Schedule shopping in Google Calendar?, Prepare a Peapod order?)
 				}
 			case <-quit:
 				ticker.Stop()
@@ -419,6 +430,8 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/documents/{id}", putOneDocument).Methods("PUT")
 	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")
 	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
+	//router.HandleFunc("/documents", postManyDocuments).Methods("POST")
+	//router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening")

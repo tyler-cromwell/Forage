@@ -96,7 +96,7 @@ func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) err
 }
 
 /*
-func (mc *Collection) postManyDocuments(ctx context.Context) error {
+func (mc *MongoClient) PostManyDocuments(ctx context.Context, documents []bson.M) error {
 }
 */
 
@@ -139,3 +139,9 @@ func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) err
 		return nil
 	}
 }
+
+/*
+func (mc *MongoClient) DeleteManyDocuments(ctx context.Context, filter bson.D) error {
+
+}
+*/

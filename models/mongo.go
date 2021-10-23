@@ -95,10 +95,22 @@ func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) err
 	}
 }
 
-/*
-func (mc *MongoClient) PostManyDocuments(ctx context.Context, documents []bson.M) error {
+func (mc *MongoClient) PostManyDocuments(ctx context.Context, docs []interface{}) error {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":       "mongo.PostManyDocuments",
+		"quantity": len(docs),
+	})
+
+	// Ask MongoDB to insert the documents
+	_, err := mc.Collection.InsertMany(ctx, docs, nil)
+	if err != nil {
+		log.WithError(err).Error("Failed to insert documents")
+		return err
+	} else {
+		return nil
+	}
 }
-*/
 
 func (mc *MongoClient) PutOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
 	// Specify common fields

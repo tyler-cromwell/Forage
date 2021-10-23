@@ -234,11 +234,54 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-/*
 func postManyDocuments(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.putOneDocument",
+		"method": "POST",
+	})
 
+	// Get documents from body
+	bytes, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Parse documents
+	var data []interface{}
+	err = json.Unmarshal(bytes, &data)
+	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
+		// Invalid request body
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode documents")
+		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		return
+	} else if err != nil {
+		// Something else failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to decode documents")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Construct insert instructions
+	documents := []interface{}{}
+	for _, e := range data {
+		documents = append(documents, e)
+	}
+
+	// Attempt to put the document
+	err = mongoClient.PostManyDocuments(request.Context(), documents)
+	if err != nil {
+		// Update failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to update document")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+	} else {
+		// Respond
+		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
+		response.WriteHeader(http.StatusOK)
+	}
 }
-*/
 
 func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Extract route parameter
@@ -460,7 +503,7 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/documents/{id}", putOneDocument).Methods("PUT")
 	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")
 	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
-	//router.HandleFunc("/documents", postManyDocuments).Methods("POST")
+	router.HandleFunc("/documents", postManyDocuments).Methods("POST")
 	//router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 

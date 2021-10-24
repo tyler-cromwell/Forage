@@ -158,8 +158,20 @@ func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) err
 	}
 }
 
-/*
-func (mc *MongoClient) DeleteManyDocuments(ctx context.Context, filter bson.D) error {
+func (mc *MongoClient) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "mongo.DeleteManyDocuments",
+		"filter": filter,
+	})
 
+	// Ask MongoDB to delete the documents
+	result, err := mc.Collection.DeleteMany(ctx, filter)
+	if err != nil {
+		log.WithError(err).Error("Failed to delete documents")
+		return result.DeletedCount, err
+	} else {
+		log.WithFields(logrus.Fields{"quantity": result.DeletedCount}).Debug("Success")
+		return result.DeletedCount, nil
+	}
 }
-*/

@@ -28,10 +28,7 @@ var mongoClient *models.MongoClient
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.getExpiring",
-		"method": "GET",
-	})
+	log := logrus.WithFields(logrus.Fields{"at": "api.getExpiring"})
 
 	// Filter by food expiring within 2 days
 	now := time.Now()
@@ -361,7 +358,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.deleteOneDocument",
-		"method": "GET",
+		"method": "DELETE",
 	})
 
 	// Extract route parameter
@@ -392,11 +389,62 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-/*
 func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.deleteManyDocuments",
+		"method": "DELETE",
+	})
 
+	// Delete by list of IDs (for now)
+	// Get document fields from body
+	bytes, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Parse update fields
+	var ids []string
+	err = json.Unmarshal(bytes, &ids)
+	if err != nil {
+		// Something else failed
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode delete fields")
+		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Create filter
+	interim := []primitive.ObjectID{}
+	for _, id := range ids {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse id")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			return
+		} else {
+			interim = append(interim, oid)
+		}
+	}
+	filter := bson.M{"_id": bson.M{"$in": interim}}
+	log = log.WithFields(logrus.Fields{"filter": filter})
+
+	// Attempt to delete the documents
+	deleted, err := mongoClient.DeleteManyDocuments(request.Context(), filter)
+	if deleted == 0 {
+		// Delete completed but no documents were found
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
+		RespondWithError(response, log, http.StatusNotFound, fmt.Sprint("no documents found"))
+	} else if err != nil {
+		// Delete failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete documents")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+	} else {
+		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Debug("Success")
+		response.WriteHeader(http.StatusOK)
+	}
 }
-*/
 
 func ListenAndServe(tcpSocket string) {
 	uri := os.Getenv("DATABASE_URI")
@@ -503,7 +551,7 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")
 	router.HandleFunc("/documents", getManyDocuments).Methods("GET")
 	router.HandleFunc("/documents", postManyDocuments).Methods("POST")
-	//router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
+	router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening for HTTP requests")

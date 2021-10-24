@@ -125,7 +125,7 @@ func (mc *MongoClient) UpdateOneDocument(ctx context.Context, filter bson.D, upd
 
 	// Ask MongoDB to update the document
 	result, err := mc.Collection.UpdateOne(ctx, filter, update, nil)
-	if result.MatchedCount == 0 {
+	if result != nil && result.MatchedCount == 0 {
 		// Update completed but no document was found
 		customError := fmt.Errorf("no document matching filter")
 		log.WithError(customError).Warn("Failed to update document")

@@ -353,6 +353,13 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	for k, v := range fields {
 		interim[k] = v
 	}
+
+	// Ignore _id field since it's immutable and will error
+	_, ok := interim["_id"]
+	if ok {
+		delete(interim, "_id")
+	}
+
 	update := bson.M{"$set": interim}
 
 	// Attempt to put the document

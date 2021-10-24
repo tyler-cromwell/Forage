@@ -1042,6 +1042,61 @@ let documents = [
         name: 'Turkey',
         type: 'Ingredient',
         updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            freezer: {
+                value: 15,
+                unit: 'day'
+            },
+            refrigerator: {
+                value: 3,
+                unit: 'day'
+            }
+        },
+        name: 'Unagi',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 0,
+                unit: 'year'
+            }
+        },
+        name: 'Worcestershire Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            sealed: false
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'year'
+            }
+        },
+        name: 'Worcestershire Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
     }
 ]
 

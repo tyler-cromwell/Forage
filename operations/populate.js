@@ -142,7 +142,7 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'oz'
+            unit: 'ounce'
         },
         lifespan: {
             pantry: {
@@ -194,7 +194,7 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'oz'
+            unit: 'ounce'
         },
         attributes: {
             wrapped: true
@@ -318,6 +318,102 @@ let documents = [
     },
     {
         amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 9,
+                unit: 'month'
+            }
+        },
+        name: 'Chili Flakes',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 10,
+                unit: 'day'
+            }
+        },
+        name: 'Cream Cheese',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 10,
+                unit: 'day'
+            }
+        },
+        name: 'Cucumber',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'year'
+            }
+        },
+        name: 'Cumin',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Dijon Mustard',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            sealed: false
+        },
+        lifespan: {
+            refrigerator: {
+                value: 1,
+                unit: 'year'
+            }
+        },
+        name: 'Dijon Mustard',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 12,
             unit: 'count'
         },
@@ -408,7 +504,7 @@ let documents = [
     {
         amount: {
             value: 8,
-            unit: 'fl oz'
+            unit: 'fluid ounce'
         },
         attributes: {
             sealed: true
@@ -426,7 +522,7 @@ let documents = [
     {
         amount: {
             value: 8,
-            unit: 'fl oz'
+            unit: 'fluid ounce'
         },
         attributes: {
             sealed: false
@@ -584,6 +680,36 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'fluid ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'month'
+            }
+        },
+        name: 'Mirin',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 3,
+                unit: 'week'
+            }
+        },
+        name: 'Muenster Cheese',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'cup'
         },
         lifespan: {
@@ -599,11 +725,34 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 18,
+                unit: 'day'
+            }
+        },
+        name: 'Nori',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'head'
         },
         lifespan: {
+            freezer: {
+                value: 8,
+                unit: 'month'
+            },
             refrigerator: {
                 value: 2,
+                unit: 'week'
+            },
+            pantry: {
+                value: 1,
                 unit: 'week'
             }
         },
@@ -808,6 +957,21 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'cup'
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Rice Vinegar',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'group'
         },
         attributes: {
@@ -832,7 +996,7 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'oz'
+            unit: 'ounce'
         },
         lifespan: {
             refrigerator: {
@@ -845,6 +1009,21 @@ let documents = [
             }
         },
         name: 'Shallot',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Sugar',
         type: 'Ingredient',
         updated: dateUpdated
     },

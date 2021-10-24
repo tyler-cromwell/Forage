@@ -143,6 +143,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Extract query parameters
 	queryParams := request.URL.Query()
 	qpFrom := queryParams.Get("from")
+	qpHaveStocked := queryParams.Get("haveStocked")
 	qpName := queryParams.Get("name")
 	qpType := queryParams.Get("type")
 	qpTo := queryParams.Get("to")
@@ -162,8 +163,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if qpFrom != "" {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse from date")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
 			return
 		}
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
@@ -182,8 +183,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if qpTo != "" {
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse to date")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
 			return
 		}
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
@@ -200,6 +201,22 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 				"$gte": primitive.NewDateTimeFromTime(timeFrom),
 				"$lte": primitive.NewDateTimeFromTime(timeTo),
 			},
+		}
+	}
+
+	if qpHaveStocked != "" {
+		b, err := strconv.ParseBool(qpHaveStocked)
+		if err != nil {
+			// Invalid query parameter value provided
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse haveStocked")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			return
+		} else {
+			filterHaveStocked = bson.M{
+				"haveStocked": bson.M{
+					"$eq": b,
+				},
+			}
 		}
 	}
 

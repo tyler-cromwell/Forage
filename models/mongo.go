@@ -15,10 +15,10 @@ type MongoClient struct {
 	Collection *mongo.Collection
 }
 
-func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
+func (mc *MongoClient) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.GetOneDocument",
+		"at":     "mongo.FindOneDocument",
 		"filter": filter,
 	})
 
@@ -42,14 +42,15 @@ func (mc *MongoClient) GetOneDocument(ctx context.Context, filter bson.D) (*bson
 		log.WithError(err).Error("Failed to decode document")
 		return nil, err
 	} else {
+		log.Debug("Success")
 		return &doc, nil
 	}
 }
 
-func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+func (mc *MongoClient) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.GetManyDocuments",
+		"at":     "mongo.FindDocuments",
 		"filter": filter,
 	})
 
@@ -74,14 +75,15 @@ func (mc *MongoClient) GetManyDocuments(ctx context.Context, filter bson.M, opts
 		log.WithError(err).Error("Failed to close cursor")
 		return nil, err // maybe return results anyway???
 	} else {
+		log.Debug("Success")
 		return docs, nil
 	}
 }
 
-func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) error {
+func (mc *MongoClient) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":       "mongo.PostOneDocument",
+		"at":       "mongo.InsertOneDocument",
 		"document": doc,
 	})
 
@@ -91,14 +93,15 @@ func (mc *MongoClient) PostOneDocument(ctx context.Context, doc interface{}) err
 		log.WithError(err).Error("Failed to insert document")
 		return err
 	} else {
+		log.Debug("Success")
 		return nil
 	}
 }
 
-func (mc *MongoClient) PostManyDocuments(ctx context.Context, docs []interface{}) error {
+func (mc *MongoClient) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":       "mongo.PostManyDocuments",
+		"at":       "mongo.InsertManyDocuments",
 		"quantity": len(docs),
 	})
 
@@ -108,14 +111,15 @@ func (mc *MongoClient) PostManyDocuments(ctx context.Context, docs []interface{}
 		log.WithError(err).Error("Failed to insert documents")
 		return err
 	} else {
+		log.Debug("Success")
 		return nil
 	}
 }
 
-func (mc *MongoClient) PutOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
+func (mc *MongoClient) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.PutOneDocument",
+		"at":     "mongo.UpdateOneDocument",
 		"filter": filter,
 	})
 
@@ -131,6 +135,7 @@ func (mc *MongoClient) PutOneDocument(ctx context.Context, filter bson.D, update
 		log.WithError(err).Error("Failed to update document")
 		return result.MatchedCount, result.ModifiedCount, err
 	} else {
+		log.Debug("Success")
 		return result.MatchedCount, result.ModifiedCount, nil
 	}
 }
@@ -148,6 +153,7 @@ func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) err
 		log.WithError(err).Error("Failed to delete document")
 		return err
 	} else {
+		log.Debug("Success")
 		return nil
 	}
 }

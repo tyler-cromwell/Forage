@@ -65,7 +65,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	opts.SetSort(bson.D{{"expirationDate", -1}})
 
 	// Grab the documents
-	documents, err := mongoClient.GetManyDocuments(context.Background(), filter, opts)
+	documents, err := mongoClient.FindDocuments(context.Background(), filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
@@ -84,21 +84,21 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 }
 
 func getOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Extract route parameter
-	vars := mux.Vars(request)
-	id := vars["id"]
-
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getOneDocument",
 		"method": "GET",
 	})
 
+	// Extract route parameter
+	vars := mux.Vars(request)
+	id := vars["id"]
+
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil && err.Error() == "the provided hex string is not a valid ObjectID" {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Error("Failed to parse document id")
 		RespondWithError(response, log, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {
@@ -113,13 +113,13 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the document
-	document, err := mongoClient.GetOneDocument(request.Context(), filter)
+	document, err := mongoClient.FindOneDocument(request.Context(), filter)
 	if err != nil && err.Error() == "mongo: no documents in result" {
-		// Search completed but no document was found
+		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		RespondWithError(response, log, http.StatusNotFound, err.Error())
 	} else if err != nil {
-		// Search failed
+		// Get failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get document")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
@@ -137,18 +137,18 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 }
 
 func getManyDocuments(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getManyDocuments",
+		"method": "GET",
+	})
+
 	// Extract query parameters
 	queryParams := request.URL.Query()
 	qpFrom := queryParams.Get("from")
 	qpName := queryParams.Get("name")
 	qpType := queryParams.Get("type")
 	qpTo := queryParams.Get("to")
-
-	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.getManyDocuments",
-		"method": "GET",
-	})
 
 	// Check if query parameters are present
 	var timeFrom time.Time
@@ -216,9 +216,9 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the documents
-	documents, err := mongoClient.GetManyDocuments(request.Context(), filter, nil)
+	documents, err := mongoClient.FindDocuments(request.Context(), filter, nil)
 	if err != nil {
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to find documents")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
 		// Prepare to respond with documents
@@ -237,7 +237,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.putOneDocument",
+		"at":     "api.postManyDocuments",
 		"method": "POST",
 	})
 
@@ -271,34 +271,33 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Attempt to put the document
-	err = mongoClient.PostManyDocuments(request.Context(), documents)
+	err = mongoClient.InsertManyDocuments(request.Context(), documents)
 	if err != nil {
-		// Update failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to update document")
+		// Post failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post document")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
-		// Respond
-		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
-		response.WriteHeader(http.StatusOK)
+		log.WithFields(logrus.Fields{"status": http.StatusCreated}).Debug("Success")
+		response.WriteHeader(http.StatusCreated)
 	}
 }
 
 func putOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Extract route parameter
-	vars := mux.Vars(request)
-	id := vars["id"]
-
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.putOneDocument",
 		"method": "PUT",
 	})
 
+	// Extract route parameter
+	vars := mux.Vars(request)
+	id := vars["id"]
+
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil && err.Error() == "the provided hex string is not a valid ObjectID" {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse document id")
 		RespondWithError(response, log, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {
@@ -325,7 +324,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(bytes, &fields)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to decode update fields")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
 		RespondWithError(response, log, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {
@@ -343,32 +342,31 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	update := bson.M{"$set": interim}
 
 	// Attempt to put the document
-	matched, _, err := mongoClient.PutOneDocument(request.Context(), filter, update)
+	matched, _, err := mongoClient.UpdateOneDocument(request.Context(), filter, update)
 	if matched == 0 {
-		// Update completed but no document was found
-		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to update document")
+		// Put completed but no document was found
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to put document")
 		RespondWithError(response, log, http.StatusNotFound, err.Error())
 	} else if err != nil {
-		// Update failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to update document")
+		// Put failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to put document")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
-		// Respond
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
 	}
 }
 
 func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Extract route parameter
-	vars := mux.Vars(request)
-	id := vars["id"]
-
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.deleteOneDocument",
 		"method": "GET",
 	})
+
+	// Extract route parameter
+	vars := mux.Vars(request)
+	id := vars["id"]
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -385,6 +383,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Attempt to delete the document
 	err = mongoClient.DeleteOneDocument(request.Context(), filter)
 	if err != nil {
+		// Delete failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete document")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
@@ -456,7 +455,7 @@ func ListenAndServe(tcpSocket string) {
 				}}
 
 				// Grab the documents
-				documents, err := mongoClient.GetManyDocuments(context.Background(), filter, nil)
+				documents, err := mongoClient.FindDocuments(context.Background(), filter, nil)
 				if err != nil {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {

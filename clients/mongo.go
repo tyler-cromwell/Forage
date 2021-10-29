@@ -11,11 +11,11 @@ import (
 	//"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-type MongoClient struct {
+type Mongo struct {
 	Collection *mongo.Collection
 }
 
-func (mc *MongoClient) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
+func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.FindOneDocument",
@@ -47,7 +47,7 @@ func (mc *MongoClient) FindOneDocument(ctx context.Context, filter bson.D) (*bso
 	}
 }
 
-func (mc *MongoClient) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.FindDocuments",
@@ -80,7 +80,7 @@ func (mc *MongoClient) FindDocuments(ctx context.Context, filter bson.M, opts *o
 	}
 }
 
-func (mc *MongoClient) InsertOneDocument(ctx context.Context, doc interface{}) error {
+func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertOneDocument",
@@ -98,7 +98,7 @@ func (mc *MongoClient) InsertOneDocument(ctx context.Context, doc interface{}) e
 	}
 }
 
-func (mc *MongoClient) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
+func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertManyDocuments",
@@ -116,7 +116,7 @@ func (mc *MongoClient) InsertManyDocuments(ctx context.Context, docs []interface
 	}
 }
 
-func (mc *MongoClient) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
+func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.UpdateOneDocument",
@@ -140,7 +140,7 @@ func (mc *MongoClient) UpdateOneDocument(ctx context.Context, filter bson.D, upd
 	}
 }
 
-func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) error {
+func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.DeleteOneDocument",
@@ -158,7 +158,7 @@ func (mc *MongoClient) DeleteOneDocument(ctx context.Context, filter bson.D) err
 	}
 }
 
-func (mc *MongoClient) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {
+func (mc *Mongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "mongo.DeleteManyDocuments",

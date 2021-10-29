@@ -24,7 +24,8 @@ import (
 	"github.com/tyler-cromwell/forage/clients"
 )
 
-var mongoClient *clients.MongoClient
+var mongoClient *clients.Mongo
+var twilioClient *clients.Twilio
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
@@ -474,6 +475,8 @@ func ListenAndServe(tcpSocket string) {
 	// Get environment variables
 	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
 	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
+	phoneTo := os.Getenv("TWILIO_PHONE_TO")
 	uri := os.Getenv("DATABASE_URI")
 
 	// Initialize context/timeout
@@ -487,7 +490,9 @@ func ListenAndServe(tcpSocket string) {
 	}
 
 	// Initialize Twilio client
-	twilioClient := clients.Twilio{
+	twilioClient = &clients.Twilio{
+		From: phoneFrom,
+		To:   phoneTo,
 		Client: twilio.NewRestClientWithParams(twilio.RestClientParams{
 			Username: accountSid,
 			Password: authToken,
@@ -503,10 +508,10 @@ func ListenAndServe(tcpSocket string) {
 	// Specify database & collection
 	database := client.Database("forage")
 	collection := database.Collection("data")
-	mongoClient = &clients.MongoClient{Collection: collection}
+	mongoClient = &clients.Mongo{Collection: collection}
 
 	// Launch job to periodically check for expiring food
-	interval := 24 * time.Hour / 24 / 60 / 20
+	interval := 24 * time.Hour
 	ticker := time.NewTicker(interval)
 	quit := make(chan struct{})
 	go func() {
@@ -549,10 +554,6 @@ func ListenAndServe(tcpSocket string) {
 					if quantity == 0 {
 						continue
 					}
-
-					// Get message participants
-					phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
-					phoneTo := os.Getenv("TWILIO_PHONE_TO")
 
 					// Compose message
 					var message string

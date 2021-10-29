@@ -1,4 +1,4 @@
-package models
+package clients
 
 import (
 	"context"

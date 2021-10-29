@@ -13,6 +13,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/twilio/twilio-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,10 +22,9 @@ import (
 	//"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	"github.com/tyler-cromwell/forage/clients"
-	"github.com/tyler-cromwell/forage/models"
 )
 
-var mongoClient *models.MongoClient
+var mongoClient *clients.MongoClient
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
@@ -471,6 +471,9 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 }
 
 func ListenAndServe(tcpSocket string) {
+	// Get environment variables
+	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
+	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
 	uri := os.Getenv("DATABASE_URI")
 
 	// Initialize context/timeout
@@ -483,6 +486,13 @@ func ListenAndServe(tcpSocket string) {
 		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure initialize MongoDB client")
 	}
 
+	// Initialize Twilio client
+	twilioClient := clients.Twilio{
+		Client: twilio.NewRestClientWithParams(twilio.RestClientParams{
+			Username: accountSid,
+			Password: authToken,
+		})}
+
 	// Connect to database instance
 	err = client.Connect(ctx)
 	if err != nil {
@@ -493,10 +503,10 @@ func ListenAndServe(tcpSocket string) {
 	// Specify database & collection
 	database := client.Database("forage")
 	collection := database.Collection("data")
-	mongoClient = &models.MongoClient{Collection: collection}
+	mongoClient = &clients.MongoClient{Collection: collection}
 
 	// Launch job to periodically check for expiring food
-	interval := 24 * time.Hour
+	interval := 24 * time.Hour / 24 / 60 / 20
 	ticker := time.NewTicker(interval)
 	quit := make(chan struct{})
 	go func() {
@@ -553,7 +563,7 @@ func ListenAndServe(tcpSocket string) {
 					}
 
 					// Send the message
-					_, err := clients.SendMessage(phoneFrom, phoneTo, message)
+					_, err := twilioClient.SendMessage(phoneFrom, phoneTo, message)
 					if err != nil {
 						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo, "message": message}).WithError(err).Error("Failed to send Twilio message")
 					} else {

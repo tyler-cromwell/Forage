@@ -3,6 +3,7 @@ module github.com/tyler-cromwell/forage
 go 1.13
 
 require (
+	github.com/adlio/trello v1.9.0
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/mux v1.8.0

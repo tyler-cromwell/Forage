@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/adlio/trello"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/twilio/twilio-go"
@@ -25,6 +26,7 @@ import (
 )
 
 var mongoClient *clients.Mongo
+var trelloClient clients.Trello
 var twilioClient *clients.Twilio
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
@@ -473,6 +475,12 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 func ListenAndServe(tcpSocket string) {
 	// Get environment variables
+	trelloMemberID := os.Getenv("TRELLO_MEMBER")
+	trelloBoardName := os.Getenv("TRELLO_BOARD")
+	trelloListName := os.Getenv("TRELLO_LIST")
+	trelloLabels := os.Getenv("TRELLO_LABELS")
+	trelloApiKey := os.Getenv("TRELLO_API_KEY")
+	trelloApiToken := os.Getenv("TRELLO_API_TOKEN")
 	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
 	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
 	phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
@@ -487,6 +495,16 @@ func ListenAndServe(tcpSocket string) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure initialize MongoDB client")
+	}
+
+	// Initialize Trello client
+	trelloClient = clients.Trello{
+		Key:       trelloApiKey,
+		Token:     trelloApiToken,
+		MemberID:  trelloMemberID,
+		BoardName: trelloBoardName,
+		ListName:  trelloListName,
+		Client:    trello.NewClient(trelloApiKey, trelloApiToken),
 	}
 
 	// Initialize Twilio client
@@ -547,7 +565,7 @@ func ListenAndServe(tcpSocket string) {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {
 					quantity := len(documents)
-					log.WithFields(logrus.Fields{"quantity": quantity}).Info("Items expiring")
+					log.WithFields(logrus.Fields{"quantity": quantity}).Debug("Items expiring")
 					// if > 0, push an event (SMS via Twilio? Email? Schedule shopping in Google Calendar?, Prepare a Peapod order?)
 
 					// Skip if nothing is expiring
@@ -555,20 +573,42 @@ func ListenAndServe(tcpSocket string) {
 						continue
 					}
 
+					// Construct list of names of items to shop for
+					var groceries []string
+					for _, document := range documents {
+						v, keyFound := document["name"]
+						if keyFound {
+							groceries = append(groceries, v.(string))
+						}
+					}
+
+					// Construct shopping list due date
+					now := time.Now()
+					rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+					dueDate := rounded.Add(lookahead + (time.Hour * 24))
+
+					// Create shopping list card on Trello
+					url, err := trelloClient.CreateShoppingList(&dueDate, groceries)
+					if err != nil {
+						log.WithError(err).Error("Failed to create Trello card")
+					} else {
+						log.WithFields(logrus.Fields{"url": url}).Debug("Created Trello card")
+					}
+
 					// Compose message
 					var message string
 					if quantity == 1 {
-						message = fmt.Sprint(quantity, " item expiring soon")
+						message = fmt.Sprintf("%d item expiring soon! View shopping list: %s", quantity, url)
 					} else {
-						message = fmt.Sprint(quantity, " items expiring soon")
+						message = fmt.Sprintf("%d items expiring soon! View shopping list: %s", quantity, url)
 					}
 
 					// Send the message
-					_, err := twilioClient.SendMessage(phoneFrom, phoneTo, message)
+					_, err = twilioClient.SendMessage(phoneFrom, phoneTo, message)
 					if err != nil {
-						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo, "message": message}).WithError(err).Error("Failed to send Twilio message")
+						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo}).WithError(err).Error("Failed to send Twilio message")
 					} else {
-						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo, "message": message}).Debug("Sent Twilio message")
+						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo}).Debug("Sent Twilio message")
 					}
 				}
 			case <-quit:

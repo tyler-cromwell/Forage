@@ -15,7 +15,7 @@ type Trello struct {
 	Client    *trello.Client
 }
 
-func (tc *Trello) CreateShoppingList(dueDate *time.Time, listItems []string) (string, error) {
+func (tc *Trello) CreateShoppingList(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
 	var board *trello.Board
 	var list *trello.List
 	var labelIDs []string
@@ -56,8 +56,10 @@ func (tc *Trello) CreateShoppingList(dueDate *time.Time, listItems []string) (st
 		return "", err
 	}
 	for _, l := range labels {
-		if l.Name == "Important" || l.Name == "Life" || l.Name == "Organization" {
-			labelIDs = append(labelIDs, l.ID)
+		for _, al := range applyLabels {
+			if l.Name == al {
+				labelIDs = append(labelIDs, l.ID)
+			}
 		}
 	}
 

@@ -588,7 +588,8 @@ func ListenAndServe(tcpSocket string) {
 					dueDate := rounded.Add(lookahead + (time.Hour * 24))
 
 					// Create shopping list card on Trello
-					url, err := trelloClient.CreateShoppingList(&dueDate, groceries)
+					labels := strings.Split(trelloLabels, ",")
+					url, err := trelloClient.CreateShoppingList(&dueDate, labels, groceries)
 					if err != nil {
 						log.WithError(err).Error("Failed to create Trello card")
 					} else {

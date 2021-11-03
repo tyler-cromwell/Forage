@@ -475,26 +475,38 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 func ListenAndServe(tcpSocket string) {
 	// Get environment variables
+	intervalStr := os.Getenv("FORAGE_INTERVAL")
+	forageInterval, err := time.ParseDuration(intervalStr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to get expiration interval")
+	}
+
+	lookaheadStr := os.Getenv("FORAGE_LOOKAHEAD")
+	forageLookahead, err := time.ParseDuration(lookaheadStr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to get expiration lookahead")
+	}
+
+	mongoUri := os.Getenv("MONGO_URI")
 	trelloMemberID := os.Getenv("TRELLO_MEMBER")
 	trelloBoardName := os.Getenv("TRELLO_BOARD")
 	trelloListName := os.Getenv("TRELLO_LIST")
 	trelloLabels := os.Getenv("TRELLO_LABELS")
 	trelloApiKey := os.Getenv("TRELLO_API_KEY")
 	trelloApiToken := os.Getenv("TRELLO_API_TOKEN")
-	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
-	phoneFrom := os.Getenv("TWILIO_PHONE_FROM")
-	phoneTo := os.Getenv("TWILIO_PHONE_TO")
-	uri := os.Getenv("DATABASE_URI")
+	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
+	twilioAuthToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	twilioPhoneFrom := os.Getenv("TWILIO_PHONE_FROM")
+	twilioPhoneTo := os.Getenv("TWILIO_PHONE_TO")
 
 	// Initialize context/timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Initialize MongoDB client
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failure initialize MongoDB client")
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Fatal("Failed to initialize MongoDB client")
 	}
 
 	// Initialize Trello client
@@ -509,17 +521,17 @@ func ListenAndServe(tcpSocket string) {
 
 	// Initialize Twilio client
 	twilioClient = &clients.Twilio{
-		From: phoneFrom,
-		To:   phoneTo,
+		From: twilioPhoneFrom,
+		To:   twilioPhoneTo,
 		Client: twilio.NewRestClientWithParams(twilio.RestClientParams{
-			Username: accountSid,
-			Password: authToken,
+			Username: twilioAccountSid,
+			Password: twilioAuthToken,
 		})}
 
 	// Connect to database instance
 	err = client.Connect(ctx)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": uri}).WithError(err).Fatal("Failed to connect to MongoDB instance")
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Fatal("Failed to connect to MongoDB instance")
 	}
 	defer client.Disconnect(ctx)
 
@@ -529,12 +541,10 @@ func ListenAndServe(tcpSocket string) {
 	mongoClient = &clients.Mongo{Collection: collection}
 
 	// Launch job to periodically check for expiring food
-	interval := 24 * time.Hour
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(forageInterval)
 	quit := make(chan struct{})
 	go func() {
-		lookahead := time.Hour * 24 * 2
-		logrus.WithFields(logrus.Fields{"interval": interval, "lookahead": lookahead}).Info("Expiration watch job started")
+		logrus.WithFields(logrus.Fields{"interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job started")
 		for {
 			select {
 			case <-ticker.C:
@@ -585,7 +595,7 @@ func ListenAndServe(tcpSocket string) {
 					// Construct shopping list due date
 					now := time.Now()
 					rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-					dueDate := rounded.Add(lookahead + (time.Hour * 24))
+					dueDate := rounded.Add(forageLookahead + (time.Hour * 24))
 
 					// Create shopping list card on Trello
 					labels := strings.Split(trelloLabels, ",")
@@ -605,16 +615,16 @@ func ListenAndServe(tcpSocket string) {
 					}
 
 					// Send the message
-					_, err = twilioClient.SendMessage(phoneFrom, phoneTo, message)
+					_, err = twilioClient.SendMessage(twilioClient.From, twilioClient.To, message)
 					if err != nil {
-						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo}).WithError(err).Error("Failed to send Twilio message")
+						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")
 					} else {
-						log.WithFields(logrus.Fields{"from": phoneFrom, "to": phoneTo}).Debug("Sent Twilio message")
+						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Debug("Sent Twilio message")
 					}
 				}
 			case <-quit:
 				ticker.Stop()
-				logrus.WithFields(logrus.Fields{"interval": interval, "lookahead": lookahead}).Info("Expiration watch job stopped")
+				logrus.WithFields(logrus.Fields{"interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job stopped")
 				return
 			}
 		}

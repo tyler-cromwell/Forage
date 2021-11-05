@@ -603,7 +603,6 @@ func ListenAndServe(tcpSocket string) {
 				} else {
 					quantity := len(documents)
 					log.WithFields(logrus.Fields{"quantity": quantity}).Debug("Items expiring")
-					// if > 0, push an event (SMS via Twilio? Email? Schedule shopping in Google Calendar?, Prepare a Peapod order?)
 
 					// Skip if nothing is expiring
 					if quantity == 0 {

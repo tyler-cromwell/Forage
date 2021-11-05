@@ -580,7 +580,7 @@ func ListenAndServe(tcpSocket string) {
 
 				// Filter by food expiring within 2 days
 				now := time.Now()
-				later := time.Now().Add(time.Hour * 24 * 2)
+				later := time.Now().Add(forageLookahead)
 				filter := bson.M{"$or": []bson.M{
 					{
 						"expirationDate": bson.M{

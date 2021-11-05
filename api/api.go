@@ -475,16 +475,40 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 func ListenAndServe(tcpSocket string) {
 	// Get environment variables
+	contextTimeoutStr := os.Getenv("FORAGE_CONTEXT_TIMEOUT")
+	if contextTimeoutStr == "" {
+		// Default case
+		contextTimeoutStr = "5s"
+		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).Debug("Setting context timeout to default")
+	}
+
+	forageContext, err := time.ParseDuration(contextTimeoutStr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).WithError(err).Fatal("Failed to parse context timeout")
+	}
+
 	intervalStr := os.Getenv("FORAGE_INTERVAL")
+	if intervalStr == "" {
+		// Default case
+		intervalStr = "24h"
+		logrus.WithFields(logrus.Fields{"interval": intervalStr}).Debug("Setting expiration interval to default")
+	}
+
 	forageInterval, err := time.ParseDuration(intervalStr)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to get expiration interval")
+		logrus.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to parse expiration interval")
 	}
 
 	lookaheadStr := os.Getenv("FORAGE_LOOKAHEAD")
+	if lookaheadStr == "" {
+		// Default case
+		lookaheadStr = "48h"
+		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).Debug("Setting expiration lookahead to default")
+	}
+
 	forageLookahead, err := time.ParseDuration(lookaheadStr)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to get expiration lookahead")
+		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to parse expiration lookahead")
 	}
 
 	mongoUri := os.Getenv("MONGO_URI")
@@ -500,7 +524,8 @@ func ListenAndServe(tcpSocket string) {
 	twilioPhoneTo := os.Getenv("TWILIO_PHONE_TO")
 
 	// Initialize context/timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), forageContext)
+	logrus.WithFields(logrus.Fields{"timeout": forageContext}).Info("Initialized context")
 	defer cancel()
 
 	// Initialize MongoDB client
@@ -532,6 +557,8 @@ func ListenAndServe(tcpSocket string) {
 	err = client.Connect(ctx)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Fatal("Failed to connect to MongoDB instance")
+	} else {
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).Info("Connected to MongoDB")
 	}
 	defer client.Disconnect(ctx)
 

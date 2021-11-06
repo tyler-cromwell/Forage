@@ -602,7 +602,7 @@ func ListenAndServe(tcpSocket string) {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {
 					quantity := len(documents)
-					log.WithFields(logrus.Fields{"quantity": quantity}).Debug("Items expiring")
+					log.WithFields(logrus.Fields{"quantity": quantity}).Info("Items expiring")
 
 					// Skip if nothing is expiring
 					if quantity == 0 {
@@ -629,7 +629,7 @@ func ListenAndServe(tcpSocket string) {
 					if err != nil {
 						log.WithError(err).Error("Failed to create Trello card")
 					} else {
-						log.WithFields(logrus.Fields{"url": url}).Debug("Created Trello card")
+						log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
 					}
 
 					// Compose message
@@ -645,7 +645,7 @@ func ListenAndServe(tcpSocket string) {
 					if err != nil {
 						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")
 					} else {
-						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Debug("Sent Twilio message")
+						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Info("Sent Twilio message")
 					}
 				}
 			case <-quit:

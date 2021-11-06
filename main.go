@@ -9,8 +9,18 @@ import (
 
 func main() {
 	// Configure logrus logging
+	levelStr := os.Getenv("LOGRUS_LEVEL")
+	if levelStr == "" {
+		logrus.Fatal("Logging level not specified")
+	}
+
+	level, err := logrus.ParseLevel(levelStr)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"level": levelStr}).WithError(err).Fatal("Failed to parse logging level")
+	}
+
 	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
-	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(level)
 	logrus.SetOutput(os.Stdout)
 	//    logrus.SetReportCaller(true)
 	logrus.Info("Logging configured")

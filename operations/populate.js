@@ -35,6 +35,10 @@ let documents = [
             refrigerator: {
                 value: 1,
                 unit: 'month'
+            },
+            freezer: {
+                value: 1,
+                unit: 'year'
             }
         },
         name: 'Bagel',
@@ -72,7 +76,7 @@ let documents = [
             sealed: false
         },
         lifespan: {
-            pantry: {
+            refrigerator: {
                 value: 3,
                 unit: 'day'
             }
@@ -151,25 +155,6 @@ let documents = [
             }
         },
         name: 'Black Pepper',
-        type: 'Ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'loaf'
-        },
-        attributes: {
-            lowHumidity: true,
-            sealed: true
-        },
-        lifespan: {
-            pantry: {
-                value: 10,
-                unit: 'days'
-            }
-        },
-        name: 'Bread',
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -549,21 +534,6 @@ let documents = [
             }
         },
         name: 'Jelly',
-        type: 'Ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'count'
-        },
-        lifespan: {
-            pantry: {
-                value: 0,
-                unit: 'day'
-            }
-        },
-        name: 'Kosher Salt',
         type: 'Ingredient',
         updated: dateUpdated
     },
@@ -972,6 +942,21 @@ let documents = [
     {
         amount: {
             value: 1,
+            unit: 'count'
+        },
+        lifespan: {
+            pantry: {
+                value: 0,
+                unit: 'day'
+            }
+        },
+        name: 'Salt',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'group'
         },
         attributes: {
@@ -1059,6 +1044,59 @@ let documents = [
             }
         },
         name: 'Unagi',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 40,
+            unit: 'fluid ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Vegetable Oil',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'loaf'
+        },
+        attributes: {
+            lowHumidity: true,
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 10,
+                unit: 'days'
+            }
+        },
+        name: 'White Bread',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'loaf'
+        },
+        attributes: {
+            lowHumidity: true,
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 10,
+                unit: 'days'
+            }
+        },
+        name: 'Whole Wheat Bread',
         type: 'Ingredient',
         updated: dateUpdated
     },

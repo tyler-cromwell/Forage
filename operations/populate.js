@@ -249,7 +249,7 @@ let documents = [
             unit: 'box'
         },
         lifespan: {
-            refrigerator: {
+            pantry: {
                 value: 10,
                 unit: 'month'
             }
@@ -1049,7 +1049,7 @@ let documents = [
     },
     {
         amount: {
-            value: 40,
+            value: 48,
             unit: 'fluid ounce'
         },
         lifespan: {
@@ -1073,7 +1073,7 @@ let documents = [
         },
         lifespan: {
             pantry: {
-                value: 10,
+                value: 14,
                 unit: 'days'
             }
         },
@@ -1092,7 +1092,7 @@ let documents = [
         },
         lifespan: {
             pantry: {
-                value: 10,
+                value: 14,
                 unit: 'days'
             }
         },

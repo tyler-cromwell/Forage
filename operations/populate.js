@@ -25,29 +25,6 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'count'
-        },
-        lifespan: {
-            pantry: {
-                value: 2,
-                unit: 'day'
-            },
-            refrigerator: {
-                value: 1,
-                unit: 'month'
-            },
-            freezer: {
-                value: 1,
-                unit: 'year'
-            }
-        },
-        name: 'Bagel',
-        type: 'Ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
             unit: 'piece'
         },
         attributes: {
@@ -82,6 +59,29 @@ let documents = [
             }
         },
         name: 'Bacon',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'count'
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'day'
+            },
+            refrigerator: {
+                value: 1,
+                unit: 'month'
+            },
+            freezer: {
+                value: 1,
+                unit: 'year'
+            }
+        },
+        name: 'Bagel',
         type: 'Ingredient',
         updated: dateUpdated
     },

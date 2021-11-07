@@ -291,10 +291,10 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	err = mongoClient.InsertManyDocuments(request.Context(), documents)
 	if err != nil {
 		// Post failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post document")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post documents")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
-		log.WithFields(logrus.Fields{"status": http.StatusCreated}).Debug("Success")
+		log.WithFields(logrus.Fields{"quantity": len(documents), "status": http.StatusCreated}).Debug("Success")
 		response.WriteHeader(http.StatusCreated)
 	}
 }

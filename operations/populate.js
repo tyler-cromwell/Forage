@@ -527,13 +527,78 @@ let documents = [
             value: 1,
             unit: 'jar'
         },
+        attributes: {
+            brand: "Smucker's",
+            flavor: 'Grape',
+            unopened: true
+        },
         lifespan: {
             pantry: {
-                value: 2,
+                value: 8,
                 unit: 'month'
             }
         },
-        name: 'Jelly',
+        name: 'Jam',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'jar'
+        },
+        attributes: {
+            brand: "Smucker's",
+            flavor: 'Grape',
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                value: 8,
+                unit: 'month'
+            }
+        },
+        name: 'Jam',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'jar'
+        },
+        attributes: {
+            brand: "Smucker's",
+            flavor: 'Raspberry',
+            unopened: true
+        },
+        lifespan: {
+            pantry: {
+                value: 8,
+                unit: 'month'
+            }
+        },
+        name: 'Jam',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'jar'
+        },
+        attributes: {
+            brand: "Smucker's",
+            flavor: 'Raspberry',
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                value: 8,
+                unit: 'month'
+            }
+        },
+        name: 'Jam',
         type: 'Ingredient',
         updated: dateUpdated
     },

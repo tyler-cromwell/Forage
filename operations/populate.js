@@ -999,6 +999,42 @@ let documents = [
     },
     {
         amount: {
+            value: 30,
+            unit: 'fluid ounce'
+        },
+        attributes: {
+            sealed: true
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'year'
+            }
+        },
+        name: 'Soy Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'fluid ounce'
+        },
+        attributes: {
+            sealed: false
+        },
+        lifespan: {
+            refrigerator: {
+                value: 1,
+                unit: 'month'
+            }
+        },
+        name: 'Soy Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 1,
             unit: 'ounce'
         },

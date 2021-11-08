@@ -9,6 +9,46 @@ let dateUpdated = new Date()
 let documents = [
     {
         amount: {
+            unit: 'ounces',
+            value: 10.25
+        },
+        attributes: {
+            family: 'sauce',
+            flavor: 'Roasted Garlic',
+            unopened: true
+        },
+        lifespan: {
+            pantry: {
+                unit: 'month',
+                value: 4
+            }
+        },
+        name: 'Aioli',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'ounces',
+            value: 10.25
+        },
+        attributes: {
+            family: 'sauce',
+            flavor: 'Roasted Garlic',
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'day',
+                value: 4
+            }
+        },
+        name: 'Aioli',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 5,
             unit: 'count'
         },
@@ -516,6 +556,48 @@ let documents = [
             refrigerator: {
                 value: 3,
                 unit: 'year'
+            }
+        },
+        name: 'Hot Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'fluid ounce',
+            value: 5
+        },
+        attributes: {
+            brand: 'The Spicy Shark',
+            family: 'sauce',
+            flavor: 'Original Habanero',
+            unopened: true
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 6
+            }
+        },
+        name: 'Hot Sauce',
+        type: 'Ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'fluid ounce',
+            value: 5
+        },
+        attributes: {
+            brand: 'The Spicy Shark',
+            family: 'sauce',
+            flavor: 'Original Habanero',
+            unopened: false
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 2
             }
         },
         name: 'Hot Sauce',

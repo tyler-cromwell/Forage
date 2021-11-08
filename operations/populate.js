@@ -24,7 +24,7 @@ let documents = [
             }
         },
         name: 'Aioli',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -44,7 +44,7 @@ let documents = [
             }
         },
         name: 'Aioli',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -59,7 +59,7 @@ let documents = [
             }
         },
         name: 'Apples',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -81,7 +81,7 @@ let documents = [
             }
         },
         name: 'Bacon',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -99,7 +99,7 @@ let documents = [
             }
         },
         name: 'Bacon',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -122,7 +122,7 @@ let documents = [
             }
         },
         name: 'Bagel',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -137,7 +137,7 @@ let documents = [
             }
         },
         name: 'Bananas',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -161,7 +161,7 @@ let documents = [
             }
         },
         name: 'Beef',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -180,7 +180,7 @@ let documents = [
             }
         },
         name: 'Beef',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -195,7 +195,7 @@ let documents = [
             }
         },
         name: 'Black Pepper',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -213,7 +213,7 @@ let documents = [
             }
         },
         name: 'Broccoli',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -235,7 +235,7 @@ let documents = [
             }
         },
         name: 'Brussel Sprouts',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -250,7 +250,7 @@ let documents = [
             }
         },
         name: 'Butter',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -265,7 +265,7 @@ let documents = [
             }
         },
         name: 'Carrots',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -280,7 +280,7 @@ let documents = [
             }
         },
         name: 'Celery',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -295,7 +295,7 @@ let documents = [
             }
         },
         name: 'Cheerios',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -319,7 +319,7 @@ let documents = [
             }
         },
         name: 'Chicken',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -338,7 +338,7 @@ let documents = [
             }
         },
         name: 'Chicken',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -353,7 +353,7 @@ let documents = [
             }
         },
         name: 'Chili Flakes',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -368,7 +368,7 @@ let documents = [
             }
         },
         name: 'Cream Cheese',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -383,7 +383,7 @@ let documents = [
             }
         },
         name: 'Cucumber',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -398,7 +398,7 @@ let documents = [
             }
         },
         name: 'Cumin',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -416,7 +416,7 @@ let documents = [
             }
         },
         name: 'Dijon Mustard',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -434,7 +434,7 @@ let documents = [
             }
         },
         name: 'Dijon Mustard',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -449,7 +449,7 @@ let documents = [
             }
         },
         name: 'Eggs',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -464,7 +464,7 @@ let documents = [
             }
         },
         name: 'Garlic',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -486,7 +486,7 @@ let documents = [
             }
         },
         name: 'Greek Yogurt',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -508,7 +508,7 @@ let documents = [
             }
         },
         name: 'Greek Yogurt',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -528,38 +528,44 @@ let documents = [
     },
     {
         amount: {
-            value: 8,
+            value: 5,
             unit: 'fluid ounce'
         },
         attributes: {
-            sealed: true
+            brand: 'The Heatonist',
+            family: 'sauce',
+            flavor: 'Los Calientes',
+            unopened: true
         },
         lifespan: {
-            refrigerator: {
-                value: 6,
-                unit: 'year'
+            pantry: {
+                unit: 'year',
+                value: 6
             }
         },
         name: 'Hot Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 8,
+            value: 5,
             unit: 'fluid ounce'
         },
         attributes: {
-            sealed: false
+            brand: 'The Heatonist',
+            family: 'sauce',
+            flavor: 'Los Calientes',
+            unopened: false
         },
         lifespan: {
             refrigerator: {
-                value: 3,
-                unit: 'year'
+                unit: 'year',
+                value: 2
             }
         },
         name: 'Hot Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -580,7 +586,7 @@ let documents = [
             }
         },
         name: 'Hot Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -595,19 +601,19 @@ let documents = [
             unopened: false
         },
         lifespan: {
-            pantry: {
+            refrigerator: {
                 unit: 'year',
                 value: 2
             }
         },
         name: 'Hot Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            value: 12,
+            unit: 'ounce'
         },
         attributes: {
             brand: "Smucker's",
@@ -621,13 +627,13 @@ let documents = [
             }
         },
         name: 'Jam',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            value: 12,
+            unit: 'ounce'
         },
         attributes: {
             brand: "Smucker's",
@@ -641,13 +647,13 @@ let documents = [
             }
         },
         name: 'Jam',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            value: 12,
+            unit: 'ounce'
         },
         attributes: {
             brand: "Smucker's",
@@ -661,13 +667,13 @@ let documents = [
             }
         },
         name: 'Jam',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            value: 12,
+            unit: 'ounce'
         },
         attributes: {
             brand: "Smucker's",
@@ -681,7 +687,7 @@ let documents = [
             }
         },
         name: 'Jam',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -696,7 +702,7 @@ let documents = [
             }
         },
         name: 'Lettuce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -719,7 +725,7 @@ let documents = [
             }
         },
         name: 'Maple Syrup',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -738,7 +744,7 @@ let documents = [
             }
         },
         name: 'Maple Syrup',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -757,7 +763,7 @@ let documents = [
             }
         },
         name: 'Mayonnaise',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -776,7 +782,7 @@ let documents = [
             }
         },
         name: 'Mayonnaise',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -791,7 +797,7 @@ let documents = [
             }
         },
         name: 'Milk',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -806,7 +812,7 @@ let documents = [
             }
         },
         name: 'Mirin',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -821,7 +827,7 @@ let documents = [
             }
         },
         name: 'Muenster Cheese',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -836,7 +842,7 @@ let documents = [
             }
         },
         name: 'Napa Cabbage',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -851,7 +857,7 @@ let documents = [
             }
         },
         name: 'Nori',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -874,7 +880,7 @@ let documents = [
             }
         },
         name: 'Onion',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -893,7 +899,7 @@ let documents = [
             }
         },
         name: 'Pasta',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -912,7 +918,7 @@ let documents = [
             }
         },
         name: 'Pasta',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -927,7 +933,7 @@ let documents = [
             }
         },
         name: 'Peanut Butter',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -949,7 +955,7 @@ let documents = [
             }
         },
         name: 'Pickles',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -967,7 +973,7 @@ let documents = [
             }
         },
         name: 'Pickles',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -991,7 +997,7 @@ let documents = [
             }
         },
         name: 'Pork',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1010,7 +1016,7 @@ let documents = [
             }
         },
         name: 'Pork',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1028,7 +1034,7 @@ let documents = [
             }
         },
         name: 'Ranch Dressing',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1048,7 +1054,7 @@ let documents = [
             }
         },
         name: 'Rice',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1068,7 +1074,7 @@ let documents = [
             }
         },
         name: 'Rice',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1083,7 +1089,7 @@ let documents = [
             }
         },
         name: 'Rice Vinegar',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1098,7 +1104,7 @@ let documents = [
             }
         },
         name: 'Salt',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1122,7 +1128,7 @@ let documents = [
             }
         },
         name: 'Scallions',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1141,7 +1147,7 @@ let documents = [
             }
         },
         name: 'Shallot',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1159,7 +1165,7 @@ let documents = [
             }
         },
         name: 'Soy Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1177,7 +1183,7 @@ let documents = [
             }
         },
         name: 'Soy Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1192,7 +1198,7 @@ let documents = [
             }
         },
         name: 'Sugar',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1208,7 +1214,7 @@ let documents = [
             }
         },
         name: 'Turkey',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1227,7 +1233,7 @@ let documents = [
             }
         },
         name: 'Unagi',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1242,7 +1248,7 @@ let documents = [
             }
         },
         name: 'Vegetable Oil',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1261,7 +1267,7 @@ let documents = [
             }
         },
         name: 'White Bread',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1280,7 +1286,7 @@ let documents = [
             }
         },
         name: 'Whole Wheat Bread',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1298,7 +1304,7 @@ let documents = [
             }
         },
         name: 'Worcestershire Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -1316,7 +1322,7 @@ let documents = [
             }
         },
         name: 'Worcestershire Sauce',
-        type: 'Ingredient',
+        type: 'ingredient',
         updated: dateUpdated
     }
 ]

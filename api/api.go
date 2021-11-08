@@ -581,17 +581,26 @@ func ListenAndServe(tcpSocket string) {
 				// Filter by food expiring within 2 days
 				now := time.Now()
 				later := time.Now().Add(forageLookahead)
-				filter := bson.M{"$or": []bson.M{
+				filter := bson.M{"$and": []bson.M{
 					{
-						"expirationDate": bson.M{
-							"$gte": primitive.NewDateTimeFromTime(now),
-							"$lte": primitive.NewDateTimeFromTime(later),
+						"$or": []bson.M{
+							{
+								"expirationDate": bson.M{
+									"$gte": primitive.NewDateTimeFromTime(now),
+									"$lte": primitive.NewDateTimeFromTime(later),
+								},
+							},
+							{
+								"sellBy": bson.M{
+									"$gte": primitive.NewDateTimeFromTime(now),
+									"$lte": primitive.NewDateTimeFromTime(later),
+								},
+							},
 						},
 					},
 					{
-						"sellBy": bson.M{
-							"$gte": primitive.NewDateTimeFromTime(now),
-							"$lte": primitive.NewDateTimeFromTime(later),
+						"haveStocked": bson.M{
+							"$eq": true,
 						},
 					},
 				}}

@@ -33,24 +33,77 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{"at": "api.getExpiring"})
 
+	// Extract query parameters
+	queryParams := request.URL.Query()
+	qpFrom := queryParams.Get("from")
+	qpTo := queryParams.Get("to")
+
+	// Check if query parameters are present
+	var timeFrom time.Time = time.Now()
+	var timeTo time.Time = time.Now().Add(time.Hour * 24 * 2)
+	filterExpires := bson.M{}
+	filterSellBy := bson.M{}
+
+	if qpFrom != "" {
+		from, err := strconv.ParseInt(qpFrom, 10, 64)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			return
+		}
+		timeFrom = time.Unix(0, from*int64(time.Millisecond))
+		filterExpires = bson.M{
+			"expirationDate": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+			},
+		}
+		filterSellBy = bson.M{
+			"sellBy": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+			},
+		}
+	}
+	if qpTo != "" {
+		to, err := strconv.ParseInt(qpTo, 10, 64)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
+			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			return
+		}
+		timeTo = time.Unix(0, to*int64(time.Millisecond))
+		filterExpires = bson.M{
+			"expirationDate": bson.M{
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
+		filterSellBy = bson.M{
+			"sellBy": bson.M{
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
+	}
+
+	if qpFrom != "" && qpTo != "" {
+		filterExpires = bson.M{
+			"expirationDate": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
+		filterSellBy = bson.M{
+			"sellBy": bson.M{
+				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+				"$lte": primitive.NewDateTimeFromTime(timeTo),
+			},
+		}
+	}
+
 	// Filter by food expiring within 2 days
-	now := time.Now()
-	lookahead := time.Now().Add(time.Hour * 24 * 2)
 	filter := bson.M{"$and": []bson.M{
 		{
 			"$or": []bson.M{
-				{
-					"expirationDate": bson.M{
-						"$gte": primitive.NewDateTimeFromTime(now),
-						"$lte": primitive.NewDateTimeFromTime(lookahead),
-					},
-				},
-				{
-					"sellBy": bson.M{
-						"$gte": primitive.NewDateTimeFromTime(now),
-						"$lte": primitive.NewDateTimeFromTime(lookahead),
-					},
-				},
+				filterExpires,
+				filterSellBy,
 			},
 		},
 		{

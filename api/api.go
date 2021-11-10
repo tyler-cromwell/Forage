@@ -43,14 +43,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	var timeTo time.Time = time.Now().Add(time.Hour * 24 * 2)
 	filterExpires := bson.M{
 		"expirationDate": bson.M{
-			"$gte": primitive.NewDateTimeFromTime(timeFrom),
-			"$lte": primitive.NewDateTimeFromTime(timeTo),
-		},
-	}
-	filterSellBy := bson.M{
-		"sellBy": bson.M{
-			"$gte": primitive.NewDateTimeFromTime(timeFrom),
-			"$lte": primitive.NewDateTimeFromTime(timeTo),
+			"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
+			"$lte": timeTo.UnixNano() / int64(time.Millisecond),
 		},
 	}
 
@@ -64,12 +58,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
-			},
-		}
-		filterSellBy = bson.M{
-			"sellBy": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
@@ -83,12 +72,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
-			},
-		}
-		filterSellBy = bson.M{
-			"sellBy": bson.M{
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
+				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
@@ -96,26 +80,15 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	if qpFrom != "" && qpTo != "" {
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
-			},
-		}
-		filterSellBy = bson.M{
-			"sellBy": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
+				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
+				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
 
 	// Filter by food expiring within 2 days
 	filter := bson.M{"$and": []bson.M{
-		{
-			"$or": []bson.M{
-				filterExpires,
-				filterSellBy,
-			},
-		},
+		filterExpires,
 		{
 			"haveStocked": bson.M{
 				"$eq": true,
@@ -125,7 +98,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 
 	// Define sorting criteria
 	opts := options.Find()
-	opts.SetSort(bson.D{{"expirationDate", -1}})
+	opts.SetSort(bson.D{{"expirationDate", 1}})
 
 	// Grab the documents
 	documents, err := mongoClient.FindDocuments(context.Background(), filter, opts)
@@ -236,7 +209,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
+				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
@@ -256,7 +229,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
+				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
@@ -264,8 +237,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if qpFrom != "" && qpTo != "" {
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": primitive.NewDateTimeFromTime(timeFrom),
-				"$lte": primitive.NewDateTimeFromTime(timeTo),
+				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
+				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
 			},
 		}
 	}
@@ -642,23 +615,13 @@ func ListenAndServe(tcpSocket string) {
 				log := logrus.WithFields(logrus.Fields{"at": "api.expirationJob"})
 
 				// Filter by food expiring within 2 days
-				now := time.Now()
-				later := time.Now().Add(forageLookahead)
+				now := time.Now().UnixNano() / int64(time.Millisecond)
+				later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
 				filter := bson.M{"$and": []bson.M{
 					{
-						"$or": []bson.M{
-							{
-								"expirationDate": bson.M{
-									"$gte": primitive.NewDateTimeFromTime(now),
-									"$lte": primitive.NewDateTimeFromTime(later),
-								},
-							},
-							{
-								"sellBy": bson.M{
-									"$gte": primitive.NewDateTimeFromTime(now),
-									"$lte": primitive.NewDateTimeFromTime(later),
-								},
-							},
+						"expirationDate": bson.M{
+							"$gte": now,
+							"$lte": later,
 						},
 					},
 					{

@@ -942,16 +942,12 @@ let documents = [
             unit: 'jar'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
-                value: 3,
-                unit: 'year'
-            },
-            refrigerator: {
-                value: 3,
-                unit: 'year'
+                value: 18,
+                unit: 'month'
             }
         },
         name: 'Pickles',
@@ -964,12 +960,12 @@ let documents = [
             unit: 'jar'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
-            pantry: {
-                value: 2,
-                unit: 'year'
+            refrigerator: {
+                value: 18,
+                unit: 'month'
             }
         },
         name: 'Pickles',

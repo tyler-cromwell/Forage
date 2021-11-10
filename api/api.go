@@ -41,8 +41,18 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Check if query parameters are present
 	var timeFrom time.Time = time.Now()
 	var timeTo time.Time = time.Now().Add(time.Hour * 24 * 2)
-	filterExpires := bson.M{}
-	filterSellBy := bson.M{}
+	filterExpires := bson.M{
+		"expirationDate": bson.M{
+			"$gte": primitive.NewDateTimeFromTime(timeFrom),
+			"$lte": primitive.NewDateTimeFromTime(timeTo),
+		},
+	}
+	filterSellBy := bson.M{
+		"sellBy": bson.M{
+			"$gte": primitive.NewDateTimeFromTime(timeFrom),
+			"$lte": primitive.NewDateTimeFromTime(timeTo),
+		},
+	}
 
 	if qpFrom != "" {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)

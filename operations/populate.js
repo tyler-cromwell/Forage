@@ -358,8 +358,29 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            unopened: true
+        },
+        lifespan: {
+            freezer: {
+                unit: 'month',
+                value: 2
+            }
+        },
+        name: 'Cream Cheese',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -862,6 +883,44 @@ let documents = [
     },
     {
         amount: {
+            unit: "fluid ounces",
+            value: 1
+        },
+        attributes: {
+            type: "Extra Virgin",
+            unopened: true
+        },
+        lifespan: {
+            pantry: {
+                unit: "month",
+                value: 20
+            }
+        },
+        name: "Olive Oil",
+        storeIn: "pantry",
+        type: "ingredient",
+    },
+    {
+        amount: {
+            unit: "fluid ounces",
+            value: 1
+        },
+        attributes: {
+            type: "Extra Virgin",
+            unopened: false
+        },
+        lifespan: {
+            pantry: {
+                unit: "month",
+                value: 6
+            }
+        },
+        name: "Olive Oil",
+        storeIn: "pantry",
+        type: "ingredient",
+    },
+    {
+        amount: {
             value: 1,
             unit: 'head'
         },
@@ -1254,7 +1313,7 @@ let documents = [
         },
         attributes: {
             lowHumidity: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -1273,7 +1332,7 @@ let documents = [
         },
         attributes: {
             lowHumidity: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {

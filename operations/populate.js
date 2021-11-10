@@ -534,6 +534,21 @@ let documents = [
     },
     {
         amount: {
+            unit: 'head',
+            value: 1
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'day',
+                value: 9
+            }
+        },
+        name: 'Green Leaf Lettuce',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 1,
             unit: 'piece'
         },
@@ -642,9 +657,13 @@ let documents = [
             unopened: true
         },
         lifespan: {
+            refrigerator: {
+                unit: 'year',
+                value: 2
+            },
             pantry: {
-                value: 8,
-                unit: 'month'
+                unit: 'year',
+                value: 2
             }
         },
         name: 'Jam',
@@ -682,9 +701,13 @@ let documents = [
             unopened: true
         },
         lifespan: {
+            refrigerator: {
+                unit: 'month',
+                value: 20
+            },
             pantry: {
-                value: 8,
-                unit: 'month'
+                unit: 'month',
+                value: 20
             }
         },
         name: 'Jam',
@@ -939,6 +962,21 @@ let documents = [
             }
         },
         name: 'Onion',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'box'
+        },
+        lifespan: {
+            pantry: {
+                value: 6,
+                unit: 'month'
+            }
+        },
+        name: 'Panko Bread Crumbs',
         type: 'ingredient',
         updated: dateUpdated
     },

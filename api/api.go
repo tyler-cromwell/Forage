@@ -20,14 +20,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	//"go.mongodb.org/mongo-driver/mongo/readpref"
-
 	"github.com/tyler-cromwell/forage/clients"
 )
 
 var mongoClient *clients.Mongo
 var trelloClient clients.Trello
 var twilioClient *clients.Twilio
+
+var forageLookahead time.Duration
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
@@ -40,7 +40,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 
 	// Check if query parameters are present
 	var timeFrom time.Time = time.Now()
-	var timeTo time.Time = time.Now().Add(time.Hour * 24 * 2)
+	var timeTo time.Time = time.Now().Add(forageLookahead)
 	filterExpires := bson.M{
 		"expirationDate": bson.M{
 			"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
@@ -86,7 +86,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	// Filter by food expiring within 2 days
+	// Filter by food expiring within the given search window
 	filter := bson.M{"$and": []bson.M{
 		filterExpires,
 		{
@@ -542,7 +542,7 @@ func ListenAndServe(tcpSocket string) {
 		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).Debug("Setting expiration lookahead to default")
 	}
 
-	forageLookahead, err := time.ParseDuration(lookaheadStr)
+	forageLookahead, err = time.ParseDuration(lookaheadStr)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to parse expiration lookahead")
 	}
@@ -614,7 +614,7 @@ func ListenAndServe(tcpSocket string) {
 				// Specify common fields
 				log := logrus.WithFields(logrus.Fields{"at": "api.expirationJob"})
 
-				// Filter by food expiring within 2 days
+				// Filter by food expiring within the given search window
 				now := time.Now().UnixNano() / int64(time.Millisecond)
 				later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
 				filter := bson.M{"$and": []bson.M{
@@ -667,7 +667,7 @@ func ListenAndServe(tcpSocket string) {
 						log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
 					}
 
-					// Compose message
+					// Compose Twilio message
 					var message string
 					if quantity == 1 {
 						message = fmt.Sprintf("%d item expiring soon! View shopping list: %s", quantity, url)
@@ -675,7 +675,7 @@ func ListenAndServe(tcpSocket string) {
 						message = fmt.Sprintf("%d items expiring soon! View shopping list: %s", quantity, url)
 					}
 
-					// Send the message
+					// Send the Twilio message
 					_, err = twilioClient.SendMessage(twilioClient.From, twilioClient.To, message)
 					if err != nil {
 						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")

@@ -935,7 +935,6 @@ let documents = [
             }
         },
         name: "Olive Oil",
-        storeIn: "pantry",
         type: "ingredient",
     },
     {
@@ -954,7 +953,6 @@ let documents = [
             }
         },
         name: "Olive Oil",
-        storeIn: "pantry",
         type: "ingredient",
     },
     {

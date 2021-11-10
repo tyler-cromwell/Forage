@@ -428,7 +428,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -560,6 +560,21 @@ let documents = [
         },
         name: 'Gyoza',
         type: 'Meal',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 7.75
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 2
+            }
+        },
+        name: 'Hamburger Seasoning',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {

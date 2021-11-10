@@ -5,7 +5,7 @@ let resultDrop = database.data.drop()
 print('Dropped:', resultDrop)
 
 // Production will include expiration date
-let dateUpdated = new Date()
+let dateUpdated = new Date().getTime()
 let documents = [
     {
         amount: {
@@ -1478,7 +1478,7 @@ documents.forEach((document) => {
     }
 
     // Update document
-    document.expirationDate = expirationDate
+    document.expirationDate = expirationDate.getTime()
     document.haveStocked = false
     document.storeIn = maxEnv
 })

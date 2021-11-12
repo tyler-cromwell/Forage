@@ -15,6 +15,56 @@ type Trello struct {
 	Client    *trello.Client
 }
 
+func (tc *Trello) GetShoppingList() (*trello.Card, error) {
+	var board *trello.Board
+	var list *trello.List
+	var card *trello.Card
+
+	// Get Trello member
+	member, err := tc.Client.GetMember(tc.MemberID, trello.Defaults())
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all boards
+	boards, err := member.GetBoards(trello.Defaults())
+	if err != nil {
+		return nil, err
+	}
+	for _, b := range boards {
+		if b.Name == tc.BoardName {
+			board = b
+			break
+		}
+	}
+
+	// Get List with given name
+	lists, err := board.GetLists(trello.Defaults())
+	if err != nil {
+		return nil, err
+	}
+	for _, l := range lists {
+		if l.Name == tc.ListName {
+			list = l
+			break
+		}
+	}
+
+	// Get Card with name "Shopping List"
+	cards, err := list.GetCards()
+	if err != nil {
+		return nil, err
+	}
+	for _, c := range cards {
+		if c.Name == "Shopping List" {
+			card = c
+			break
+		}
+	}
+
+	return card, nil
+}
+
 func (tc *Trello) CreateShoppingList(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
 	var board *trello.Board
 	var list *trello.List
@@ -38,7 +88,7 @@ func (tc *Trello) CreateShoppingList(dueDate *time.Time, applyLabels []string, l
 		}
 	}
 
-	// Get List with name To Do
+	// Get List with given name
 	lists, err := board.GetLists(trello.Defaults())
 	if err != nil {
 		return "", err
@@ -102,6 +152,29 @@ func (tc *Trello) CreateShoppingList(dueDate *time.Time, applyLabels []string, l
 		err = card.AddIDLabel(labelID)
 		if err != nil {
 			return "", err
+		}
+	}
+
+	return card.URL, nil
+}
+
+func (tc *Trello) AddToShoppingList(listItems []string) (string, error) {
+	card, err := tc.GetShoppingList()
+	if err != nil {
+		return "", err
+	}
+
+	checklistIDs := card.IDCheckLists
+	checklist, err := tc.Client.GetChecklist(checklistIDs[0], trello.Defaults())
+	if err != nil {
+		return "", err
+	} else {
+		// Add items to the checklist
+		for _, item := range listItems {
+			_, err := checklist.CreateCheckItem(item)
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 

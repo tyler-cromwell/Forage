@@ -627,13 +627,27 @@ func checkExpirations(trelloLabels string) {
 		rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		dueDate := rounded.Add(forageLookahead + (time.Hour * 24))
 
-		// Create shopping list card on Trello
-		labels := strings.Split(trelloLabels, ",")
-		url, err := trelloClient.CreateShoppingList(&dueDate, labels, groceries)
+		var url string
+		shoppingListCard, err := trelloClient.GetShoppingList()
 		if err != nil {
-			log.WithError(err).Error("Failed to create Trello card")
+			log.WithError(err).Error("Failed to get Trello card")
+		} else if shoppingListCard != nil {
+			// Add to shopping list card on Trello
+			url, err = trelloClient.AddToShoppingList(groceries)
+			if err != nil {
+				log.WithError(err).Error("Failed to add to Trello card")
+			} else {
+				log.Info("Added to Trello card")
+			}
 		} else {
-			log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
+			// Create shopping list card on Trello
+			labels := strings.Split(trelloLabels, ",")
+			url, err = trelloClient.CreateShoppingList(&dueDate, labels, groceries)
+			if err != nil {
+				log.WithError(err).Error("Failed to create Trello card")
+			} else {
+				log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
+			}
 		}
 
 		// Compose Twilio message

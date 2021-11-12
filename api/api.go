@@ -753,14 +753,22 @@ func ListenAndServe(tcpSocket string) {
 	quit := make(chan struct{})
 	checkExpirations(trelloLabels) // Run once before first ticker tick
 	go func() {
-		logrus.WithFields(logrus.Fields{"at": "expirationJob", "interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job started")
+		// Specify common fields
+		log := logrus.WithFields(logrus.Fields{
+			"at":        "expirationJob",
+			"interval":  forageInterval,
+			"lookahead": forageLookahead,
+		})
+
+		// Wait for ticker ticks
+		log.Info("Expiration watch job started")
 		for {
 			select {
 			case <-ticker.C:
 				checkExpirations(trelloLabels)
 			case <-quit:
 				ticker.Stop()
-				logrus.WithFields(logrus.Fields{"interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job stopped")
+				log.Info("Expiration watch job stopped")
 				return
 			}
 		}
@@ -777,9 +785,13 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
 	router.HandleFunc("/expired", getExpired).Methods("GET")
 
-	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening for HTTP requests")
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"socket": tcpSocket})
+
+	// Listen for HTTP requests
+	log.Info("Listening for HTTP requests")
 	err = http.ListenAndServe(tcpSocket, router)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"socket": tcpSocket}).WithError(err).Fatal("Failed to listen for and serve requests")
+		log.WithError(err).Fatal("Failed to listen for and serve requests")
 	}
 }

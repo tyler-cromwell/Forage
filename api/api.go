@@ -29,6 +29,47 @@ var twilioClient *clients.Twilio
 
 var forageLookahead time.Duration
 
+func getExpired(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"at": "api.getExpired"})
+
+	// Filter by food expired already
+	filter := bson.M{"$and": []bson.M{
+		{
+			"expirationDate": bson.M{
+				"$lte": time.Now().UnixNano() / int64(time.Millisecond),
+			},
+		},
+		{
+			"haveStocked": bson.M{
+				"$eq": true,
+			},
+		},
+	}}
+
+	// Define sorting criteria
+	opts := options.Find()
+	opts.SetSort(bson.D{{"expirationDate", 1}})
+
+	// Grab the documents
+	documents, err := mongoClient.FindDocuments(context.Background(), filter, opts)
+	if err != nil {
+		log.WithError(err).Error("Failed to identify expired items")
+		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+	} else {
+		// Prepare to respond with documents
+		marshalled, err := json.Marshal(documents)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
+			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		} else {
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			response.WriteHeader(http.StatusOK)
+			response.Write(marshalled)
+		}
+	}
+}
+
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{"at": "api.getExpiring"})
@@ -614,9 +655,23 @@ func ListenAndServe(tcpSocket string) {
 				// Specify common fields
 				log := logrus.WithFields(logrus.Fields{"at": "api.expirationJob"})
 
-				// Filter by food expiring within the given search window
+				// Filter by food expired already
 				now := time.Now().UnixNano() / int64(time.Millisecond)
 				later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
+				filterExpired := bson.M{"$and": []bson.M{
+					{
+						"expirationDate": bson.M{
+							"$lte": now,
+						},
+					},
+					{
+						"haveStocked": bson.M{
+							"$eq": true,
+						},
+					},
+				}}
+
+				// Filter by food expiring within the given search window
 				filter := bson.M{"$and": []bson.M{
 					{
 						"expirationDate": bson.M{
@@ -632,20 +687,33 @@ func ListenAndServe(tcpSocket string) {
 				}}
 
 				// Grab the documents
+				documentsExpired, err := mongoClient.FindDocuments(context.Background(), filterExpired, nil)
+				if err != nil {
+					log.WithError(err).Error("Failed to identify expired items")
+					continue
+				}
+
 				documents, err := mongoClient.FindDocuments(context.Background(), filter, nil)
 				if err != nil {
 					log.WithError(err).Error("Failed to identify expiring items")
 				} else {
+					quantityExpired := len(documentsExpired)
 					quantity := len(documents)
-					log.WithFields(logrus.Fields{"quantity": quantity}).Info("Items expiring")
+					log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking required")
 
 					// Skip if nothing is expiring
-					if quantity == 0 {
+					if quantity == 0 && quantityExpired == 0 {
 						continue
 					}
 
 					// Construct list of names of items to shop for
 					var groceries []string
+					for _, document := range documentsExpired {
+						v, keyFound := document["name"]
+						if keyFound {
+							groceries = append(groceries, v.(string))
+						}
+					}
 					for _, document := range documents {
 						v, keyFound := document["name"]
 						if keyFound {
@@ -700,6 +768,7 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/documents", postManyDocuments).Methods("POST")
 	router.HandleFunc("/documents", deleteManyDocuments).Methods("DELETE")
 	router.HandleFunc("/expiring", getExpiring).Methods("GET")
+	router.HandleFunc("/expired", getExpired).Methods("GET")
 
 	logrus.WithFields(logrus.Fields{"socket": tcpSocket}).Info("Listening for HTTP requests")
 	err = http.ListenAndServe(tcpSocket, router)

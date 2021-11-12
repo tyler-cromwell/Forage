@@ -539,7 +539,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if deleted == 0 {
 		// Delete completed but no documents were found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
-		RespondWithError(response, log, http.StatusNotFound, fmt.Sprint("no documents found"))
+		RespondWithError(response, log, http.StatusNotFound, "no documents found")
 	} else if err != nil {
 		// Delete failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete documents")
@@ -547,6 +547,110 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	} else {
 		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
+	}
+}
+
+func checkExpirations(trelloLabels string) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"at": "api.checkExpirations"})
+
+	// Filter by food expired already
+	now := time.Now().UnixNano() / int64(time.Millisecond)
+	later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
+	filterExpired := bson.M{"$and": []bson.M{
+		{
+			"expirationDate": bson.M{
+				"$lte": now,
+			},
+		},
+		{
+			"haveStocked": bson.M{
+				"$eq": true,
+			},
+		},
+	}}
+
+	// Filter by food expiring within the given search window
+	filter := bson.M{"$and": []bson.M{
+		{
+			"expirationDate": bson.M{
+				"$gte": now,
+				"$lte": later,
+			},
+		},
+		{
+			"haveStocked": bson.M{
+				"$eq": true,
+			},
+		},
+	}}
+
+	// Grab the documents
+	documentsExpired, err := mongoClient.FindDocuments(context.Background(), filterExpired, nil)
+	if err != nil {
+		log.WithError(err).Error("Failed to identify expired items")
+		return
+	}
+
+	documents, err := mongoClient.FindDocuments(context.Background(), filter, nil)
+	if err != nil {
+		log.WithError(err).Error("Failed to identify expiring items")
+	} else {
+		quantityExpired := len(documentsExpired)
+		quantity := len(documents)
+
+		// Skip if nothing is expiring
+		if quantity == 0 && quantityExpired == 0 {
+			log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking not required")
+			return
+		} else {
+			log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking required")
+		}
+
+		// Construct list of names of items to shop for
+		var groceries []string
+		for _, document := range documentsExpired {
+			v, keyFound := document["name"]
+			if keyFound {
+				groceries = append(groceries, v.(string))
+			}
+		}
+		for _, document := range documents {
+			v, keyFound := document["name"]
+			if keyFound {
+				groceries = append(groceries, v.(string))
+			}
+		}
+
+		// Construct shopping list due date
+		now := time.Now()
+		rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		dueDate := rounded.Add(forageLookahead + (time.Hour * 24))
+
+		// Create shopping list card on Trello
+		labels := strings.Split(trelloLabels, ",")
+		url, err := trelloClient.CreateShoppingList(&dueDate, labels, groceries)
+		if err != nil {
+			log.WithError(err).Error("Failed to create Trello card")
+		} else {
+			log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
+		}
+
+		// Compose Twilio message
+		var message string
+		if quantity == 1 {
+			message = fmt.Sprintf("%d item expiring soon! View shopping list: %s", quantity, url)
+		} else {
+			message = fmt.Sprintf("%d items expiring soon! View shopping list: %s", quantity, url)
+		}
+
+		// Send the Twilio message
+		_, err = twilioClient.SendMessage(twilioClient.From, twilioClient.To, message)
+		if err != nil {
+			log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")
+		} else {
+			log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Info("Sent Twilio message")
+		}
 	}
 }
 
@@ -647,110 +751,13 @@ func ListenAndServe(tcpSocket string) {
 	// Launch job to periodically check for expiring food
 	ticker := time.NewTicker(forageInterval)
 	quit := make(chan struct{})
+	checkExpirations(trelloLabels) // Run once before first ticker tick
 	go func() {
-		logrus.WithFields(logrus.Fields{"interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job started")
+		logrus.WithFields(logrus.Fields{"at": "expirationJob", "interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job started")
 		for {
 			select {
 			case <-ticker.C:
-				// Specify common fields
-				log := logrus.WithFields(logrus.Fields{"at": "api.expirationJob"})
-
-				// Filter by food expired already
-				now := time.Now().UnixNano() / int64(time.Millisecond)
-				later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
-				filterExpired := bson.M{"$and": []bson.M{
-					{
-						"expirationDate": bson.M{
-							"$lte": now,
-						},
-					},
-					{
-						"haveStocked": bson.M{
-							"$eq": true,
-						},
-					},
-				}}
-
-				// Filter by food expiring within the given search window
-				filter := bson.M{"$and": []bson.M{
-					{
-						"expirationDate": bson.M{
-							"$gte": now,
-							"$lte": later,
-						},
-					},
-					{
-						"haveStocked": bson.M{
-							"$eq": true,
-						},
-					},
-				}}
-
-				// Grab the documents
-				documentsExpired, err := mongoClient.FindDocuments(context.Background(), filterExpired, nil)
-				if err != nil {
-					log.WithError(err).Error("Failed to identify expired items")
-					continue
-				}
-
-				documents, err := mongoClient.FindDocuments(context.Background(), filter, nil)
-				if err != nil {
-					log.WithError(err).Error("Failed to identify expiring items")
-				} else {
-					quantityExpired := len(documentsExpired)
-					quantity := len(documents)
-					log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking required")
-
-					// Skip if nothing is expiring
-					if quantity == 0 && quantityExpired == 0 {
-						continue
-					}
-
-					// Construct list of names of items to shop for
-					var groceries []string
-					for _, document := range documentsExpired {
-						v, keyFound := document["name"]
-						if keyFound {
-							groceries = append(groceries, v.(string))
-						}
-					}
-					for _, document := range documents {
-						v, keyFound := document["name"]
-						if keyFound {
-							groceries = append(groceries, v.(string))
-						}
-					}
-
-					// Construct shopping list due date
-					now := time.Now()
-					rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-					dueDate := rounded.Add(forageLookahead + (time.Hour * 24))
-
-					// Create shopping list card on Trello
-					labels := strings.Split(trelloLabels, ",")
-					url, err := trelloClient.CreateShoppingList(&dueDate, labels, groceries)
-					if err != nil {
-						log.WithError(err).Error("Failed to create Trello card")
-					} else {
-						log.WithFields(logrus.Fields{"url": url}).Info("Created Trello card")
-					}
-
-					// Compose Twilio message
-					var message string
-					if quantity == 1 {
-						message = fmt.Sprintf("%d item expiring soon! View shopping list: %s", quantity, url)
-					} else {
-						message = fmt.Sprintf("%d items expiring soon! View shopping list: %s", quantity, url)
-					}
-
-					// Send the Twilio message
-					_, err = twilioClient.SendMessage(twilioClient.From, twilioClient.To, message)
-					if err != nil {
-						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")
-					} else {
-						log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Info("Sent Twilio message")
-					}
-				}
+				checkExpirations(trelloLabels)
 			case <-quit:
 				ticker.Stop()
 				logrus.WithFields(logrus.Fields{"interval": forageInterval, "lookahead": forageLookahead}).Info("Expiration watch job stopped")

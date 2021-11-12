@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/adlio/trello"
@@ -165,6 +166,10 @@ func (tc *Trello) AddToShoppingList(listItems []string) (string, error) {
 	}
 
 	checklistIDs := card.IDCheckLists
+	if len(checklistIDs) == 0 {
+		return "", fmt.Errorf("no checklists attached to card")
+	}
+
 	checklist, err := tc.Client.GetChecklist(checklistIDs[0], trello.Defaults())
 	if err != nil {
 		return "", err

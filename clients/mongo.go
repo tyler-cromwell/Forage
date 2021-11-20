@@ -11,7 +11,36 @@ import (
 )
 
 type Mongo struct {
+	Client     *mongo.Client
+	Database   *mongo.Database
 	Collection *mongo.Collection
+}
+
+func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error) {
+	// Initialize MongoDB client
+	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Error("Failed to initialize MongoDB client")
+		return nil, err
+	}
+
+	// Connect to database instance
+	err = client.Connect(ctx)
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Error("Failed to connect to MongoDB instance")
+		return nil, err
+	} else {
+		logrus.WithFields(logrus.Fields{"uri": mongoUri}).Info("Connected to MongoDB")
+	}
+
+	// Specify database & collection
+	database := client.Database("forage")
+	collection := database.Collection("data")
+	return &Mongo{
+		Client:     client,
+		Database:   database,
+		Collection: collection,
+	}, nil
 }
 
 func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {

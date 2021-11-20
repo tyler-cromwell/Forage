@@ -11,13 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/adlio/trello"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/twilio/twilio-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/tyler-cromwell/forage/clients"
@@ -25,7 +22,7 @@ import (
 )
 
 var mongoClient *clients.Mongo
-var trelloClient clients.Trello
+var trelloClient *clients.Trello
 var twilioClient *clients.Twilio
 
 var forageLookahead time.Duration
@@ -734,44 +731,15 @@ func ListenAndServe(tcpSocket string) {
 	logrus.WithFields(logrus.Fields{"timeout": forageContext}).Info("Initialized context")
 	defer cancel()
 
-	// Initialize MongoDB client
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
+	// Initialize clients
+	mongoClient, err = clients.NewMongoClientWrapper(ctx, mongoUri)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Fatal("Failed to initialize MongoDB client")
-	}
-
-	// Initialize Trello client
-	trelloClient = clients.Trello{
-		Key:       trelloApiKey,
-		Token:     trelloApiToken,
-		MemberID:  trelloMemberID,
-		BoardName: trelloBoardName,
-		ListName:  trelloListName,
-		Client:    trello.NewClient(trelloApiKey, trelloApiToken),
-	}
-
-	// Initialize Twilio client
-	twilioClient = &clients.Twilio{
-		From: twilioPhoneFrom,
-		To:   twilioPhoneTo,
-		Client: twilio.NewRestClientWithParams(twilio.RestClientParams{
-			Username: twilioAccountSid,
-			Password: twilioAuthToken,
-		})}
-
-	// Connect to database instance
-	err = client.Connect(ctx)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Fatal("Failed to connect to MongoDB instance")
+		logrus.WithError(err).Fatal("Failed to create MongoDB client wrapper")
 	} else {
-		logrus.WithFields(logrus.Fields{"uri": mongoUri}).Info("Connected to MongoDB")
+		defer mongoClient.Client.Disconnect(ctx)
 	}
-	defer client.Disconnect(ctx)
-
-	// Specify database & collection
-	database := client.Database("forage")
-	collection := database.Collection("data")
-	mongoClient = &clients.Mongo{Collection: collection}
+	trelloClient = clients.NewTrelloClientWrapper(trelloApiKey, trelloApiToken, trelloMemberID, trelloBoardName, trelloListName)
+	twilioClient = clients.NewTwilioClientWrapper(twilioAccountSid, twilioAuthToken, twilioPhoneFrom, twilioPhoneTo)
 
 	// Launch job to periodically check for expiring food
 	ticker := time.NewTicker(forageInterval)

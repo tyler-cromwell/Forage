@@ -17,6 +17,18 @@ type Trello struct {
 	Client    *trello.Client
 }
 
+func NewTrelloClientWrapper(apiKey, apiToken, memberID, boardName, listName string) *Trello {
+	client := Trello{
+		Key:       apiKey,
+		Token:     apiToken,
+		MemberID:  memberID,
+		BoardName: boardName,
+		ListName:  listName,
+		Client:    trello.NewClient(apiKey, apiToken),
+	}
+	return &client
+}
+
 func (tc *Trello) GetShoppingList() (*trello.Card, error) {
 	var board *trello.Board
 	var list *trello.List

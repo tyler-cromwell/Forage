@@ -11,6 +11,18 @@ type Twilio struct {
 	Client *twilio.RestClient
 }
 
+func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *Twilio {
+	client := Twilio{
+		From: phoneFrom,
+		To:   phoneTo,
+		Client: twilio.NewRestClientWithParams(twilio.RestClientParams{
+			Username: accountSid,
+			Password: authToken,
+		}),
+	}
+	return &client
+}
+
 func (tc *Twilio) SendMessage(phoneFrom, phoneTo, message string) (string, error) {
 	// Prepare message
 	params := &openapi.CreateMessageParams{}

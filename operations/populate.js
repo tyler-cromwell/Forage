@@ -540,7 +540,7 @@ let documents = [
         lifespan: {
             refrigerator: {
                 unit: 'day',
-                value: 9
+                value: 12
             }
         },
         name: 'Green Leaf Lettuce',
@@ -1478,6 +1478,7 @@ documents.forEach((document) => {
     // Update document
     document.expirationDate = expirationDate.getTime()
     document.haveStocked = false
+    document.stockedDate = new Date('9999/12/31')
     document.storeIn = maxEnv
 })
 

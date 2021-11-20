@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -54,7 +55,7 @@ func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, e
 	var doc bson.M
 	result := mc.Collection.FindOne(ctx, filter)
 	err := result.Err()
-	if err != nil && err.Error() == "mongo: no documents in result" {
+	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Search completed but no document was found
 		log.WithError(err).Warn("Failed to find document")
 		return nil, err
@@ -155,7 +156,7 @@ func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update in
 	result, err := mc.Collection.UpdateOne(ctx, filter, update, nil)
 	if result != nil && result.MatchedCount == 0 {
 		// Update completed but no document was found
-		customError := fmt.Errorf("no document matching filter")
+		customError := fmt.Errorf(utils.ErrNoMatchedDocuments)
 		log.WithError(customError).Warn("Failed to update document")
 		return result.MatchedCount, result.ModifiedCount, customError
 	} else if err != nil {

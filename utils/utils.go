@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+const ErrNoMatchedDocuments = "no document matching filter"
 const ErrInvalidObjectID = "the provided hex string is not a valid ObjectID"
 const ErrMongoNoDocuments = "mongo: no documents in result"
 

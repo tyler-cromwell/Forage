@@ -21,6 +21,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/tyler-cromwell/forage/clients"
+	"github.com/tyler-cromwell/forage/utils"
 )
 
 var mongoClient *clients.Mongo
@@ -173,9 +174,9 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil && err.Error() == "the provided hex string is not a valid ObjectID" {
+	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Error("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		RespondWithError(response, log, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {
@@ -191,7 +192,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to get the document
 	document, err := mongoClient.FindOneDocument(request.Context(), filter)
-	if err != nil && err.Error() == "mongo: no documents in result" {
+	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		RespondWithError(response, log, http.StatusNotFound, err.Error())
@@ -389,9 +390,9 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil && err.Error() == "the provided hex string is not a valid ObjectID" {
+	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse document id")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		RespondWithError(response, log, http.StatusBadRequest, err.Error())
 		return
 	} else if err != nil {
@@ -471,7 +472,13 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
+	if err != nil && err.Error() == utils.ErrInvalidObjectID {
+		// Invalid document id provided
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		return
+	} else if err != nil {
+		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 		return
@@ -483,9 +490,13 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to delete the document
 	err = mongoClient.DeleteOneDocument(request.Context(), filter)
-	if err != nil {
-		// Delete failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete document")
+	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
+		// Get completed but no document was found
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
+		RespondWithError(response, log, http.StatusNotFound, err.Error())
+	} else if err != nil {
+		// Get failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get document")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
 	} else {
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")

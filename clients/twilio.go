@@ -1,6 +1,8 @@
 package clients
 
 import (
+	"fmt"
+
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -21,6 +23,20 @@ func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *T
 		}),
 	}
 	return &client
+}
+
+func (tc Twilio) ComposeMessage(quantity, quantityExpired int, url string) string {
+	var message string
+	if quantity == 1 {
+		message = fmt.Sprintf("%d item expiring soon and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
+	} else if quantity > 1 {
+		message = fmt.Sprintf("%d items expiring soon and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
+	} else if quantity <= 0 && quantityExpired == 1 {
+		message = fmt.Sprintf("%d item expired! View shopping list: %s", quantityExpired, url)
+	} else if quantity <= 0 && quantityExpired > 1 {
+		message = fmt.Sprintf("%d items expired! View shopping list: %s", quantityExpired, url)
+	}
+	return message
 }
 
 func (tc *Twilio) SendMessage(phoneFrom, phoneTo, message string) (string, error) {

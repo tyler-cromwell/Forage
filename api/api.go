@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -643,7 +642,7 @@ func checkExpirations() {
 			if err != nil {
 				log.WithError(err).Error("Failed to add to Trello card")
 			} else {
-				log.Info("Added to Trello card")
+				log.WithFields(logrus.Fields{"url": url}).Info("Added to Trello card")
 			}
 		} else {
 			// Create shopping list card on Trello
@@ -657,12 +656,7 @@ func checkExpirations() {
 		}
 
 		// Compose Twilio message
-		var message string
-		if quantity == 1 {
-			message = fmt.Sprintf("%d item expiring soon! View shopping list: %s", quantity, url)
-		} else {
-			message = fmt.Sprintf("%d items expiring soon! View shopping list: %s", quantity, url)
-		}
+		var message = configuration.Twilio.ComposeMessage(quantity, quantityExpired, url)
 
 		// Send the Twilio message
 		_, err = configuration.Twilio.SendMessage(configuration.Twilio.From, configuration.Twilio.To, message)

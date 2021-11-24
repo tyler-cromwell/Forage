@@ -685,7 +685,7 @@ func ListenAndServe(tcpSocket string) {
 		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).Debug("Setting context timeout to default")
 	}
 
-	forageContext, err := time.ParseDuration(contextTimeoutStr)
+	forageContextTimeout, err := time.ParseDuration(contextTimeoutStr)
 	if err != nil {
 		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).WithError(err).Fatal("Failed to parse context timeout")
 	}
@@ -727,8 +727,8 @@ func ListenAndServe(tcpSocket string) {
 	twilioPhoneTo := os.Getenv("TWILIO_PHONE_TO")
 
 	// Initialize context/timeout
-	ctx, cancel := context.WithTimeout(context.Background(), forageContext)
-	logrus.WithFields(logrus.Fields{"timeout": forageContext}).Info("Initialized context")
+	ctx, cancel := context.WithTimeout(context.Background(), forageContextTimeout)
+	logrus.WithFields(logrus.Fields{"timeout": forageContextTimeout}).Info("Initialized context")
 	defer cancel()
 
 	// Initialize clients

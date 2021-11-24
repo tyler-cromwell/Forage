@@ -490,6 +490,25 @@ let documents = [
     },
     {
         amount: {
+            unit: "pound",
+            value: 1.0
+        },
+        lifespan: {
+            freezer: {
+                unit: "month",
+                value: 3
+            },
+            refrigerator: {
+                unit: "month",
+                value: 1
+            }
+        },
+        name: "Gnocchi",
+        type: "ingredient",
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 1,
             unit: 'cup'
         },
@@ -871,6 +890,42 @@ let documents = [
             }
         },
         name: 'Mirin',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: true
+        },
+        lifespan: {
+            refrigerator: {
+                value: 6,
+                unit: 'week'
+            }
+        },
+        name: 'Mozzarella Cheese',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                value: 5,
+                unit: 'day'
+            }
+        },
+        name: 'Mozzarella Cheese',
         type: 'ingredient',
         updated: dateUpdated
     },

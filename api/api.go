@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -17,15 +16,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/tyler-cromwell/forage/clients"
+	"github.com/tyler-cromwell/forage/config"
 	"github.com/tyler-cromwell/forage/utils"
 )
 
-var mongoClient *clients.Mongo
-var trelloClient *clients.Trello
-var twilioClient *clients.Twilio
-
-var forageLookahead time.Duration
+var configuration *config.Configuration
 
 func getExpired(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
@@ -50,7 +45,7 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 	opts.SetSort(bson.D{{"expirationDate", 1}})
 
 	// Grab the documents
-	documents, err := mongoClient.FindDocuments(context.Background(), filter, opts)
+	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expired items")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
@@ -79,7 +74,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 
 	// Check if query parameters are present
 	var timeFrom time.Time = time.Now()
-	var timeTo time.Time = time.Now().Add(forageLookahead)
+	var timeTo time.Time = time.Now().Add(configuration.Lookahead)
 	filterExpires := bson.M{
 		"expirationDate": bson.M{
 			"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
@@ -140,7 +135,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	opts.SetSort(bson.D{{"expirationDate", 1}})
 
 	// Grab the documents
-	documents, err := mongoClient.FindDocuments(context.Background(), filter, opts)
+	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
@@ -188,7 +183,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the document
-	document, err := mongoClient.FindOneDocument(request.Context(), filter)
+	document, err := configuration.Mongo.FindOneDocument(request.Context(), filter)
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
@@ -308,7 +303,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to get the documents
-	documents, err := mongoClient.FindDocuments(request.Context(), filter, nil)
+	documents, err := configuration.Mongo.FindDocuments(request.Context(), filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
 		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
@@ -363,7 +358,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Attempt to put the document
-	err = mongoClient.InsertManyDocuments(request.Context(), documents)
+	err = configuration.Mongo.InsertManyDocuments(request.Context(), documents)
 	if err != nil {
 		// Post failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post documents")
@@ -441,7 +436,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	update := bson.M{"$set": interim}
 
 	// Attempt to put the document
-	matched, _, err := mongoClient.UpdateOneDocument(request.Context(), filter, update)
+	matched, _, err := configuration.Mongo.UpdateOneDocument(request.Context(), filter, update)
 	if matched == 0 {
 		// Put completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to put document")
@@ -486,7 +481,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to delete the document
-	err = mongoClient.DeleteOneDocument(request.Context(), filter)
+	err = configuration.Mongo.DeleteOneDocument(request.Context(), filter)
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
@@ -543,7 +538,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"filter": filter})
 
 	// Attempt to delete the documents
-	deleted, err := mongoClient.DeleteManyDocuments(request.Context(), filter)
+	deleted, err := configuration.Mongo.DeleteManyDocuments(request.Context(), filter)
 	if deleted == 0 {
 		// Delete completed but no documents were found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
@@ -558,13 +553,16 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func checkExpirations(trelloLabels string) {
+func checkExpirations() {
+	// Define a context
+	ctx := context.Background()
+
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{"at": "api.checkExpirations"})
 
 	// Filter by food expired already
 	now := time.Now().UnixNano() / int64(time.Millisecond)
-	later := time.Now().Add(forageLookahead).UnixNano() / int64(time.Millisecond)
+	later := time.Now().Add(configuration.Lookahead).UnixNano() / int64(time.Millisecond)
 	filterExpired := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{
@@ -594,13 +592,13 @@ func checkExpirations(trelloLabels string) {
 	}}
 
 	// Grab the documents
-	documentsExpired, err := mongoClient.FindDocuments(context.Background(), filterExpired, nil)
+	documentsExpired, err := configuration.Mongo.FindDocuments(ctx, filterExpired, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expired items")
 		return
 	}
 
-	documents, err := mongoClient.FindDocuments(context.Background(), filter, nil)
+	documents, err := configuration.Mongo.FindDocuments(ctx, filter, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 	} else {
@@ -633,15 +631,15 @@ func checkExpirations(trelloLabels string) {
 		// Construct shopping list due date
 		now := time.Now()
 		rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		dueDate := rounded.Add(forageLookahead + (time.Hour * 24))
+		dueDate := rounded.Add(configuration.Lookahead + (time.Hour * 24))
 
 		var url string
-		shoppingListCard, err := trelloClient.GetShoppingList()
+		shoppingListCard, err := configuration.Trello.GetShoppingList()
 		if err != nil {
 			log.WithError(err).Error("Failed to get Trello card")
 		} else if shoppingListCard != nil {
 			// Add to shopping list card on Trello
-			url, err = trelloClient.AddToShoppingList(groceries)
+			url, err = configuration.Trello.AddToShoppingList(groceries)
 			if err != nil {
 				log.WithError(err).Error("Failed to add to Trello card")
 			} else {
@@ -649,8 +647,8 @@ func checkExpirations(trelloLabels string) {
 			}
 		} else {
 			// Create shopping list card on Trello
-			labels := strings.Split(trelloLabels, ",")
-			url, err = trelloClient.CreateShoppingList(&dueDate, labels, groceries)
+			labels := strings.Split(configuration.Trello.LabelsStr, ",")
+			url, err = configuration.Trello.CreateShoppingList(&dueDate, labels, groceries)
 			if err != nil {
 				log.WithError(err).Error("Failed to create Trello card")
 			} else {
@@ -667,90 +665,27 @@ func checkExpirations(trelloLabels string) {
 		}
 
 		// Send the Twilio message
-		_, err = twilioClient.SendMessage(twilioClient.From, twilioClient.To, message)
+		_, err = configuration.Twilio.SendMessage(configuration.Twilio.From, configuration.Twilio.To, message)
 		if err != nil {
-			log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).WithError(err).Error("Failed to send Twilio message")
+			log.WithFields(logrus.Fields{"from": configuration.Twilio.From, "to": configuration.Twilio.To}).WithError(err).Error("Failed to send Twilio message")
 		} else {
-			log.WithFields(logrus.Fields{"from": twilioClient.From, "to": twilioClient.To}).Info("Sent Twilio message")
+			log.WithFields(logrus.Fields{"from": configuration.Twilio.From, "to": configuration.Twilio.To}).Info("Sent Twilio message")
 		}
 	}
 }
 
-func ListenAndServe(tcpSocket string) {
-	// Get environment variables
-	contextTimeoutStr := os.Getenv("FORAGE_CONTEXT_TIMEOUT")
-	if contextTimeoutStr == "" {
-		// Default case
-		contextTimeoutStr = "5s"
-		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).Debug("Setting context timeout to default")
-	}
-
-	forageContextTimeout, err := time.ParseDuration(contextTimeoutStr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).WithError(err).Fatal("Failed to parse context timeout")
-	}
-
-	intervalStr := os.Getenv("FORAGE_INTERVAL")
-	if intervalStr == "" {
-		// Default case
-		intervalStr = "24h"
-		logrus.WithFields(logrus.Fields{"interval": intervalStr}).Debug("Setting expiration interval to default")
-	}
-
-	forageInterval, err := time.ParseDuration(intervalStr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to parse expiration interval")
-	}
-
-	lookaheadStr := os.Getenv("FORAGE_LOOKAHEAD")
-	if lookaheadStr == "" {
-		// Default case
-		lookaheadStr = "48h"
-		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).Debug("Setting expiration lookahead to default")
-	}
-
-	forageLookahead, err = time.ParseDuration(lookaheadStr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to parse expiration lookahead")
-	}
-
-	mongoUri := os.Getenv("MONGO_URI")
-	trelloMemberID := os.Getenv("TRELLO_MEMBER")
-	trelloBoardName := os.Getenv("TRELLO_BOARD")
-	trelloListName := os.Getenv("TRELLO_LIST")
-	trelloLabels := os.Getenv("TRELLO_LABELS")
-	trelloApiKey := os.Getenv("TRELLO_API_KEY")
-	trelloApiToken := os.Getenv("TRELLO_API_TOKEN")
-	twilioAccountSid := os.Getenv("TWILIO_ACCOUNT_SID")
-	twilioAuthToken := os.Getenv("TWILIO_AUTH_TOKEN")
-	twilioPhoneFrom := os.Getenv("TWILIO_PHONE_FROM")
-	twilioPhoneTo := os.Getenv("TWILIO_PHONE_TO")
-
-	// Initialize context/timeout
-	ctx, cancel := context.WithTimeout(context.Background(), forageContextTimeout)
-	logrus.WithFields(logrus.Fields{"timeout": forageContextTimeout}).Info("Initialized context")
-	defer cancel()
-
-	// Initialize clients
-	mongoClient, err = clients.NewMongoClientWrapper(ctx, mongoUri)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to create MongoDB client wrapper")
-	} else {
-		defer mongoClient.Client.Disconnect(ctx)
-	}
-	trelloClient = clients.NewTrelloClientWrapper(trelloApiKey, trelloApiToken, trelloMemberID, trelloBoardName, trelloListName)
-	twilioClient = clients.NewTwilioClientWrapper(twilioAccountSid, twilioAuthToken, twilioPhoneFrom, twilioPhoneTo)
-
+func ListenAndServe(ctx context.Context, c *config.Configuration) {
+	configuration = c
 	// Launch job to periodically check for expiring food
-	ticker := time.NewTicker(forageInterval)
+	ticker := time.NewTicker(configuration.Interval)
 	quit := make(chan struct{})
-	checkExpirations(trelloLabels) // Run once before first ticker tick
+	checkExpirations() // Run once before first ticker tick
 	go func() {
 		// Specify common fields
 		log := logrus.WithFields(logrus.Fields{
 			"at":        "expirationJob",
-			"interval":  forageInterval,
-			"lookahead": forageLookahead,
+			"interval":  configuration.Interval,
+			"lookahead": configuration.Lookahead,
 		})
 
 		// Wait for ticker ticks
@@ -758,7 +693,7 @@ func ListenAndServe(tcpSocket string) {
 		for {
 			select {
 			case <-ticker.C:
-				checkExpirations(trelloLabels)
+				checkExpirations()
 			case <-quit:
 				ticker.Stop()
 				log.Info("Expiration watch job stopped")
@@ -779,11 +714,11 @@ func ListenAndServe(tcpSocket string) {
 	router.HandleFunc("/expired", getExpired).Methods("GET")
 
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"socket": tcpSocket})
+	log := logrus.WithFields(logrus.Fields{"socket": configuration.ListenSocket})
 
 	// Listen for HTTP requests
 	log.Info("Listening for HTTP requests")
-	err = http.ListenAndServe(tcpSocket, router)
+	err := http.ListenAndServe(configuration.ListenSocket, router)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to listen for and serve requests")
 	}

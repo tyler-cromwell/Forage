@@ -12,6 +12,7 @@ import (
 )
 
 type Mongo struct {
+	Uri        string
 	Client     *mongo.Client
 	Database   *mongo.Database
 	Collection *mongo.Collection
@@ -38,6 +39,7 @@ func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error)
 	database := client.Database("forage")
 	collection := database.Collection("data")
 	return &Mongo{
+		Uri:        mongoUri,
 		Client:     client,
 		Database:   database,
 		Collection: collection,

@@ -14,16 +14,18 @@ type Trello struct {
 	MemberID  string
 	BoardName string
 	ListName  string
+	LabelsStr string
 	Client    *trello.Client
 }
 
-func NewTrelloClientWrapper(apiKey, apiToken, memberID, boardName, listName string) *Trello {
+func NewTrelloClientWrapper(apiKey, apiToken, memberID, boardName, listName, labels string) *Trello {
 	client := Trello{
 		Key:       apiKey,
 		Token:     apiToken,
 		MemberID:  memberID,
 		BoardName: boardName,
 		ListName:  listName,
+		LabelsStr: labels,
 		Client:    trello.NewClient(apiKey, apiToken),
 	}
 	return &client

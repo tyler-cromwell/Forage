@@ -1,7 +1,7 @@
 # Forage
 
 ## What is Forage?
-Forage is a [Go][go] app that monitors the various expiration dates of food that keep in my kitchen pantry, refrigerator, and freezer. Its goal is to reduce/prevent food waste by alerting (via [Twilio][twilio] SMS) and creating a shopping list (as a [Trello][trello] card) when items are nearing their expiration dates. Food items are defined as [JSON][json] documents in a [MongoDB][mongo] database.
+Forage is a [Go][go] app that monitors the various expiration dates of food that I keep in my kitchen pantry, refrigerator, and freezer. Its goal is to reduce/prevent food waste by alerting (via [Twilio][twilio] SMS) and creating a shopping list (as a [Trello][trello] card) when items are nearing their expiration dates. Food items are defined as [JSON][json] documents in a [MongoDB][mongo] database.
 
 ## Repository Hierarchy
 - `api`: Code that defines the REST API and background job(s).

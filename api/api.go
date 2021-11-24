@@ -614,18 +614,8 @@ func checkExpirations() {
 
 		// Construct list of names of items to shop for
 		var groceries []string
-		for _, document := range documentsExpired {
-			v, keyFound := document["name"]
-			if keyFound {
-				groceries = append(groceries, v.(string))
-			}
-		}
-		for _, document := range documents {
-			v, keyFound := document["name"]
-			if keyFound {
-				groceries = append(groceries, v.(string))
-			}
-		}
+		groceries = append(groceries, utils.StringSliceFromBsonM(documentsExpired, "name")...)
+		groceries = append(groceries, utils.StringSliceFromBsonM(documents, "name")...)
 
 		// Construct shopping list due date
 		now := time.Now()

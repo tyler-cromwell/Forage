@@ -976,39 +976,41 @@ let documents = [
     },
     {
         amount: {
-            unit: "fluid ounces",
+            unit: 'fluid ounces',
             value: 1
         },
         attributes: {
-            type: "Extra Virgin",
+            type: 'Extra Virgin',
             unopened: true
         },
         lifespan: {
             pantry: {
-                unit: "month",
+                unit: 'month',
                 value: 20
             }
         },
-        name: "Olive Oil",
-        type: "ingredient",
+        name: 'Olive Oil',
+        type: 'ingredient',
+        updated: dateUpdated
     },
     {
         amount: {
-            unit: "fluid ounces",
+            unit: 'fluid ounces',
             value: 1
         },
         attributes: {
-            type: "Extra Virgin",
+            type: 'Extra Virgin',
             unopened: false
         },
         lifespan: {
             pantry: {
-                unit: "month",
+                unit: 'month',
                 value: 6
             }
         },
-        name: "Olive Oil",
-        type: "ingredient",
+        name: 'Olive Oil',
+        type: 'ingredient',
+        updated: dateUpdated
     },
     {
         amount: {
@@ -1519,21 +1521,21 @@ documents.forEach((document) => {
 
     // Calculate max expiration date
     // Since this is before insertMany, updated is also created date
+    let updatedDate = new Date(document.updated)
     let expirationDate = new Date(
-        document.updated.getFullYear(),
-        document.updated.getMonth(),
-        document.updated.getDate()+maxDays
-    )
+        updatedDate.getFullYear(),
+        updatedDate.getMonth(),
+        updatedDate.getDate()+maxDays
+    ).getTime()
 
     if (document.expirationDate === undefined && maxDays == 0) {
-        // Go cannot marshal dates with a year greater than 9999
-        expirationDate = new Date('9999/12/31')
+        expirationDate = 0
     }
 
     // Update document
-    document.expirationDate = expirationDate.getTime()
+    document.expirationDate = expirationDate
     document.haveStocked = false
-    document.stockedDate = new Date('9999/12/31')
+    document.stockedDate = 0
     document.storeIn = maxEnv
 })
 

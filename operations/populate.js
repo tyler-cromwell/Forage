@@ -68,7 +68,7 @@ let documents = [
             unit: 'piece'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -90,7 +90,7 @@ let documents = [
             unit: 'piece'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -148,7 +148,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -171,7 +171,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             refrigerator: {
@@ -306,7 +306,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -329,7 +329,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             refrigerator: {
@@ -446,7 +446,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -513,7 +513,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -535,7 +535,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
             freezer: {
@@ -790,7 +790,7 @@ let documents = [
         },
         attributes: {
             genuine: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -813,7 +813,7 @@ let documents = [
         },
         attributes: {
             genuine: true,
-            sealed: false
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -831,7 +831,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: true,
+            unopened: true,
             store: true
         },
         lifespan: {
@@ -850,7 +850,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: false,
+            unopened: false,
             store: true
         },
         lifespan: {
@@ -941,6 +941,42 @@ let documents = [
             }
         },
         name: 'Muenster Cheese',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: true
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'month',
+                value: 3
+            }
+        },
+        name: 'Parmesan Cheese',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'week',
+                value: 6
+            }
+        },
+        name: 'Parmesan Cheese',
         type: 'ingredient',
         updated: dateUpdated
     },
@@ -1052,31 +1088,50 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'box'
+            unit: 'pound',
+            value: 1
         },
         attributes: {
             cooked: false,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
-                value: 6,
-                unit: 'month'
+                value: 3,
+                unit: 'year'
             }
         },
-        name: 'Pasta',
+        name: 'Bucatini Pasta',
         type: 'ingredient',
         updated: dateUpdated
     },
     {
         amount: {
-            value: 1,
-            unit: 'pound'
+            unit: 'pound',
+            value: 1
+        },
+        attributes: {
+            cooked: false,
+            unopened: false
+        },
+        lifespan: {
+            pantry: {
+                value: 1,
+                unit: 'year'
+            }
+        },
+        name: 'Bucatini Pasta',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'pound',
+            value: 1
         },
         attributes: {
             cooked: true,
-            sealed: true
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -1108,29 +1163,8 @@ let documents = [
             value: 1,
             unit: 'jar'
         },
-        attributes: {
-            unopened: true
-        },
         lifespan: {
             pantry: {
-                value: 18,
-                unit: 'month'
-            }
-        },
-        name: 'Pickles',
-        type: 'ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'jar'
-        },
-        attributes: {
-            unopened: false
-        },
-        lifespan: {
-            refrigerator: {
                 value: 18,
                 unit: 'month'
             }
@@ -1147,7 +1181,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             freezer: {
@@ -1170,7 +1204,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             refrigerator: {
@@ -1188,7 +1222,7 @@ let documents = [
             unit: 'jar'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             refrigerator: {
@@ -1208,7 +1242,7 @@ let documents = [
         attributes: {
             cooked: false,
             lowHumidity: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -1228,7 +1262,7 @@ let documents = [
         attributes: {
             cooked: true,
             lowHumidity: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             refrigerator: {
@@ -1277,7 +1311,7 @@ let documents = [
         },
         attributes: {
             lowHumidity: true,
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -1297,7 +1331,7 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'ounce'
+            unit: 'piece'
         },
         lifespan: {
             refrigerator: {
@@ -1319,7 +1353,7 @@ let documents = [
             unit: 'fluid ounce'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -1337,7 +1371,7 @@ let documents = [
             unit: 'fluid ounce'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
             refrigerator: {
@@ -1369,7 +1403,52 @@ let documents = [
             value: 1,
             unit: 'pound'
         },
-        comment: 'Cold cut',
+        attributes: {
+            type: 'Cold cut'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 2,
+                unit: 'day'
+            }
+        },
+        name: 'Turkey',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'pound'
+        },
+        attributes: {
+            cooked: false,
+            refreeze: false,
+            unopened: true
+        },
+        lifespan: {
+            freezer: {
+                value: 3,
+                unit: 'month'
+            },
+            refrigerator: {
+                value: 2,
+                unit: 'day'
+            }
+        },
+        name: 'Turkey',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'pound'
+        },
+        attributes: {
+            cooked: true,
+            unopened: true
+        },
         lifespan: {
             refrigerator: {
                 value: 2,
@@ -1420,8 +1499,7 @@ let documents = [
             unit: 'loaf'
         },
         attributes: {
-            lowHumidity: true,
-            unopened: true
+            lowHumidity: true
         },
         lifespan: {
             pantry: {
@@ -1439,8 +1517,7 @@ let documents = [
             unit: 'loaf'
         },
         attributes: {
-            lowHumidity: true,
-            unopened: true
+            lowHumidity: true
         },
         lifespan: {
             pantry: {
@@ -1458,7 +1535,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: true
+            unopened: true
         },
         lifespan: {
             pantry: {
@@ -1476,7 +1553,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            sealed: false
+            unopened: false
         },
         lifespan: {
             pantry: {

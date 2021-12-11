@@ -49,8 +49,9 @@ func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error)
 func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.FindOneDocument",
-		"filter": filter,
+		"at":       "mongo.FindOneDocument",
+		"instance": mc.Uri,
+		"filter":   filter,
 	})
 
 	// Ask MongoDB to find the document
@@ -81,8 +82,9 @@ func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, e
 func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.FindDocuments",
-		"filter": filter,
+		"at":       "mongo.FindDocuments",
+		"instance": mc.Uri,
+		"filter":   filter,
 	})
 
 	// Ask MongoDB to find the documents
@@ -115,6 +117,7 @@ func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertOneDocument",
+		"instance": mc.Uri,
 		"document": doc,
 	})
 
@@ -133,6 +136,7 @@ func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) er
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertManyDocuments",
+		"instance": mc.Uri,
 		"quantity": len(docs),
 	})
 
@@ -150,8 +154,9 @@ func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) er
 func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.UpdateOneDocument",
-		"filter": filter,
+		"at":       "mongo.UpdateOneDocument",
+		"instance": mc.Uri,
+		"filter":   filter,
 	})
 
 	// Ask MongoDB to update the document
@@ -174,8 +179,9 @@ func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update in
 func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.DeleteOneDocument",
-		"filter": filter,
+		"at":       "mongo.DeleteOneDocument",
+		"instance": mc.Uri,
+		"filter":   filter,
 	})
 
 	// Ask MongoDB to delete the document
@@ -192,8 +198,9 @@ func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 func (mc *Mongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "mongo.DeleteManyDocuments",
-		"filter": filter,
+		"at":       "mongo.DeleteManyDocuments",
+		"instance": mc.Uri,
+		"filter":   filter,
 	})
 
 	// Ask MongoDB to delete the documents

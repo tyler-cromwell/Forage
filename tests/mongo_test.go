@@ -2,8 +2,10 @@ package tests
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/tyler-cromwell/forage/tests/mocks"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,14 +15,13 @@ import (
 
 func TestMongoClient(t *testing.T) {
 	// Discard logging output
-	//logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(ioutil.Discard)
 
 	// Mock the Mongo database
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
 	mt.Run("FindOneDocument", func(mt *mtest.T) {
-		//cases := []struct{}{}
 		client, err := mocks.NewMongoClientWrapper(mt, context.Background(), "")
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()
@@ -40,9 +41,7 @@ func TestMongoClient(t *testing.T) {
 
 		// Case: "Failed to find document" (Search completed but document not found)
 		mt.ClearMockResponses()
-		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{
-			Message: "mongo: no documents in result",
-		}))
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
 		filter = bson.D{{"_id", id2}}
 		_, err = client.FindOneDocument(context.Background(), filter)
 		require.Error(mt, err)
@@ -57,7 +56,6 @@ func TestMongoClient(t *testing.T) {
 	})
 
 	mt.Run("FindDocuments", func(mt *mtest.T) {
-		//cases := []struct{}{}
 		client, err := mocks.NewMongoClientWrapper(mt, context.Background(), "")
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()

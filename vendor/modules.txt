@@ -1,5 +1,11 @@
+# github.com/adlio/trello v1.9.0
+github.com/adlio/trello
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/go-stack/stack v1.8.1
 github.com/go-stack/stack
+# github.com/golang/mock v1.6.0
+github.com/golang/mock/gomock
 # github.com/golang/snappy v0.0.4
 github.com/golang/snappy
 # github.com/google/go-cmp v0.5.2
@@ -19,8 +25,52 @@ github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.8.1
 github.com/sirupsen/logrus
+# github.com/stretchr/testify v1.7.0
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# github.com/twilio/twilio-go v0.17.0
+github.com/twilio/twilio-go
+github.com/twilio/twilio-go/client
+github.com/twilio/twilio-go/client/form
+github.com/twilio/twilio-go/rest/accounts/v1
+github.com/twilio/twilio-go/rest/api/v2010
+github.com/twilio/twilio-go/rest/autopilot/v1
+github.com/twilio/twilio-go/rest/bulkexports/v1
+github.com/twilio/twilio-go/rest/chat/v1
+github.com/twilio/twilio-go/rest/chat/v2
+github.com/twilio/twilio-go/rest/conversations/v1
+github.com/twilio/twilio-go/rest/events/v1
+github.com/twilio/twilio-go/rest/fax/v1
+github.com/twilio/twilio-go/rest/flex/v1
+github.com/twilio/twilio-go/rest/frontline/v1
+github.com/twilio/twilio-go/rest/insights/v1
+github.com/twilio/twilio-go/rest/ip_messaging/v1
+github.com/twilio/twilio-go/rest/ip_messaging/v2
+github.com/twilio/twilio-go/rest/lookups/v1
+github.com/twilio/twilio-go/rest/media/v1
+github.com/twilio/twilio-go/rest/messaging/v1
+github.com/twilio/twilio-go/rest/monitor/v1
+github.com/twilio/twilio-go/rest/notify/v1
+github.com/twilio/twilio-go/rest/numbers/v2
+github.com/twilio/twilio-go/rest/pricing/v1
+github.com/twilio/twilio-go/rest/pricing/v2
+github.com/twilio/twilio-go/rest/proxy/v1
+github.com/twilio/twilio-go/rest/serverless/v1
+github.com/twilio/twilio-go/rest/studio/v1
+github.com/twilio/twilio-go/rest/studio/v2
+github.com/twilio/twilio-go/rest/supersim/v1
+github.com/twilio/twilio-go/rest/sync/v1
+github.com/twilio/twilio-go/rest/taskrouter/v1
+github.com/twilio/twilio-go/rest/trunking/v1
+github.com/twilio/twilio-go/rest/trusthub/v1
+github.com/twilio/twilio-go/rest/verify/v2
+github.com/twilio/twilio-go/rest/video/v1
+github.com/twilio/twilio-go/rest/voice/v1
+github.com/twilio/twilio-go/rest/wireless/v1
 # github.com/xdg-go/pbkdf2 v1.0.0
 github.com/xdg-go/pbkdf2
 # github.com/xdg-go/scram v1.0.2
@@ -79,3 +129,7 @@ golang.org/x/sys/windows
 # golang.org/x/text v0.3.7
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+golang.org/x/time/rate
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3

@@ -57,26 +57,19 @@ func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, e
 	// Ask MongoDB to find the document
 	var doc bson.M
 	result := mc.Collection.FindOne(ctx, filter)
-	err := result.Err()
-	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
+	err := result.Decode(&doc)
+	if err != nil && err.Error() == mongo.ErrNoDocuments.Error() {
 		// Search completed but no document was found
 		log.WithError(err).Warn("Failed to find document")
 		return nil, err
 	} else if err != nil {
-		// Search failed
+		// Actual failure
 		log.WithError(err).Error("Failed to find document")
 		return nil, err
 	}
 
-	// MongoDB found the document
-	err = result.Decode(&doc)
-	if err != nil {
-		log.WithError(err).Error("Failed to decode document")
-		return nil, err
-	} else {
-		log.Debug("Success")
-		return &doc, nil
-	}
+	log.Debug("Success")
+	return &doc, nil
 }
 
 func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

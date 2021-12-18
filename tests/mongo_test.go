@@ -17,12 +17,15 @@ func TestMongoClient(t *testing.T) {
 	// Discard logging output
 	logrus.SetOutput(ioutil.Discard)
 
+	// Setup context
+	ctx := context.Background()
+
 	// Mock the Mongo database
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
 
 	mt.Run("FindOneDocument", func(mt *mtest.T) {
-		client, err := mocks.NewMongoClientWrapper(mt, context.Background(), "")
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()
 
@@ -36,27 +39,27 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1)
 		filter := bson.D{{"_id", id1}}
-		_, err = client.FindOneDocument(context.Background(), filter)
+		_, err = client.FindOneDocument(ctx, filter)
 		require.NoError(mt, err)
 
 		// Case: "Failed to find document" (Search completed but document not found)
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
 		filter = bson.D{{"_id", id2}}
-		_, err = client.FindOneDocument(context.Background(), filter)
+		_, err = client.FindOneDocument(ctx, filter)
 		require.Error(mt, err)
 
 		// Case: "Failed to find document" (Actual failure)
 		mt.ClearMockResponses()
 		filter = bson.D{{"_id", id1}}
-		_, err = client.FindOneDocument(context.Background(), filter)
+		_, err = client.FindOneDocument(ctx, filter)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
 	})
 
 	mt.Run("FindDocuments", func(mt *mtest.T) {
-		client, err := mocks.NewMongoClientWrapper(mt, context.Background(), "")
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()
 
@@ -76,28 +79,28 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1, document2, killCursors)
 		filter := bson.M{"_id": id1}
-		_, err = client.FindDocuments(context.Background(), filter, nil)
+		_, err = client.FindDocuments(ctx, filter, nil)
 		require.NoError(mt, err)
 
 		// Case: "Failed to find documents"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
 		filter = bson.M{"_id": id1}
-		_, err = client.FindDocuments(context.Background(), filter, nil)
+		_, err = client.FindDocuments(ctx, filter, nil)
 		require.Error(mt, err)
 
 		// Case: "Failed to decode documents"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1)
 		filter = bson.M{"_id": id1}
-		_, err = client.FindDocuments(context.Background(), filter, nil)
+		_, err = client.FindDocuments(ctx, filter, nil)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
 	})
 
 	mt.Run("InsertOneDocument", func(mt *mtest.T) {
-		client, err := mocks.NewMongoClientWrapper(mt, context.Background(), "")
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
 
 		doc1 := bson.D{
 			{"name", "john"},
@@ -107,13 +110,13 @@ func TestMongoClient(t *testing.T) {
 		// Case: "Success"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		err = client.InsertOneDocument(context.Background(), doc1)
+		err = client.InsertOneDocument(ctx, doc1)
 		require.NoError(mt, err)
 
 		// Case: "Failed to insert document"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
-		err = client.InsertOneDocument(context.Background(), doc1)
+		err = client.InsertOneDocument(ctx, doc1)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()

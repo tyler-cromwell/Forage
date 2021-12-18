@@ -32,7 +32,7 @@ func TestMongoClient(t *testing.T) {
 			{"email", "john.doe@test.com"},
 		})
 
-		// Case: "Success" (happy case)
+		// Case: "Success"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1)
 		filter := bson.D{{"_id", id1}}
@@ -72,14 +72,28 @@ func TestMongoClient(t *testing.T) {
 		})
 		killCursors := mtest.CreateCursorResponse(0, "foo.bar", mtest.NextBatch)
 
-		// Documents found & decoded successfully (happy case)
+		// Case: "Success"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1, document2, killCursors)
 		filter := bson.M{"_id": id1}
 		_, err = client.FindDocuments(context.Background(), filter, nil)
-		t.Log(err)
+		require.NoError(mt, err)
 
 		// Case: "Failed to find documents"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
+		filter = bson.M{"_id": id1}
+		_, err = client.FindDocuments(context.Background(), filter, nil)
+		require.Error(mt, err)
+
+		// Case: "Failed to decode documents"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(document1)
+		filter = bson.M{"_id": id1}
+		_, err = client.FindDocuments(context.Background(), filter, nil)
+		require.Error(mt, err)
+
+		mt.ClearMockResponses()
 	})
 
 	mt.Run("InsertOneDocument", func(mt *mtest.T) {

@@ -93,13 +93,6 @@ func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options
 	if err != nil {
 		log.WithError(err).Error("Failed to decode documents")
 		return nil, err
-	}
-
-	// Cleanup
-	err = cursor.Close(ctx)
-	if err != nil {
-		log.WithError(err).Error("Failed to close cursor")
-		return nil, err // maybe return results anyway???
 	} else {
 		log.Debug("Success")
 		return docs, nil

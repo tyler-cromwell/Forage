@@ -146,6 +146,33 @@ func TestMongoClient(t *testing.T) {
 	})
 
 	mt.Run("UpdateOneDocument", func(mt *mtest.T) {
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		id1 := primitive.NewObjectID()
+
+		doc1 := bson.D{
+			{"_id", id1},
+			{"name", "john"},
+			{"email", "john.doe@test.com"},
+		}
+
+		// Case: "Success"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(mtest.CreateSuccessResponse(), bson.D{
+			{"ok", 1},
+			{"value", doc1},
+		})
+		filter := bson.D{{"_id", id1}}
+		_, _, err = client.UpdateOneDocument(ctx, filter, bson.M{"$set": doc1})
+		require.NoError(mt, err)
+
+		// Case: "Failed to update document"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
+		filter = bson.D{{"_id", id1}}
+		_, _, err = client.UpdateOneDocument(ctx, filter, doc1)
+		require.Error(mt, err)
+
+		mt.ClearMockResponses()
 	})
 
 	mt.Run("DeleteOneDocument", func(mt *mtest.T) {

@@ -2,10 +2,8 @@ package clients
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -147,15 +145,10 @@ func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update in
 
 	// Ask MongoDB to update the document
 	result, err := mc.Collection.UpdateOne(ctx, filter, update, nil)
-	if result != nil && result.MatchedCount == 0 {
-		// Update completed but no document was found
-		customError := fmt.Errorf(utils.ErrNoMatchedDocuments)
-		log.WithError(customError).Warn("Failed to update document")
-		return result.MatchedCount, result.ModifiedCount, customError
-	} else if err != nil {
+	if err != nil {
 		// Update failed
 		log.WithError(err).Error("Failed to update document")
-		return result.MatchedCount, result.ModifiedCount, err
+		return 0, 0, err
 	} else {
 		log.Debug("Success")
 		return result.MatchedCount, result.ModifiedCount, nil

@@ -26,6 +26,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("FindOneDocument", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()
 
@@ -60,6 +61,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("FindDocuments", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
 		id1 := primitive.NewObjectID()
 		id2 := primitive.NewObjectID()
 
@@ -101,6 +103,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("InsertOneDocument", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
 
 		doc1 := bson.D{
 			{"name", "john"},
@@ -124,6 +127,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("InsertManyDocuments", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
 
 		doc1 := bson.D{
 			{"name", "john"},
@@ -147,6 +151,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("UpdateOneDocument", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
 		id1 := primitive.NewObjectID()
 
 		doc1 := bson.D{

@@ -176,6 +176,25 @@ func TestMongoClient(t *testing.T) {
 	})
 
 	mt.Run("DeleteOneDocument", func(mt *mtest.T) {
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
+		id1 := primitive.NewObjectID()
+
+		// Case: "Success"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(mtest.CreateSuccessResponse())
+		filter := bson.D{{"_id", id1}}
+		err = client.DeleteOneDocument(ctx, filter)
+		require.NoError(mt, err)
+
+		// Case: "Failed to delete document"
+		mt.ClearMockResponses()
+		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
+		filter = bson.D{{"_id", id1}}
+		err = client.DeleteOneDocument(ctx, filter)
+		require.Error(mt, err)
+
+		mt.ClearMockResponses()
 	})
 
 	mt.Run("DeleteManyDocuments", func(mt *mtest.T) {

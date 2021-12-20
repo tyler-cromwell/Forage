@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type Mongo struct {
@@ -25,8 +26,8 @@ func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error)
 	}
 
 	// Connect to database instance
-	err = client.Connect(ctx)
-	if err != nil {
+	_ = client.Connect(ctx)
+	if err = client.Ping(ctx, readpref.Primary()); err != nil {
 		logrus.WithFields(logrus.Fields{"uri": mongoUri}).WithError(err).Error("Failed to connect to MongoDB instance")
 		return nil, err
 	} else {

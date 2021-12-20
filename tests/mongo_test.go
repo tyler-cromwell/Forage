@@ -4,9 +4,11 @@ import (
 	"context"
 	"io/ioutil"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"github.com/tyler-cromwell/forage/clients"
 	"github.com/tyler-cromwell/forage/tests/mocks"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,11 +20,30 @@ func TestMongoClient(t *testing.T) {
 	logrus.SetOutput(ioutil.Discard)
 
 	// Setup context
-	ctx := context.Background()
+	//	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
 	// Mock the Mongo database
 	mt := mtest.New(t, mtest.NewOptions().ClientType(mtest.Mock))
 	defer mt.Close()
+
+	mt.Run("NewMongoClientWrapper", func(mt *mtest.T) {
+		// Case: "Success"
+		client, err := clients.NewMongoClientWrapper(ctx, "mongodb://127.0.0.1:27017") // Expects an actual instance running
+		require.NoError(mt, err)
+		require.NotNil(mt, client)
+
+		// Case: "Failed to initialize MongoDB client"
+		client, err = clients.NewMongoClientWrapper(ctx, "mongodb://0.0.0.0:0")
+		require.Error(mt, err)
+		require.Nil(mt, client)
+
+		// Case: "Failed to connect to MongoDB instance"
+		client, err = clients.NewMongoClientWrapper(ctx, "mongodb://0.0.0.0:1")
+		require.Error(mt, err)
+		require.Nil(mt, client)
+	})
 
 	mt.Run("FindOneDocument", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")

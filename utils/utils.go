@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -10,6 +9,11 @@ import (
 const ErrNoMatchedDocuments = "no document matching filter"
 const ErrInvalidObjectID = "the provided hex string is not a valid ObjectID"
 const ErrMongoNoDocuments = "mongo: no documents in result"
+
+func ParseDatetimeFromMongoID(id string) (time.Time, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	return oid.Timestamp(), err
+}
 
 func StringSliceFromBsonM(documents []primitive.M, key string) []string {
 	var slice []string
@@ -20,13 +24,4 @@ func StringSliceFromBsonM(documents []primitive.M, key string) []string {
 		}
 	}
 	return slice
-}
-
-func ParseDatetimeFromMongoID(id string) (time.Time, error) {
-	parsed, err := strconv.ParseInt(id[0:8]+"", 16, 64)
-	if err != nil {
-		return time.Time{}, nil
-	}
-	timestamp := time.Unix(parsed, 0)
-	return timestamp, nil
 }

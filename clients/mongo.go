@@ -186,7 +186,7 @@ func (mc *Mongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64,
 	result, err := mc.Collection.DeleteMany(ctx, filter)
 	if err != nil {
 		log.WithError(err).Error("Failed to delete documents")
-		return result.DeletedCount, err
+		return 0, err
 	} else {
 		log.WithFields(logrus.Fields{"quantity": result.DeletedCount}).Debug("Success")
 		return result.DeletedCount, nil

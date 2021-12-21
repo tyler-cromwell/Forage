@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/tyler-cromwell/forage/utils"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestUtils(t *testing.T) {
@@ -30,6 +32,33 @@ func TestUtils(t *testing.T) {
 	})
 
 	t.Run("StringSliceFromBsonM", func(t *testing.T) {
+		documents := []primitive.M{
+			bson.M{
+				"name": "Boba Fett",
+				"age":  41,
+			},
+			bson.M{
+				"name": "Din Djarin",
+				"age":  39,
+			},
+		}
 
+		cases := []struct {
+			documents []primitive.M
+			key       string
+			want      []string
+		}{
+			{documents, "name", []string{"Boba Fett", "Din Djarin"}},
+			{documents, "stuff", []string{}},
+		}
+
+		for _, c := range cases {
+			got := utils.StringSliceFromBsonM(c.documents, c.key)
+			for i := range got {
+				if got[i] != c.want[i] {
+					t.Errorf("StringSliceFromBsonM(\"%s\", \"%s\")[%d], got (\"%s\"), want (\"%s\")", documents, c.key, i, got[i], c.want[i])
+				}
+			}
+		}
 	})
 }

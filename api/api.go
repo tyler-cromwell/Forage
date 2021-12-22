@@ -47,13 +47,15 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expired items")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
 		} else {
 			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -85,7 +87,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		}
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
@@ -99,7 +102,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		}
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
@@ -137,13 +141,15 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
 		} else {
 			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -168,12 +174,14 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"id": id, "status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -186,17 +194,20 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
-		RespondWithError(response, log, http.StatusNotFound, err.Error())
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
 	} else if err != nil {
 		// Get failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get document")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		// Prepare to respond with document
 		marshalled, err := json.Marshal(document)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
 		} else {
 			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -236,7 +247,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		}
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
@@ -256,7 +268,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		}
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
@@ -281,7 +294,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			// Invalid query parameter value provided
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse haveStocked")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		} else {
 			filterHaveStocked = bson.M{
@@ -305,13 +319,15 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	documents, err := configuration.Mongo.FindDocuments(request.Context(), filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
 		} else {
 			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
 			response.WriteHeader(http.StatusOK)
@@ -331,7 +347,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -341,12 +358,14 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode documents")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to decode documents")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -361,7 +380,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		// Post failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post documents")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		log.WithFields(logrus.Fields{"quantity": len(documents), "status": http.StatusCreated}).Debug("Success")
 		response.WriteHeader(http.StatusCreated)
@@ -384,12 +404,14 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -401,7 +423,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -411,12 +434,14 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to decode update fields")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -439,11 +464,13 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	if matched == 0 {
 		// Put completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to put document")
-		RespondWithError(response, log, http.StatusNotFound, err.Error())
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
 	} else if err != nil {
 		// Put failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to put document")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
@@ -466,12 +493,14 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -484,11 +513,13 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
-		RespondWithError(response, log, http.StatusNotFound, err.Error())
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
 	} else if err != nil {
 		// Get failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get document")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
@@ -507,7 +538,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -517,7 +549,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		// Something else failed
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode delete fields")
-		RespondWithError(response, log, http.StatusBadRequest, err.Error())
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
 		return
 	}
 
@@ -527,7 +560,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		oid, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse id")
-			RespondWithError(response, log, http.StatusBadRequest, err.Error())
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte(err.Error()))
 			return
 		} else {
 			interim = append(interim, oid)
@@ -541,11 +575,13 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	if deleted == 0 {
 		// Delete completed but no documents were found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
-		RespondWithError(response, log, http.StatusNotFound, "no documents found")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte("no documents found"))
 	} else if err != nil {
 		// Delete failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete documents")
-		RespondWithError(response, log, http.StatusInternalServerError, err.Error())
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
 	} else {
 		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)

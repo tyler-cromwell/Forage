@@ -39,4 +39,17 @@ func TestTwilioClient(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("SendMessage", func(t *testing.T) {
+		client := mocks.NewTwilioClientWrapper("", "", "", "")
+		require.NotNil(t, client)
+
+		// Case: "Success"
+		_, err := client.SendMessage("+11111111111", "+11111111112", "Hello")
+		require.Nil(t, err)
+
+		// Case: "Error"
+		_, err = client.SendMessage("+11111111111", "+11111111112", "Error")
+		require.NotNil(t, err)
+	})
 }

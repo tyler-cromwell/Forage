@@ -12,10 +12,10 @@ type TwilioInterface interface {
 }
 
 type Twilio struct {
-	From   string
-	To     string
-	Client *twilio.RestClient
-	Inter  TwilioInterface
+	From      string
+	To        string
+	Client    *twilio.RestClient
+	Interface TwilioInterface
 }
 
 func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *Twilio {
@@ -24,10 +24,10 @@ func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *T
 		Password: authToken,
 	})
 	client := Twilio{
-		From:   phoneFrom,
-		To:     phoneTo,
-		Client: c,
-		Inter:  c.ApiV2010, // Need this in order to mock SMS messaging
+		From:      phoneFrom,
+		To:        phoneTo,
+		Client:    c,
+		Interface: c.ApiV2010, // Need this in order to mock SMS messaging
 	}
 	return &client
 }
@@ -55,7 +55,7 @@ func (tc *Twilio) SendMessage(phoneFrom, phoneTo, message string) (string, error
 
 	// Send it
 	//resp, err := tc.Client.ApiV2010.CreateMessage(params)
-	resp, err := tc.Inter.CreateMessage(params)
+	resp, err := tc.Interface.CreateMessage(params)
 	if err != nil {
 		return "", err
 	} else {

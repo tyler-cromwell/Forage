@@ -8,25 +8,24 @@ import (
 	"github.com/tyler-cromwell/forage/clients"
 )
 
-type MockStruct struct {
-}
+type MockTwilioStruct struct{}
 
 func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *clients.Twilio {
 	c := twilio.NewRestClientWithParams(twilio.RestClientParams{
 		Username: accountSid,
 		Password: authToken,
 	})
-	ms := MockStruct{}
+	ms := MockTwilioStruct{}
 	client := clients.Twilio{
-		From:   phoneFrom,
-		To:     phoneTo,
-		Client: c,
-		Inter:  &ms,
+		From:      phoneFrom,
+		To:        phoneTo,
+		Client:    c,
+		Interface: &ms,
 	}
 	return &client
 }
 
-func (ms *MockStruct) CreateMessage(params *openapi.CreateMessageParams) (*openapi.ApiV2010Message, error) {
+func (ms *MockTwilioStruct) CreateMessage(params *openapi.CreateMessageParams) (*openapi.ApiV2010Message, error) {
 	var sid string
 	var err error
 

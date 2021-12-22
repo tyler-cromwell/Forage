@@ -21,7 +21,7 @@ func TestMongoClient(t *testing.T) {
 
 	// Setup context
 	//	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	// Mock the Mongo database

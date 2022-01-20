@@ -226,8 +226,8 @@ let documents = [
         },
         lifespan: {
             freezer: {
-                value: 1,
-                unit: 'year'
+                value: 3,
+                unit: 'month'
             },
             refrigerator: {
                 value: 5,
@@ -235,6 +235,44 @@ let documents = [
             }
         },
         name: 'Brussel Sprouts',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: pound,
+            value: 1
+        },
+        attributes: {
+            cooked: false,
+            unopened: true,
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 3
+            }
+        },
+        name: 'Bucatini',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: pound,
+            value: 1
+        },
+        attributes: {
+            cooked: false,
+            unopened: false,
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 1
+            }
+        },
+        name: 'Bucatini',
         type: 'ingredient',
         updated: dateUpdated
     },
@@ -476,12 +514,12 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'clove'
+            unit: 'head'
         },
         lifespan: {
-            refrigerator: {
-                value: 2,
-                unit: 'month'
+            pantry: {
+                unit: 'month',
+                value: 3
             }
         },
         name: 'Garlic',
@@ -505,6 +543,21 @@ let documents = [
         },
         name: "Gnocchi",
         type: "ingredient",
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 10
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'day',
+                value: 5
+            }
+        },
+        name: 'Grape Tomatoes',
+        type: 'ingredient',
         updated: dateUpdated
     },
     {
@@ -785,6 +838,44 @@ let documents = [
     },
     {
         amount: {
+            unit: pound,
+            value: 1
+        },
+        attributes: {
+            cooked: false,
+            unopened: true,
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 3
+            }
+        },
+        name: 'Linguine',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: pound,
+            value: 1
+        },
+        attributes: {
+            cooked: false,
+            unopened: false,
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 1
+            }
+        },
+        name: 'Linguine',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
             value: 1,
             unit: 'cup'
         },
@@ -870,7 +961,7 @@ let documents = [
         },
         lifespan: {
             refrigerator: {
-                value: 10,
+                value: 12,
                 unit: 'day'
             }
         },
@@ -890,6 +981,24 @@ let documents = [
             }
         },
         name: 'Mirin',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            unit: 'pound',
+            value: 1
+        },
+        attributes: {
+            form: 'Loaf'
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'week',
+                value: 3
+            }
+        },
+        name: 'Mozzarella Cheese',
         type: 'ingredient',
         updated: dateUpdated
     },
@@ -941,42 +1050,6 @@ let documents = [
             }
         },
         name: 'Muenster Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'ounce'
-        },
-        attributes: {
-            unopened: true
-        },
-        lifespan: {
-            refrigerator: {
-                unit: 'month',
-                value: 3
-            }
-        },
-        name: 'Parmesan Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'ounce'
-        },
-        attributes: {
-            unopened: false
-        },
-        lifespan: {
-            refrigerator: {
-                unit: 'week',
-                value: 6
-            }
-        },
-        name: 'Parmesan Cheese',
         type: 'ingredient',
         updated: dateUpdated
     },
@@ -1053,18 +1126,18 @@ let documents = [
             value: 1,
             unit: 'head'
         },
+        attributes: {
+            "cut": false,
+            "type": "Red"
+        },
         lifespan: {
             freezer: {
                 value: 8,
                 unit: 'month'
             },
-            refrigerator: {
-                value: 2,
-                unit: 'week'
-            },
             pantry: {
-                value: 1,
-                unit: 'week'
+                value: 2,
+                unit: 'month'
             }
         },
         name: 'Onion',
@@ -1092,44 +1165,6 @@ let documents = [
             value: 1
         },
         attributes: {
-            cooked: false,
-            unopened: true
-        },
-        lifespan: {
-            pantry: {
-                value: 3,
-                unit: 'year'
-            }
-        },
-        name: 'Bucatini Pasta',
-        type: 'ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            unit: 'pound',
-            value: 1
-        },
-        attributes: {
-            cooked: false,
-            unopened: false
-        },
-        lifespan: {
-            pantry: {
-                value: 1,
-                unit: 'year'
-            }
-        },
-        name: 'Bucatini Pasta',
-        type: 'ingredient',
-        updated: dateUpdated
-    },
-    {
-        amount: {
-            unit: 'pound',
-            value: 1
-        },
-        attributes: {
             cooked: true,
             unopened: false
         },
@@ -1140,6 +1175,42 @@ let documents = [
             }
         },
         name: 'Pasta',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: true
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'month',
+                value: 3
+            }
+        },
+        name: 'Parmesan Cheese',
+        type: 'ingredient',
+        updated: dateUpdated
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            unopened: false
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'week',
+                value: 6
+            }
+        },
+        name: 'Parmesan Cheese',
         type: 'ingredient',
         updated: dateUpdated
     },

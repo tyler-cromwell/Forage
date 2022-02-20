@@ -1,0 +1,108 @@
+package trello
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+
+	"github.com/adlio/trello"
+	"github.com/gorilla/mux"
+	"github.com/tyler-cromwell/forage/clients"
+)
+
+func NewTrelloClientWrapper(mockServer *httptest.Server, apiKey, apiToken, memberID, boardName, listName, labels string) *clients.Trello {
+	client := clients.Trello{
+		Key:       apiKey,
+		Token:     apiToken,
+		MemberID:  memberID,
+		BoardName: boardName,
+		ListName:  listName,
+		LabelsStr: labels,
+		Client:    trello.NewClient(apiKey, apiToken),
+	}
+
+	client.Client.BaseURL = mockServer.URL // Something like "http://127.0.0.1:53791"
+	return &client
+}
+
+func MockMembersParam(router *mux.Router) *mux.Router {
+	router.HandleFunc("/members/{mid}", func(response http.ResponseWriter, request *http.Request) {
+		member := trello.Member{
+			ID: "mid",
+		}
+		b, _ := json.Marshal(member)
+		response.WriteHeader(http.StatusOK)
+		response.Write(b)
+	})
+	return router
+}
+
+func MockMembersParamError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/members/{mid}", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockMembersParamBoards(router *mux.Router) *mux.Router {
+	router.HandleFunc("/members/{mid}/boards", func(response http.ResponseWriter, request *http.Request) {
+		boards := make([]trello.Board, 1)
+		boards[0] = trello.Board{
+			ID:   "board",
+			Name: "Board",
+		}
+		b, _ := json.Marshal(boards)
+		response.WriteHeader(http.StatusOK)
+		response.Write(b)
+	})
+	return router
+}
+
+func MockMembersParamBoardsError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/members/{mid}/boards", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockBoardsParamLists(router *mux.Router) *mux.Router {
+	router.HandleFunc("/boards/{bid}/lists", func(response http.ResponseWriter, request *http.Request) {
+		lists := make([]trello.List, 1)
+		lists[0] = trello.List{
+			ID:   "list",
+			Name: "List",
+		}
+		l, _ := json.Marshal(lists)
+		response.WriteHeader(http.StatusOK)
+		response.Write(l)
+	})
+	return router
+}
+
+func MockBoardsParamListsError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/boards/{bid}/lists", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockListsParamCards(router *mux.Router) *mux.Router {
+	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
+		cards := make([]trello.Card, 1)
+		cards[0] = trello.Card{
+			ID:   "shopping_list",
+			Name: "Shopping List",
+		}
+		c, _ := json.Marshal(cards)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockListsParamCardsError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}

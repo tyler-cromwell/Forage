@@ -25,7 +25,7 @@ func NewTrelloClientWrapper(mockServer *httptest.Server, apiKey, apiToken, membe
 	return &client
 }
 
-func MockMembersParam(router *mux.Router) *mux.Router {
+func MockGetMember(router *mux.Router) *mux.Router {
 	router.HandleFunc("/members/{mid}", func(response http.ResponseWriter, request *http.Request) {
 		member := trello.Member{
 			ID: "mid",
@@ -37,14 +37,14 @@ func MockMembersParam(router *mux.Router) *mux.Router {
 	return router
 }
 
-func MockMembersParamError(router *mux.Router) *mux.Router {
+func MockGetMemberError(router *mux.Router) *mux.Router {
 	router.HandleFunc("/members/{mid}", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 	})
 	return router
 }
 
-func MockMembersParamBoards(router *mux.Router) *mux.Router {
+func MockMemberGetBoards(router *mux.Router) *mux.Router {
 	router.HandleFunc("/members/{mid}/boards", func(response http.ResponseWriter, request *http.Request) {
 		boards := make([]trello.Board, 1)
 		boards[0] = trello.Board{
@@ -58,14 +58,31 @@ func MockMembersParamBoards(router *mux.Router) *mux.Router {
 	return router
 }
 
-func MockMembersParamBoardsError(router *mux.Router) *mux.Router {
+func MockMemberGetBoardsError(router *mux.Router) *mux.Router {
 	router.HandleFunc("/members/{mid}/boards", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 	})
 	return router
 }
 
-func MockBoardsParamLists(router *mux.Router) *mux.Router {
+func MockBoardGetLabels(router *mux.Router) *mux.Router {
+	router.HandleFunc("/boards/{bid}/labels", func(response http.ResponseWriter, request *http.Request) {
+		lists := make([]trello.Label, 0)
+		l, _ := json.Marshal(lists)
+		response.WriteHeader(http.StatusOK)
+		response.Write(l)
+	})
+	return router
+}
+
+func MockBoardGetLabelsError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/boards/{bid}/labels", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockBoardGetLists(router *mux.Router) *mux.Router {
 	router.HandleFunc("/boards/{bid}/lists", func(response http.ResponseWriter, request *http.Request) {
 		lists := make([]trello.List, 1)
 		lists[0] = trello.List{
@@ -79,14 +96,14 @@ func MockBoardsParamLists(router *mux.Router) *mux.Router {
 	return router
 }
 
-func MockBoardsParamListsError(router *mux.Router) *mux.Router {
+func MockBoardGetListsError(router *mux.Router) *mux.Router {
 	router.HandleFunc("/boards/{bid}/lists", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 	})
 	return router
 }
 
-func MockListsParamCards(router *mux.Router) *mux.Router {
+func MockListGetCards(router *mux.Router) *mux.Router {
 	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
 		cards := make([]trello.Card, 1)
 		cards[0] = trello.Card{
@@ -100,8 +117,67 @@ func MockListsParamCards(router *mux.Router) *mux.Router {
 	return router
 }
 
-func MockListsParamCardsError(router *mux.Router) *mux.Router {
+func MockListAddCards(router *mux.Router) *mux.Router {
 	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
+		card := trello.Card{
+			ID:   "shopping_list",
+			Name: "Shopping List",
+		}
+		c, _ := json.Marshal(card)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockListParamCardsError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockCardSetPos(router *mux.Router) *mux.Router {
+	router.HandleFunc("/cards/{cid}", func(response http.ResponseWriter, request *http.Request) {
+		card := trello.Card{
+			ID:   "shopping_list",
+			Name: "Shopping List",
+		}
+		c, _ := json.Marshal(card)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockCardsParamError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/cards/{cid}", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockCreateChecklist(router *mux.Router) *mux.Router {
+	router.HandleFunc("/cards/{cid}/checklists", func(response http.ResponseWriter, request *http.Request) {
+		card := trello.Card{
+			ID:   "shopping_list",
+			Name: "Shopping List",
+			Checklists: []*trello.Checklist{
+				{
+					ID:   "groceries",
+					Name: "Groceries",
+				},
+			},
+		}
+		c, _ := json.Marshal(card)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockCreateChecklistError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/cards/{cid}/checklists", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 	})
 	return router

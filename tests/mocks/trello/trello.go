@@ -67,8 +67,12 @@ func MockMemberGetBoardsError(router *mux.Router) *mux.Router {
 
 func MockBoardGetLabels(router *mux.Router) *mux.Router {
 	router.HandleFunc("/boards/{bid}/labels", func(response http.ResponseWriter, request *http.Request) {
-		lists := make([]trello.Label, 0)
-		l, _ := json.Marshal(lists)
+		labels := make([]trello.Label, 1)
+		labels[0] = trello.Label{
+			ID:   "label",
+			Name: "Label",
+		}
+		l, _ := json.Marshal(labels)
 		response.WriteHeader(http.StatusOK)
 		response.Write(l)
 	})

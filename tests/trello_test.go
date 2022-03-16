@@ -107,20 +107,142 @@ func TestTrelloClient(t *testing.T) {
 			router = trelloMocks.MockListAddCards(router)
 			router = trelloMocks.MockCardSetPos(router)
 			router = trelloMocks.MockCreateChecklist(router)
-			//Mock CreateCheckItem endpoint? (shouldn't be needed)
-			//Mock AddIDLabel endpoint? (shouldn't be needed)
+			//Mock CreateCheckItem endpoint
+			//Mock AddIDLabel endpoint
 			server := httptest.NewServer(router)
 			defer server.Close()
 			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
 			require.NotNil(t, client)
+
 			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
-			card, err := client.CreateShoppingList(&dueDate, []string{}, []string{})
+			card, err := client.CreateShoppingList(&dueDate, []string{"label"}, []string{})
 			require.NoError(t, err)
 			require.NotNil(t, card)
+		})
+
+		t.Run("ErrorGetMember", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMemberError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorMemberGetBoards", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoardsError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorBoardGetLists", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetListsError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorBoardGetLabels", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockBoardGetLabelsError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorListParamCards", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockBoardGetLabels(router)
+			router = trelloMocks.MockListParamCardsError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"Label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorCardsParam", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockBoardGetLabels(router)
+			router = trelloMocks.MockListAddCards(router)
+			router = trelloMocks.MockCardsParamError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"Label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
+		})
+
+		t.Run("ErrorCreateChecklist", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockBoardGetLabels(router)
+			router = trelloMocks.MockListAddCards(router)
+			router = trelloMocks.MockCardSetPos(router)
+			router = trelloMocks.MockCreateChecklistError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			dueDate := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+			card, err := client.CreateShoppingList(&dueDate, []string{"Label"}, []string{})
+			require.Error(t, err)
+			require.Empty(t, card)
 		})
 	})
 
 	t.Run("AddToShoppingList", func(t *testing.T) {
+		t.Run("Success", func(t *testing.T) {
 
+		})
 	})
 }

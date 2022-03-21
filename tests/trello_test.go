@@ -242,7 +242,21 @@ func TestTrelloClient(t *testing.T) {
 
 	t.Run("AddToShoppingList", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockListGetCardsWithCheckLists(router)
+			router = trelloMocks.MockGetChecklist(router)
+			router = trelloMocks.MockCreateCheckItem(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
 
+			url, err := client.AddToShoppingList([]string{"Gyoza"})
+			require.NoError(t, err)
+			require.NotEmpty(t, url)
 		})
 	})
 }

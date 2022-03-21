@@ -121,6 +121,28 @@ func MockListGetCards(router *mux.Router) *mux.Router {
 	return router
 }
 
+func MockListGetCardsWithCheckLists(router *mux.Router) *mux.Router {
+	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
+		cards := make([]trello.Card, 1)
+		cards[0] = trello.Card{
+			ID:           "shopping_list",
+			Name:         "Shopping List",
+			URL:          "www.mock.url.com",
+			IDCheckLists: []string{"groceries"},
+			Checklists: []*trello.Checklist{
+				{
+					ID:   "groceries",
+					Name: "Groceries",
+				},
+			},
+		}
+		c, _ := json.Marshal(cards)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
 func MockListAddCards(router *mux.Router) *mux.Router {
 	router.HandleFunc("/lists/{lid}/cards", func(response http.ResponseWriter, request *http.Request) {
 		card := trello.Card{
@@ -182,6 +204,43 @@ func MockCreateChecklist(router *mux.Router) *mux.Router {
 
 func MockCreateChecklistError(router *mux.Router) *mux.Router {
 	router.HandleFunc("/cards/{cid}/checklists", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockGetChecklist(router *mux.Router) *mux.Router {
+	router.HandleFunc("/checklists/{cid}", func(response http.ResponseWriter, request *http.Request) {
+		checklist := trello.Checklist{
+			ID:   "groceries",
+			Name: "Groceries",
+		}
+		c, _ := json.Marshal(checklist)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockGetChecklistError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/checklists/{cid}", func(response http.ResponseWriter, request *http.Request) {
+		response.WriteHeader(http.StatusInternalServerError)
+	})
+	return router
+}
+
+func MockCreateCheckItem(router *mux.Router) *mux.Router {
+	router.HandleFunc("/checklists/{cid}/checkItems", func(response http.ResponseWriter, request *http.Request) {
+		checkItem := trello.CheckItem{}
+		c, _ := json.Marshal(checkItem)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockCreateCheckItemError(router *mux.Router) *mux.Router {
+	router.HandleFunc("/checklists/{cid}/checkItems", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 	})
 	return router

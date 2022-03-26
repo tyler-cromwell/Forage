@@ -214,6 +214,26 @@ func MockGetChecklist(router *mux.Router) *mux.Router {
 		checklist := trello.Checklist{
 			ID:   "groceries",
 			Name: "Groceries",
+			CheckItems: []trello.CheckItem{
+				{
+					ID:   "gyoza",
+					Name: "Gyoza",
+				},
+			},
+		}
+		c, _ := json.Marshal(checklist)
+		response.WriteHeader(http.StatusOK)
+		response.Write(c)
+	})
+	return router
+}
+
+func MockGetChecklistEmpty(router *mux.Router) *mux.Router {
+	router.HandleFunc("/checklists/{cid}", func(response http.ResponseWriter, request *http.Request) {
+		checklist := trello.Checklist{
+			ID:         "groceries",
+			Name:       "Groceries",
+			CheckItems: []trello.CheckItem{},
 		}
 		c, _ := json.Marshal(checklist)
 		response.WriteHeader(http.StatusOK)

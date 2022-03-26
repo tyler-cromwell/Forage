@@ -254,9 +254,92 @@ func TestTrelloClient(t *testing.T) {
 			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
 			require.NotNil(t, client)
 
+			url, err := client.AddToShoppingList([]string{""})
+			require.NoError(t, err)
+			require.NotEmpty(t, url)
+		})
+
+		t.Run("Success2", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockListGetCardsWithCheckLists(router)
+			router = trelloMocks.MockGetChecklistEmpty(router)
+			router = trelloMocks.MockCreateCheckItem(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
 			url, err := client.AddToShoppingList([]string{"Gyoza"})
 			require.NoError(t, err)
 			require.NotEmpty(t, url)
+		})
+
+		t.Run("ErrorGetShoppingList", func(t *testing.T) {
+			// Same as GetShoppingList/ErrorGetMembers
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMemberError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			url, err := client.AddToShoppingList([]string{"Gyoza"})
+			require.Error(t, err)
+			require.Empty(t, url)
+		})
+
+		t.Run("ErrorIDCheckLists", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockListGetCards(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			url, err := client.AddToShoppingList([]string{"Gyoza"})
+			require.Error(t, err)
+			require.Empty(t, url)
+		})
+
+		t.Run("ErrorGetChecklist", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockListGetCardsWithCheckLists(router)
+			router = trelloMocks.MockGetChecklistError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			url, err := client.AddToShoppingList([]string{"Gyoza"})
+			require.Error(t, err)
+			require.Empty(t, url)
+		})
+
+		t.Run("ErrorCreateCheckItem", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = trelloMocks.MockGetMember(router)
+			router = trelloMocks.MockMemberGetBoards(router)
+			router = trelloMocks.MockBoardGetLists(router)
+			router = trelloMocks.MockListGetCardsWithCheckLists(router)
+			router = trelloMocks.MockGetChecklistEmpty(router)
+			router = trelloMocks.MockCreateCheckItemError(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			url, err := client.AddToShoppingList([]string{"Gyoza"})
+			require.Error(t, err)
+			require.Empty(t, url)
 		})
 	})
 }

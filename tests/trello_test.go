@@ -108,7 +108,6 @@ func TestTrelloClient(t *testing.T) {
 			router = trelloMocks.MockCardSetPos(router)
 			router = trelloMocks.MockCreateChecklist(router)
 			router = trelloMocks.MockCreateCheckItem(router)
-			router = trelloMocks.MockAddIDLabel(router)
 			server := httptest.NewServer(router)
 			defer server.Close()
 			client := trelloMocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")

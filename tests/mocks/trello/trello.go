@@ -266,13 +266,6 @@ func MockCreateCheckItemError(router *mux.Router) *mux.Router {
 	return router
 }
 
-func MockAddIDLabel(router *mux.Router) *mux.Router {
-	router.HandleFunc("/cards/{cid}/idLabels", func(response http.ResponseWriter, request *http.Request) {
-		response.WriteHeader(http.StatusOK)
-	})
-	return router
-}
-
 func MockAddIDLabelError(router *mux.Router) *mux.Router {
 	router.HandleFunc("/cards/{cid}/idLabels", func(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)

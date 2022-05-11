@@ -371,9 +371,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	// Construct insert instructions
 	documents := []interface{}{}
-	for _, e := range data {
-		documents = append(documents, e)
-	}
+	documents = append(documents, data...)
 
 	// Attempt to put the document
 	err = configuration.Mongo.InsertManyDocuments(request.Context(), documents)

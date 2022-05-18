@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/tyler-cromwell/forage/clients"
 	"github.com/tyler-cromwell/forage/config"
@@ -51,11 +52,12 @@ func TestAPI(t *testing.T) {
 		handler         func(http.ResponseWriter, *http.Request)
 		status          int
 		body            string
+		urlVars         map[string]string
 		queryParameters map[string]string
 		mongoClient     mongo.MockMongo
 	}{
-		{"getExpired200", "GET", "/expired", getExpired, http.StatusOK, "[]", nil, mongo.MockMongo{}},
-		{"getExpired500", "GET", "/expired", getExpired, http.StatusInternalServerError, "failure", nil, mongo.MockMongo{
+		{"getExpired200", "GET", "/expired", getExpired, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
+		{"getExpired500", "GET", "/expired", getExpired, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
 			// Mongo failure
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
@@ -70,17 +72,17 @@ func TestAPI(t *testing.T) {
 				},
 			}},
 		*/
-		{"getExpiring200", "GET", "/expiring", getExpiring, http.StatusOK, "[]", map[string]string{"from": "10", "to": "20"}, mongo.MockMongo{}},
-		{"getExpiring400#1", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", map[string]string{"from": "x", "to": ""}, mongo.MockMongo{}},
-		{"getExpiring400#2", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", map[string]string{"from": "10", "to": "y"}, mongo.MockMongo{}},
-		{"getExpiring500", "GET", "/expiring", getExpiring, http.StatusInternalServerError, "failure", nil, mongo.MockMongo{
+		{"getExpiring200", "GET", "/expiring", getExpiring, http.StatusOK, "[]", nil, map[string]string{"from": "10", "to": "20"}, mongo.MockMongo{}},
+		{"getExpiring400#1", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", nil, map[string]string{"from": "x", "to": ""}, mongo.MockMongo{}},
+		{"getExpiring400#2", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", nil, map[string]string{"from": "10", "to": "y"}, mongo.MockMongo{}},
+		{"getExpiring500", "GET", "/expiring", getExpiring, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
 			// Mongo failure
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		//{"getOneDocument", "GET", "/documents/6187e576abc057dac3e7d5dc", getOneDocument, http.StatusOK, "[]", nil, mongo.MockMongo{}},
-		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, mongo.MockMongo{}},
+		{"getOneDocument", "GET", "/documents", getOneDocument, http.StatusOK, "null", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{}},
+		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
 	}
 
 	for _, st := range subtests {
@@ -101,6 +103,9 @@ func TestAPI(t *testing.T) {
 			}
 
 			rr := httptest.NewRecorder()
+			if st.urlVars != nil {
+				req = mux.SetURLVars(req, st.urlVars)
+			}
 			handler := http.HandlerFunc(st.handler)
 			handler.ServeHTTP(rr, req)
 

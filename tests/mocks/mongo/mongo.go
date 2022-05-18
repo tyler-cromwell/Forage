@@ -18,9 +18,12 @@ type MockMongo struct {
 }
 
 func (mmc *MockMongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
-	var doc bson.M
-	//fmt.Println("hello")
-	return &doc, nil
+	if mmc.OverrideFindOneDocument != nil {
+		return mmc.OverrideFindOneDocument(ctx, filter)
+	} else {
+		var doc bson.M
+		return &doc, nil
+	}
 }
 
 func (mmc *MockMongo) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

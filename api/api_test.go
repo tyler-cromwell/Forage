@@ -13,6 +13,7 @@ import (
 	"github.com/tyler-cromwell/forage/clients"
 	"github.com/tyler-cromwell/forage/config"
 	"github.com/tyler-cromwell/forage/tests/mocks/mongo"
+	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -58,7 +59,6 @@ func TestAPI(t *testing.T) {
 	}{
 		{"getExpired200", "GET", "/expired", getExpired, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
 		{"getExpired500", "GET", "/expired", getExpired, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
-			// Mongo failure
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
@@ -76,12 +76,22 @@ func TestAPI(t *testing.T) {
 		{"getExpiring400#1", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", nil, map[string]string{"from": "x", "to": ""}, mongo.MockMongo{}},
 		{"getExpiring400#2", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", nil, map[string]string{"from": "10", "to": "y"}, mongo.MockMongo{}},
 		{"getExpiring500", "GET", "/expiring", getExpiring, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
-			// Mongo failure
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		{"getOneDocument", "GET", "/documents", getOneDocument, http.StatusOK, "null", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{}},
+		{"getOneDocument200", "GET", "/documents", getOneDocument, http.StatusOK, "null", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{}},
+		{"getOneDocument400", "GET", "/documents", getOneDocument, http.StatusBadRequest, "the provided hex string is not a valid ObjectID", map[string]string{"id": "hello"}, nil, mongo.MockMongo{}},
+		{"getOneDocument404", "GET", "/documents", getOneDocument, http.StatusNotFound, utils.ErrMongoNoDocuments, map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{
+			OverrideFindOneDocument: func(ctx context.Context, filter bson.D) (*bson.M, error) {
+				return nil, fmt.Errorf(utils.ErrMongoNoDocuments)
+			},
+		}},
+		{"getOneDocument500", "GET", "/documents", getOneDocument, http.StatusInternalServerError, "failure", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{
+			OverrideFindOneDocument: func(ctx context.Context, filter bson.D) (*bson.M, error) {
+				return nil, fmt.Errorf("failure")
+			},
+		}},
 		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
 	}
 

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +20,9 @@ import (
 )
 
 func TestAPI(t *testing.T) {
+	// Discard logging output
+	logrus.SetOutput(ioutil.Discard)
+
 	forageContextTimeout, _ := time.ParseDuration("5s")
 	forageInterval, _ := time.ParseDuration("24h")
 	forageLookahead, _ := time.ParseDuration("48h")
@@ -92,7 +96,15 @@ func TestAPI(t *testing.T) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
+		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, mongo.MockMongo{}},
+		{"getManyDocuments400#1", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}, mongo.MockMongo{}},
+		{"getManyDocuments400#2", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}, mongo.MockMongo{}},
+		{"getManyDocuments400#3", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseBool: parsing \"lol\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}, mongo.MockMongo{}},
+		{"getManyDocuments500", "GET", "/documents", getManyDocuments, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
+			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				return nil, fmt.Errorf("failure")
+			},
+		}},
 	}
 
 	for _, st := range subtests {

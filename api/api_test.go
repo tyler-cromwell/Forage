@@ -19,6 +19,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type testRequest struct {
+	method          string
+	endpoint        string
+	routeVariables  map[string]string
+	queryParameters map[string]string
+	body            string
+}
+
+type testResponse struct {
+	status int
+	body   string
+}
+
 func TestAPI(t *testing.T) {
 	// Discard logging output
 	logrus.SetOutput(ioutil.Discard)
@@ -51,18 +64,14 @@ func TestAPI(t *testing.T) {
 	}
 
 	subtests := []struct {
-		name            string
-		requestType     string
-		endpoint        string
-		handler         func(http.ResponseWriter, *http.Request)
-		status          int
-		body            string
-		urlVars         map[string]string
-		queryParameters map[string]string
-		mongoClient     mongo.MockMongo
+		name        string
+		handler     func(http.ResponseWriter, *http.Request)
+		request     testRequest
+		response    testResponse
+		mongoClient mongo.MockMongo
 	}{
-		{"getExpired200", "GET", "/expired", getExpired, http.StatusOK, "[]", nil, nil, mongo.MockMongo{}},
-		{"getExpired500", "GET", "/expired", getExpired, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
+		{"getExpired200", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: ""}, testResponse{status: http.StatusOK, body: "[]"}, mongo.MockMongo{}},
+		{"getExpired500", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: ""}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
@@ -76,31 +85,31 @@ func TestAPI(t *testing.T) {
 				},
 			}},
 		*/
-		{"getExpiring200", "GET", "/expiring", getExpiring, http.StatusOK, "[]", nil, map[string]string{"from": "10", "to": "20"}, mongo.MockMongo{}},
-		{"getExpiring400#1", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", nil, map[string]string{"from": "x", "to": ""}, mongo.MockMongo{}},
-		{"getExpiring400#2", "GET", "/expiring", getExpiring, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", nil, map[string]string{"from": "10", "to": "y"}, mongo.MockMongo{}},
-		{"getExpiring500", "GET", "/expiring", getExpiring, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
+		{"getExpiring200", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "10", "to": "20"}, body: ""}, testResponse{status: http.StatusOK, body: "[]"}, mongo.MockMongo{}},
+		{"getExpiring400#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "x", "to": "20"}, body: ""}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mongo.MockMongo{}},
+		{"getExpiring400#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "10", "to": "y"}, body: ""}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mongo.MockMongo{}},
+		{"getExpiring500", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: nil, body: ""}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		{"getOneDocument200", "GET", "/documents", getOneDocument, http.StatusOK, "null", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{}},
-		{"getOneDocument400", "GET", "/documents", getOneDocument, http.StatusBadRequest, "the provided hex string is not a valid ObjectID", map[string]string{"id": "hello"}, nil, mongo.MockMongo{}},
-		{"getOneDocument404", "GET", "/documents", getOneDocument, http.StatusNotFound, utils.ErrMongoNoDocuments, map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{
+		{"getOneDocument200", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: ""}, testResponse{status: http.StatusOK, body: "null"}, mongo.MockMongo{}},
+		{"getOneDocument400", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "hello"}, queryParameters: nil, body: ""}, testResponse{status: http.StatusBadRequest, body: "the provided hex string is not a valid ObjectID"}, mongo.MockMongo{}},
+		{"getOneDocument404", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: ""}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mongo.MockMongo{
 			OverrideFindOneDocument: func(ctx context.Context, filter bson.D) (*bson.M, error) {
 				return nil, fmt.Errorf(utils.ErrMongoNoDocuments)
 			},
 		}},
-		{"getOneDocument500", "GET", "/documents", getOneDocument, http.StatusInternalServerError, "failure", map[string]string{"id": "6187e576abc057dac3e7d5dc"}, nil, mongo.MockMongo{
+		{"getOneDocument500", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: ""}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
 			OverrideFindOneDocument: func(ctx context.Context, filter bson.D) (*bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		{"getManyDocuments200", "GET", "/documents", getManyDocuments, http.StatusOK, "[]", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, mongo.MockMongo{}},
-		{"getManyDocuments400#1", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseInt: parsing \"x\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}, mongo.MockMongo{}},
-		{"getManyDocuments400#2", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseInt: parsing \"y\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}, mongo.MockMongo{}},
-		{"getManyDocuments400#3", "GET", "/documents", getManyDocuments, http.StatusBadRequest, "strconv.ParseBool: parsing \"lol\": invalid syntax", nil, map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}, mongo.MockMongo{}},
-		{"getManyDocuments500", "GET", "/documents", getManyDocuments, http.StatusInternalServerError, "failure", nil, nil, mongo.MockMongo{
+		{"getManyDocuments200", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, body: ""}, testResponse{status: http.StatusOK, body: "[]"}, mongo.MockMongo{}},
+		{"getManyDocuments400#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}, body: ""}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mongo.MockMongo{}},
+		{"getManyDocuments400#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}, body: ""}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mongo.MockMongo{}},
+		{"getManyDocuments400#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}, body: ""}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseBool: parsing \"lol\": invalid syntax"}, mongo.MockMongo{}},
+		{"getManyDocuments500", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, body: ""}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},
@@ -111,32 +120,32 @@ func TestAPI(t *testing.T) {
 		t.Run(st.name, func(t *testing.T) {
 			configuration.Mongo = &st.mongoClient
 
-			req, err := http.NewRequest(st.requestType, st.endpoint, nil)
+			req, err := http.NewRequest(st.request.method, st.request.endpoint, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			if st.queryParameters != nil {
+			if st.request.queryParameters != nil {
 				q := req.URL.Query()
-				for k, v := range st.queryParameters {
+				for k, v := range st.request.queryParameters {
 					q.Add(k, v)
 				}
 				req.URL.RawQuery = q.Encode()
 			}
 
 			rr := httptest.NewRecorder()
-			if st.urlVars != nil {
-				req = mux.SetURLVars(req, st.urlVars)
+			if st.request.routeVariables != nil {
+				req = mux.SetURLVars(req, st.request.routeVariables)
 			}
 			handler := http.HandlerFunc(st.handler)
 			handler.ServeHTTP(rr, req)
 
-			if status := rr.Code; status != st.status {
-				t.Errorf("handler returned wrong status code: got %v want %v", status, st.status)
+			if status := rr.Code; status != st.response.status {
+				t.Errorf("handler returned wrong status code: got %v want %v", status, st.response.status)
 			}
 
-			if rr.Body.String() != st.body {
-				t.Errorf("handler returned unexpected body: got \"%v\" want \"%v\"", rr.Body.String(), st.body)
+			if rr.Body.String() != st.response.body {
+				t.Errorf("handler returned unexpected body: got \"%v\" want \"%v\"", rr.Body.String(), st.response.body)
 			}
 		})
 	}

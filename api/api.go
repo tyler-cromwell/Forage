@@ -570,16 +570,16 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to delete the documents
 	deleted, err := configuration.Mongo.DeleteManyDocuments(request.Context(), filter)
-	if deleted == 0 {
-		// Delete completed but no documents were found
-		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
-		response.WriteHeader(http.StatusNotFound)
-		response.Write([]byte("no documents found"))
-	} else if err != nil {
+	if err != nil {
 		// Delete failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete documents")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
+	} else if deleted == 0 {
+		// Delete completed but no documents were found
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to delete documents")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte("no documents found"))
 	} else {
 		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)

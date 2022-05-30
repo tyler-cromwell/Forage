@@ -40,7 +40,11 @@ func (mmc *MockMongo) InsertOneDocument(ctx context.Context, doc interface{}) er
 }
 
 func (mmc *MockMongo) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
-	return nil
+	if mmc.OverrideInsertManyDocuments != nil {
+		return mmc.OverrideInsertManyDocuments(ctx, docs)
+	} else {
+		return nil
+	}
 }
 
 func (mmc *MockMongo) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {

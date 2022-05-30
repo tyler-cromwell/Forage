@@ -110,7 +110,7 @@ func TestAPI(t *testing.T) {
 				return nil, fmt.Errorf(utils.ErrMongoNoDocuments)
 			},
 		}},
-		//"getOneDocument500#1"
+		{"getOneDocument500#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "xxxxxxxxxxxxxxxxxxxxxxxx"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "encoding/hex: invalid byte: U+0078 'x'"}, mongo.MockMongo{}},
 		{"getOneDocument500#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "json: unsupported type: chan int"}, mongo.MockMongo{
 			OverrideFindOneDocument: func(ctx context.Context, filter bson.D) (*bson.M, error) {
 				var doc bson.M = map[string]interface{}{"key": make(chan int)}

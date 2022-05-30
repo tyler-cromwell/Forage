@@ -145,6 +145,22 @@ func TestAPI(t *testing.T) {
 				return fmt.Errorf("failure")
 			},
 		}},
+		{"putOneDocument200", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"_id\": \"6187e576abc057dac3e7d5dc\", \"name\": \"Document\"}"))}, testResponse{status: http.StatusOK, body: ""}, mongo.MockMongo{}},
+		{"putOneDocument400#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "hello"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusBadRequest, body: "the provided hex string is not a valid ObjectID"}, mongo.MockMongo{}},
+		{"putOneDocument400#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mongo.MockMongo{}},
+		{"putOneDocument404", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"_id\": \"6187e576abc057dac3e7d5dc\", \"name\": \"Document\"}"))}, testResponse{status: http.StatusNotFound, body: "failure"}, mongo.MockMongo{
+			OverrideUpdateOneDocument: func(context.Context, bson.D, interface{}) (int64, int64, error) {
+				return 0, 0, fmt.Errorf("failure")
+			},
+		}},
+		{"putOneDocument500#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "xxxxxxxxxxxxxxxxxxxxxxxx"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "encoding/hex: invalid byte: U+0078 'x'"}, mongo.MockMongo{}},
+		{"putOneDocument500#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mongo.MockMongo{}},
+		{"putOneDocument500#3", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{}"))}, testResponse{status: http.StatusInternalServerError, body: "unexpected end of JSON input"}, mongo.MockMongo{}},
+		{"putOneDocument500#4", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"_id\": \"6187e576abc057dac3e7d5dc\", \"name\": \"Document\"}"))}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
+			OverrideUpdateOneDocument: func(context.Context, bson.D, interface{}) (int64, int64, error) {
+				return 1, 1, fmt.Errorf("failure")
+			},
+		}},
 	}
 
 	for _, st := range subtests {

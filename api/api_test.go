@@ -161,6 +161,19 @@ func TestAPI(t *testing.T) {
 				return 1, 1, fmt.Errorf("failure")
 			},
 		}},
+		{"deleteOneDocument200", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: ""}, mongo.MockMongo{}},
+		{"deleteOneDocument400", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"id": "hello"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusBadRequest, body: "the provided hex string is not a valid ObjectID"}, mongo.MockMongo{}},
+		{"deleteOneDocument404", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mongo.MockMongo{
+			OverrideDeleteOneDocument: func(ctx context.Context, filter bson.D) error {
+				return fmt.Errorf(utils.ErrMongoNoDocuments)
+			},
+		}},
+		{"deleteOneDocument500#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"id": "xxxxxxxxxxxxxxxxxxxxxxxx"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "encoding/hex: invalid byte: U+0078 'x'"}, mongo.MockMongo{}},
+		{"deleteOneDocument500#2", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mongo.MockMongo{
+			OverrideDeleteOneDocument: func(ctx context.Context, filter bson.D) error {
+				return fmt.Errorf("failure")
+			},
+		}},
 	}
 
 	for _, st := range subtests {

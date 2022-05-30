@@ -56,7 +56,11 @@ func (mmc *MockMongo) UpdateOneDocument(ctx context.Context, filter bson.D, upda
 }
 
 func (mmc *MockMongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
-	return nil
+	if mmc.OverrideDeleteOneDocument != nil {
+		return mmc.OverrideDeleteOneDocument(ctx, filter)
+	} else {
+		return nil
+	}
 }
 
 func (mmc *MockMongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {

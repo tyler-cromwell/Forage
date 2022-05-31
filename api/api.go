@@ -631,25 +631,25 @@ func checkExpirations() {
 		return
 	}
 
-	documents, err := configuration.Mongo.FindDocuments(ctx, filter, nil)
+	documentsExpiring, err := configuration.Mongo.FindDocuments(ctx, filter, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 	} else {
 		quantityExpired := len(documentsExpired)
-		quantity := len(documents)
+		quantityExpiring := len(documentsExpiring)
 
 		// Skip if nothing is expiring
-		if quantity == 0 && quantityExpired == 0 {
-			log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking not required")
+		if quantityExpiring == 0 && quantityExpired == 0 {
+			log.WithFields(logrus.Fields{"expiring": quantityExpiring, "expired": quantityExpired}).Info("Restocking not required")
 			return
 		} else {
-			log.WithFields(logrus.Fields{"expiring": quantity, "expired": quantityExpired}).Info("Restocking required")
+			log.WithFields(logrus.Fields{"expiring": quantityExpiring, "expired": quantityExpired}).Info("Restocking required")
 		}
 
 		// Construct list of names of items to shop for
 		var groceries []string
 		groceries = append(groceries, utils.StringSliceFromBsonM(documentsExpired, "name")...)
-		groceries = append(groceries, utils.StringSliceFromBsonM(documents, "name")...)
+		groceries = append(groceries, utils.StringSliceFromBsonM(documentsExpiring, "name")...)
 
 		// Construct shopping list due date
 		now := time.Now()
@@ -670,7 +670,7 @@ func checkExpirations() {
 			}
 		} else {
 			// Create shopping list card on Trello
-			labels := strings.Split(configuration.Trello.LabelsStr, ",")
+			labels := strings.Split(configuration.Trello.InnerStruct().LabelsStr, ",")
 			url, err = configuration.Trello.CreateShoppingList(&dueDate, labels, groceries)
 			if err != nil {
 				log.WithError(err).Error("Failed to create Trello card")
@@ -680,7 +680,7 @@ func checkExpirations() {
 		}
 
 		// Compose Twilio message
-		var message = configuration.Twilio.ComposeMessage(quantity, quantityExpired, url)
+		var message = configuration.Twilio.ComposeMessage(quantityExpiring, quantityExpired, url)
 
 		// Send the Twilio message
 		_, err = configuration.Twilio.SendMessage(configuration.Twilio.From, configuration.Twilio.To, message)

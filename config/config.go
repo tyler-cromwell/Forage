@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/adlio/trello"
 	"github.com/sirupsen/logrus"
 	"github.com/tyler-cromwell/forage/clients"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,13 +21,23 @@ type MongoHandle interface {
 	DeleteManyDocuments(context.Context, bson.M) (int64, error)
 }
 
+type TrelloHandle interface {
+	InnerStruct() *clients.Trello
+	GetShoppingList() (*trello.Card, error)
+	CreateShoppingList(*time.Time, []string, []string) (string, error)
+	AddToShoppingList([]string) (string, error)
+}
+
+type TwilioHandle interface {
+}
+
 type Configuration struct {
 	ContextTimeout time.Duration
 	Interval       time.Duration
 	Lookahead      time.Duration
 	LogrusLevel    logrus.Level
 	ListenSocket   string
-	Mongo          MongoHandle //*clients.Mongo
-	Trello         *clients.Trello
+	Mongo          MongoHandle  //*clients.Mongo
+	Trello         TrelloHandle //*clients.Trello
 	Twilio         *clients.Twilio
 }

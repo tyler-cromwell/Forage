@@ -31,6 +31,10 @@ func NewTrelloClientWrapper(apiKey, apiToken, memberID, boardName, listName, lab
 	return &client
 }
 
+func (tc *Trello) InnerStruct() *Trello {
+	return tc
+}
+
 func (tc *Trello) GetShoppingList() (*trello.Card, error) {
 	var board *trello.Board
 	var list *trello.List

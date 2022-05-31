@@ -21,6 +21,14 @@ func TestTrelloClient(t *testing.T) {
 		require.NotNil(t, client)
 	})
 
+	t.Run("InnerStruct", func(t *testing.T) {
+		client := clients.NewTrelloClientWrapper("", "", "", "", "", "")
+		require.NotNil(t, client)
+
+		self := client.InnerStruct()
+		require.NotNil(t, self)
+	})
+
 	t.Run("GetShoppingList", func(t *testing.T) {
 		t.Run("Success", func(t *testing.T) {
 			router := mux.NewRouter().StrictSlash(true)

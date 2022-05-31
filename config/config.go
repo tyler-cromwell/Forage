@@ -29,6 +29,9 @@ type TrelloHandle interface {
 }
 
 type TwilioHandle interface {
+	InnerStruct() *clients.Twilio
+	ComposeMessage(int, int, string) string
+	SendMessage(string, string, string) (string, error)
 }
 
 type Configuration struct {
@@ -39,5 +42,5 @@ type Configuration struct {
 	ListenSocket   string
 	Mongo          MongoHandle  //*clients.Mongo
 	Trello         TrelloHandle //*clients.Trello
-	Twilio         *clients.Twilio
+	Twilio         TwilioHandle //*clients.Twilio
 }

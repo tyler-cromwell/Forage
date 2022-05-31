@@ -680,14 +680,14 @@ func checkExpirations() {
 		}
 
 		// Compose Twilio message
-		var message = configuration.Twilio.ComposeMessage(quantityExpiring, quantityExpired, url)
+		var message = configuration.Twilio.InnerStruct().ComposeMessage(quantityExpiring, quantityExpired, url)
 
 		// Send the Twilio message
-		_, err = configuration.Twilio.SendMessage(configuration.Twilio.From, configuration.Twilio.To, message)
+		_, err = configuration.Twilio.InnerStruct().SendMessage(configuration.Twilio.InnerStruct().From, configuration.Twilio.InnerStruct().To, message)
 		if err != nil {
-			log.WithFields(logrus.Fields{"from": configuration.Twilio.From, "to": configuration.Twilio.To}).WithError(err).Error("Failed to send Twilio message")
+			log.WithFields(logrus.Fields{"from": configuration.Twilio.InnerStruct().From, "to": configuration.Twilio.InnerStruct().To}).WithError(err).Error("Failed to send Twilio message")
 		} else {
-			log.WithFields(logrus.Fields{"from": configuration.Twilio.From, "to": configuration.Twilio.To}).Info("Sent Twilio message")
+			log.WithFields(logrus.Fields{"from": configuration.Twilio.InnerStruct().From, "to": configuration.Twilio.InnerStruct().To}).Info("Sent Twilio message")
 		}
 	}
 }

@@ -48,21 +48,7 @@ func TestAPI(t *testing.T) {
 	forageContextTimeout, _ := time.ParseDuration("5s")
 	forageInterval, _ := time.ParseDuration("24h")
 	forageLookahead, _ := time.ParseDuration("48h")
-
-	// Initialize context/timeout
-	ctx, cancel := context.WithTimeout(context.Background(), forageContextTimeout)
-	logrus.WithFields(logrus.Fields{"timeout": forageContextTimeout}).Info("Initialized context")
-	defer cancel()
-
-	// Initialize client
-	mongoUri := "mongodb://127.0.0.1:27017"
 	listenSocket := ":8001"
-	mongoClient, err := clients.NewMongoClientWrapper(ctx, mongoUri)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to create MongoDB client wrapper")
-	} else {
-		defer mongoClient.Client.Disconnect(ctx)
-	}
 
 	configuration = &config.Configuration{
 		ContextTimeout: forageContextTimeout,

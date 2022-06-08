@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -670,7 +671,9 @@ func checkExpirations() {
 			}
 		} else {
 			// Create shopping list card on Trello
-			labels := strings.Split(configuration.Trello.InnerStruct().LabelsStr, ",")
+			innerTrello := reflect.ValueOf(configuration.Trello).Elem()
+			labelsStr := *innerTrello.FieldByName("LabelsStr").Addr().Interface().(*string)
+			labels := strings.Split(labelsStr, ",")
 			url, err = configuration.Trello.CreateShoppingList(&dueDate, labels, groceries)
 			if err != nil {
 				log.WithError(err).Error("Failed to create Trello card")
@@ -680,14 +683,17 @@ func checkExpirations() {
 		}
 
 		// Compose Twilio message
-		var message = configuration.Twilio.InnerStruct().ComposeMessage(quantityExpiring, quantityExpired, url)
+		var message = configuration.Twilio.ComposeMessage(quantityExpiring, quantityExpired, url)
 
 		// Send the Twilio message
-		_, err = configuration.Twilio.InnerStruct().SendMessage(configuration.Twilio.InnerStruct().From, configuration.Twilio.InnerStruct().To, message)
+		innerTwilio := reflect.ValueOf(configuration.Twilio).Elem()
+		from := *innerTwilio.FieldByName("From").Addr().Interface().(*string)
+		to := *innerTwilio.FieldByName("To").Addr().Interface().(*string)
+		_, err = configuration.Twilio.SendMessage(from, to, message)
 		if err != nil {
-			log.WithFields(logrus.Fields{"from": configuration.Twilio.InnerStruct().From, "to": configuration.Twilio.InnerStruct().To}).WithError(err).Error("Failed to send Twilio message")
+			log.WithFields(logrus.Fields{"from": from, "to": to}).WithError(err).Error("Failed to send Twilio message")
 		} else {
-			log.WithFields(logrus.Fields{"from": configuration.Twilio.InnerStruct().From, "to": configuration.Twilio.InnerStruct().To}).Info("Sent Twilio message")
+			log.WithFields(logrus.Fields{"from": from, "to": to}).Info("Sent Twilio message")
 		}
 	}
 }

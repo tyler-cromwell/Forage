@@ -32,10 +32,6 @@ func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *T
 	return &client
 }
 
-func (tc *Twilio) InnerStruct() *Twilio {
-	return tc
-}
-
 func (tc *Twilio) ComposeMessage(quantity, quantityExpired int, url string) string {
 	var message string
 	if quantity == 1 {

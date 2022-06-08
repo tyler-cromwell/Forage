@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,11 +13,15 @@ import (
 	"testing"
 	"time"
 
+	libTrello "github.com/adlio/trello"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/tyler-cromwell/forage/clients"
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/require"
 	"github.com/tyler-cromwell/forage/config"
 	"github.com/tyler-cromwell/forage/tests/mocks/mongo"
+	"github.com/tyler-cromwell/forage/tests/mocks/trello"
+	"github.com/tyler-cromwell/forage/tests/mocks/twilio"
 	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -210,4 +215,326 @@ func TestAPI(t *testing.T) {
 			}
 		})
 	}
+
+	subtests2 := []struct {
+		name         string
+		mongoClient  mongo.MockMongo
+		trelloClient trello.MockTrello
+		twilioClient twilio.MockTwilio
+		logLevels    []logrus.Level
+		logMessages  []string
+	}{
+		{
+			// Error #1, Could not obtain expired items
+			"checkExpirationsError#1",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					expectation := bson.M{"$and": []bson.M{
+						{
+							"expirationDate": bson.M{
+								"$lte": time.Now().UnixNano() / int64(time.Millisecond),
+							},
+						},
+						{
+							"haveStocked": bson.M{
+								"$eq": true,
+							},
+						},
+					}}
+					e, err := bson.Marshal(expectation)
+					if err != nil {
+						return nil, err
+					}
+					f, err := bson.Marshal(filter)
+					if err != nil {
+						return nil, err
+					}
+
+					if bytes.Equal(f, e) {
+						return nil, fmt.Errorf("failure")
+					} else {
+						return []bson.M{
+							map[string]interface{}{"key1": "value1"},
+							map[string]interface{}{"key2": "value2"},
+						}, nil
+					}
+				},
+			},
+			trello.MockTrello{},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.ErrorLevel,
+			},
+			[]string{
+				"Failed to identify expired items",
+			},
+		},
+		{
+			// Error #2, Could not obtain expiring items
+			"checkExpirationsError#2",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					expectation := bson.M{"$and": []bson.M{
+						{
+							"expirationDate": bson.M{
+								"$gte": time.Now().UnixNano() / int64(time.Millisecond),
+								"$lte": time.Now().Add(configuration.Lookahead).UnixNano() / int64(time.Millisecond),
+							},
+						},
+						{
+							"haveStocked": bson.M{
+								"$eq": true,
+							},
+						},
+					}}
+					e, err := bson.Marshal(expectation)
+					if err != nil {
+						return nil, err
+					}
+					f, err := bson.Marshal(filter)
+					if err != nil {
+						return nil, err
+					}
+
+					if bytes.Equal(f, e) {
+						return nil, fmt.Errorf("failure")
+					} else {
+						return []bson.M{
+							map[string]interface{}{"key1": "value1"},
+							map[string]interface{}{"key2": "value2"},
+						}, nil
+					}
+				},
+			},
+			trello.MockTrello{},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.ErrorLevel,
+			},
+			[]string{
+				"Failed to identify expiring items",
+			},
+		},
+		{
+			// Success #1, No expired/expiring items, no need to proceed.
+			"checkExpirationsSuccess#1",
+			mongo.MockMongo{},
+			trello.MockTrello{},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking not required",
+			},
+		},
+		{
+			// Success #2, items expired/expiring added to existing Trello card and SMS message sent.
+			"checkExpirationsSuccess#2",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Added to Trello card",
+				"Sent Twilio message",
+			},
+		},
+		{
+			// Error #3, items expired/expiring but could not obtain Trello card, SMS message still sent.
+			"checkExpirationsError#3",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{
+				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+					return nil, fmt.Errorf("failure")
+				},
+			},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.ErrorLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Failed to get Trello card",
+				"Sent Twilio message",
+			},
+		},
+		{
+			// Success #3, items expired/expiring added to new Trello card and SMS message sent.
+			"checkExpirationsSuccess#3",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{
+				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+					return nil, nil
+				},
+			},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Created Trello card",
+				"Sent Twilio message",
+			},
+		},
+		{
+			// Error #4, items expired/expiring but could not add to existing card Trello card, SMS message still sent.
+			"checkExpirationsError#4",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{
+				OverrideAddToShoppingList: func(itemNames []string) (string, error) {
+					return "", fmt.Errorf("failure")
+				},
+			},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.ErrorLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Failed to add to Trello card",
+				"Sent Twilio message",
+			},
+		},
+		{
+			// Error #5, items expired/expiring but could not create new card Trello card, SMS message still sent.
+			"checkExpirationsError#5",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{
+				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+					return nil, nil
+				},
+				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
+					return "", fmt.Errorf("failure")
+				},
+			},
+			twilio.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.ErrorLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Failed to create Trello card",
+				"Sent Twilio message",
+			},
+		},
+		{
+			// Error #6, items expired/expiring but could not create new card Trello card or send SMS message.
+			"checkExpirationsError#6",
+			mongo.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"key1": "value1"},
+						map[string]interface{}{"key2": "value2"},
+					}, nil
+				},
+			},
+			trello.MockTrello{
+				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+					return nil, nil
+				},
+				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
+					return "", fmt.Errorf("failure")
+				},
+			},
+			twilio.MockTwilio{
+				OverrideComposeMessage: func(quantity, quantityExpired int, url string) string {
+					return ""
+				},
+				OverrideSendMessage: func(phoneFrom, phoneTo, message string) (string, error) {
+					return "", fmt.Errorf("failure")
+				},
+			},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.ErrorLevel,
+				logrus.ErrorLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Failed to create Trello card",
+				"Failed to send Twilio message",
+			},
+		},
+	}
+	t.Run("checkExpirations", func(t *testing.T) {
+		// Capture logrus output so we can assert
+		_, hook := test.NewNullLogger()
+		logrus.AddHook(hook)
+		base := 0
+
+		for _, st := range subtests2 {
+			// Arrange
+			configuration.Mongo = &st.mongoClient
+			configuration.Trello = &st.trelloClient
+			configuration.Twilio = &st.twilioClient
+
+			// Act
+			checkExpirations()
+
+			// Assert (preliminary)
+			require.Equal(t, len(st.logLevels), len(st.logMessages))
+
+			// Assert (primary)
+			for i, _ := range st.logLevels {
+				index := base + i
+				require.Equal(t, st.logLevels[i], hook.AllEntries()[index].Level)
+				require.Equal(t, st.logMessages[i], hook.AllEntries()[index].Message)
+			}
+
+			base += len(st.logLevels)
+		}
+
+		// Rever logrus output change
+		logrus.SetOutput(ioutil.Discard)
+	})
 }

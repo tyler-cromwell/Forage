@@ -4,11 +4,49 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"github.com/adlio/trello"
 	"github.com/gorilla/mux"
 	"github.com/tyler-cromwell/forage/clients"
 )
+
+type MockTrello struct {
+	Key                        string
+	Token                      string
+	MemberID                   string
+	BoardName                  string
+	ListName                   string
+	LabelsStr                  string
+	OverrideGetShoppingList    func() (*trello.Card, error)
+	OverrideCreateShoppingList func(*time.Time, []string, []string) (string, error)
+	OverrideAddToShoppingList  func([]string) (string, error)
+}
+
+func (mmc *MockTrello) GetShoppingList() (*trello.Card, error) {
+	if mmc.OverrideGetShoppingList != nil {
+		return mmc.OverrideGetShoppingList()
+	} else {
+		var card trello.Card
+		return &card, nil
+	}
+}
+
+func (mmc *MockTrello) CreateShoppingList(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
+	if mmc.OverrideCreateShoppingList != nil {
+		return mmc.OverrideCreateShoppingList(dueDate, applyLabels, listItems)
+	} else {
+		return "", nil
+	}
+}
+
+func (mmc *MockTrello) AddToShoppingList(itemNames []string) (string, error) {
+	if mmc.OverrideAddToShoppingList != nil {
+		return mmc.OverrideAddToShoppingList(itemNames)
+	} else {
+		return "", nil
+	}
+}
 
 func NewTrelloClientWrapper(mockServer *httptest.Server, apiKey, apiToken, memberID, boardName, listName, labels string) *clients.Trello {
 	client := clients.Trello{

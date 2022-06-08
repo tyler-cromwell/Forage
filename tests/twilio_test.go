@@ -15,14 +15,6 @@ func TestTwilioClient(t *testing.T) {
 		require.NotNil(t, client)
 	})
 
-	t.Run("InnerStruct", func(t *testing.T) {
-		client := clients.NewTwilioClientWrapper("", "", "", "")
-		require.NotNil(t, client)
-
-		self := client.InnerStruct()
-		require.NotNil(t, self)
-	})
-
 	t.Run("ComposeMessage", func(t *testing.T) {
 		client := mocks.NewTwilioClientWrapper("", "", "", "")
 		require.NotNil(t, client)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/adlio/trello"
 	"github.com/sirupsen/logrus"
-	"github.com/tyler-cromwell/forage/clients"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -22,14 +21,12 @@ type MongoHandle interface {
 }
 
 type TrelloHandle interface {
-	InnerStruct() *clients.Trello
 	GetShoppingList() (*trello.Card, error)
 	CreateShoppingList(*time.Time, []string, []string) (string, error)
 	AddToShoppingList([]string) (string, error)
 }
 
 type TwilioHandle interface {
-	InnerStruct() *clients.Twilio
 	ComposeMessage(int, int, string) string
 	SendMessage(string, string, string) (string, error)
 }

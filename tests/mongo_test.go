@@ -122,29 +122,31 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 	})
 
-	mt.Run("InsertOneDocument", func(mt *mtest.T) {
-		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
-		require.NoError(mt, err)
+	/*
+		mt.Run("InsertOneDocument", func(mt *mtest.T) {
+			client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+			require.NoError(mt, err)
 
-		doc1 := bson.D{
-			{"name", "john"},
-			{"email", "john.doe@test.com"},
-		}
+			doc1 := bson.D{
+				{"name", "john"},
+				{"email", "john.doe@test.com"},
+			}
 
-		// Case: "Success"
-		mt.ClearMockResponses()
-		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		err = client.InsertOneDocument(ctx, doc1)
-		require.NoError(mt, err)
+			// Case: "Success"
+			mt.ClearMockResponses()
+			mt.AddMockResponses(mtest.CreateSuccessResponse())
+			err = client.InsertOneDocument(ctx, doc1)
+			require.NoError(mt, err)
 
-		// Case: "Failed to insert document"
-		mt.ClearMockResponses()
-		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
-		err = client.InsertOneDocument(ctx, doc1)
-		require.Error(mt, err)
+			// Case: "Failed to insert document"
+			mt.ClearMockResponses()
+			mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
+			err = client.InsertOneDocument(ctx, doc1)
+			require.Error(mt, err)
 
-		mt.ClearMockResponses()
-	})
+			mt.ClearMockResponses()
+		})
+	*/
 
 	mt.Run("InsertManyDocuments", func(mt *mtest.T) {
 		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")

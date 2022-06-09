@@ -13,7 +13,7 @@ import (
 type MongoHandle interface {
 	FindOneDocument(context.Context, bson.D) (*bson.M, error)
 	FindDocuments(context.Context, bson.M, *options.FindOptions) ([]bson.M, error)
-	InsertOneDocument(context.Context, interface{}) error
+	//InsertOneDocument(context.Context, interface{}) error
 	InsertManyDocuments(context.Context, []interface{}) error
 	UpdateOneDocument(context.Context, bson.D, interface{}) (int64, int64, error)
 	DeleteOneDocument(context.Context, bson.D) error

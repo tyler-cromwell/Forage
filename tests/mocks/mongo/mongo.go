@@ -8,9 +8,9 @@ import (
 )
 
 type MockMongo struct {
-	OverrideFindOneDocument     func(context.Context, bson.D) (*bson.M, error)
-	OverrideFindManyDocuments   func(context.Context, bson.M, *options.FindOptions) ([]bson.M, error)
-	OverrideInsertOneDocument   func(context.Context, interface{}) error
+	OverrideFindOneDocument   func(context.Context, bson.D) (*bson.M, error)
+	OverrideFindManyDocuments func(context.Context, bson.M, *options.FindOptions) ([]bson.M, error)
+	//OverrideInsertOneDocument   func(context.Context, interface{}) error
 	OverrideInsertManyDocuments func(context.Context, []interface{}) error
 	OverrideUpdateOneDocument   func(context.Context, bson.D, interface{}) (int64, int64, error)
 	OverrideDeleteOneDocument   func(context.Context, bson.D) error
@@ -35,9 +35,11 @@ func (mmc *MockMongo) FindDocuments(ctx context.Context, filter bson.M, opts *op
 	}
 }
 
+/*
 func (mmc *MockMongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	return nil
 }
+*/
 
 func (mmc *MockMongo) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
 	if mmc.OverrideInsertManyDocuments != nil {

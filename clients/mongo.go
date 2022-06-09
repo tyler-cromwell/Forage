@@ -98,6 +98,7 @@ func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options
 	}
 }
 
+/*
 func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
@@ -116,6 +117,7 @@ func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 		return nil
 	}
 }
+*/
 
 func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
 	// Specify common fields

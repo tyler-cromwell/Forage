@@ -13,14 +13,13 @@ import (
 	"testing"
 	"time"
 
-	libTrello "github.com/adlio/trello"
+	"github.com/adlio/trello"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/require"
 	"github.com/tyler-cromwell/forage/config"
 	"github.com/tyler-cromwell/forage/tests/mocks"
-	"github.com/tyler-cromwell/forage/tests/mocks/twilio"
 	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -219,7 +218,7 @@ func TestAPI(t *testing.T) {
 		name         string
 		mongoClient  mocks.MockMongo
 		mocksClient  mocks.MockTrello
-		twilioClient twilio.MockTwilio
+		twilioClient mocks.MockTwilio
 		logLevels    []logrus.Level
 		logMessages  []string
 	}{
@@ -260,7 +259,7 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.ErrorLevel,
 			},
@@ -306,7 +305,7 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.ErrorLevel,
 			},
@@ -319,7 +318,7 @@ func TestAPI(t *testing.T) {
 			"checkExpirationsSuccess#1",
 			mocks.MockMongo{},
 			mocks.MockTrello{},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 			},
@@ -339,7 +338,7 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 				logrus.InfoLevel,
@@ -363,11 +362,11 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+				OverrideGetShoppingList: func() (*trello.Card, error) {
 					return nil, fmt.Errorf("failure")
 				},
 			},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 				logrus.ErrorLevel,
@@ -391,11 +390,11 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+				OverrideGetShoppingList: func() (*trello.Card, error) {
 					return nil, nil
 				},
 			},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 				logrus.InfoLevel,
@@ -423,7 +422,7 @@ func TestAPI(t *testing.T) {
 					return "", fmt.Errorf("failure")
 				},
 			},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 				logrus.ErrorLevel,
@@ -447,14 +446,14 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+				OverrideGetShoppingList: func() (*trello.Card, error) {
 					return nil, nil
 				},
 				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
 					return "", fmt.Errorf("failure")
 				},
 			},
-			twilio.MockTwilio{},
+			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
 				logrus.ErrorLevel,
@@ -478,14 +477,14 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*libTrello.Card, error) {
+				OverrideGetShoppingList: func() (*trello.Card, error) {
 					return nil, nil
 				},
 				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
 					return "", fmt.Errorf("failure")
 				},
 			},
-			twilio.MockTwilio{
+			mocks.MockTwilio{
 				OverrideComposeMessage: func(quantity, quantityExpired int, url string) string {
 					return ""
 				},

@@ -1,4 +1,4 @@
-package trello
+package mocks
 
 import (
 	"encoding/json"

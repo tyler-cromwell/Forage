@@ -25,10 +25,12 @@ func TestTwilioClient(t *testing.T) {
 			url             string
 			want            string
 		}{
-			{1, 0, "http://nothing.com", fmt.Sprintf("%d item expiring soon and %d already expired! View shopping list: %s", 1, 0, "http://nothing.com")},
-			{2, 0, "http://nothing.com", fmt.Sprintf("%d items expiring soon and %d already expired! View shopping list: %s", 2, 0, "http://nothing.com")},
+			{1, 1, "http://nothing.com", fmt.Sprintf("%d item expiring and %d already expired! View shopping list: %s", 1, 1, "http://nothing.com")},
+			{2, 1, "http://nothing.com", fmt.Sprintf("%d items expiring and %d already expired! View shopping list: %s", 2, 1, "http://nothing.com")},
 			{0, 1, "http://nothing.com", fmt.Sprintf("%d item expired! View shopping list: %s", 1, "http://nothing.com")},
 			{0, 2, "http://nothing.com", fmt.Sprintf("%d items expired! View shopping list: %s", 2, "http://nothing.com")},
+			{1, 0, "http://nothing.com", fmt.Sprintf("%d item expiring! View shopping list: %s", 1, "http://nothing.com")},
+			{2, 0, "http://nothing.com", fmt.Sprintf("%d items expiring! View shopping list: %s", 2, "http://nothing.com")},
 			{0, 0, "http://nothing.com", ""},
 		}
 

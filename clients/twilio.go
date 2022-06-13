@@ -34,14 +34,18 @@ func NewTwilioClientWrapper(accountSid, authToken, phoneFrom, phoneTo string) *T
 
 func (tc *Twilio) ComposeMessage(quantity, quantityExpired int, url string) string {
 	var message string
-	if quantity == 1 {
-		message = fmt.Sprintf("%d item expiring soon and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
-	} else if quantity > 1 {
-		message = fmt.Sprintf("%d items expiring soon and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
+	if quantity == 1 && quantityExpired >= 1 {
+		message = fmt.Sprintf("%d item expiring and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
+	} else if quantity > 1 && quantityExpired >= 1 {
+		message = fmt.Sprintf("%d items expiring and %d already expired! View shopping list: %s", quantity, quantityExpired, url)
 	} else if quantity <= 0 && quantityExpired == 1 {
 		message = fmt.Sprintf("%d item expired! View shopping list: %s", quantityExpired, url)
 	} else if quantity <= 0 && quantityExpired > 1 {
 		message = fmt.Sprintf("%d items expired! View shopping list: %s", quantityExpired, url)
+	} else if quantity == 1 && quantityExpired <= 0 {
+		message = fmt.Sprintf("%d item expiring! View shopping list: %s", quantity, url)
+	} else if quantity > 1 && quantityExpired <= 0 {
+		message = fmt.Sprintf("%d items expiring! View shopping list: %s", quantity, url)
 	}
 	return message
 }

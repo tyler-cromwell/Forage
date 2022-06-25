@@ -592,7 +592,10 @@ func checkExpirations() {
 	ctx := context.Background()
 
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"at": "api.checkExpirations"})
+	log := logrus.WithFields(logrus.Fields{
+		"at":        "api.checkExpirations",
+		"lookahead": configuration.Lookahead,
+	})
 
 	// Filter by food expired already
 	now := time.Now().UnixNano() / int64(time.Millisecond)

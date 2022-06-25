@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/tyler-cromwell/forage/config"
@@ -14,31 +15,21 @@ import (
 
 func ListenAndServe(ctx context.Context, c *config.Configuration) {
 	configuration = c
-	// Launch job to periodically check for expiring food
-	ticker := time.NewTicker(configuration.Interval)
-	quit := make(chan struct{})
-	checkExpirations() // Run once before first ticker tick
-	go func() {
-		// Specify common fields
-		log := logrus.WithFields(logrus.Fields{
-			"at":        "expirationJob",
-			"interval":  configuration.Interval,
-			"lookahead": configuration.Lookahead,
-		})
 
-		// Wait for ticker ticks
-		log.Info("Expiration watch job started")
-		for {
-			select {
-			case <-ticker.C:
-				checkExpirations()
-			case <-quit:
-				ticker.Stop()
-				log.Info("Expiration watch job stopped")
-				return
-			}
-		}
-	}()
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{"at": "ListenAndServe"})
+
+	// Load timezone
+	loc, err := time.LoadLocation(configuration.Timezone)
+	if err != nil {
+		log.WithFields(logrus.Fields{"timezone": configuration.Timezone}).WithError(err).Fatal("Failed to obtain timezone")
+	}
+
+	// Launch job to periodically check for expiring food
+	s := gocron.NewScheduler(loc)
+	s.Every(1).Day().At(configuration.Time).Do(checkExpirations)
+	s.StartAsync()
+	log.Info("Expiration watch job started")
 
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
@@ -52,11 +43,11 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 	router.HandleFunc("/expired", getExpired).Methods("GET")
 
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"socket": configuration.ListenSocket})
+	log = logrus.WithFields(logrus.Fields{"socket": configuration.ListenSocket})
 
 	// Listen for HTTP requests
 	log.Info("Listening for HTTP requests")
-	err := http.ListenAndServe(configuration.ListenSocket, router)
+	err = http.ListenAndServe(configuration.ListenSocket, router)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to listen for and serve requests")
 	}

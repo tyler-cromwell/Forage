@@ -49,13 +49,11 @@ func TestAPI(t *testing.T) {
 	logrus.SetOutput(ioutil.Discard)
 
 	forageContextTimeout, _ := time.ParseDuration("5s")
-	forageInterval, _ := time.ParseDuration("24h")
 	forageLookahead, _ := time.ParseDuration("48h")
 	listenSocket := ":8001"
 
 	configuration = &config.Configuration{
 		ContextTimeout: forageContextTimeout,
-		Interval:       forageInterval,
 		Lookahead:      forageLookahead,
 		LogrusLevel:    logrus.DebugLevel,
 		ListenSocket:   listenSocket,

@@ -51,16 +51,25 @@ func main() {
 		logrus.WithFields(logrus.Fields{"interval": intervalStr}).Debug("Setting expiration interval to default")
 	}
 
-	forageInterval, err := time.ParseDuration(intervalStr)
-	if err != nil {
-		logrus.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to parse expiration interval")
-	}
-
 	lookaheadStr := os.Getenv("FORAGE_LOOKAHEAD")
 	if lookaheadStr == "" {
 		// Default case
 		lookaheadStr = "48h"
 		logrus.WithFields(logrus.Fields{"lookahead": lookaheadStr}).Debug("Setting expiration lookahead to default")
+	}
+
+	forageTime := os.Getenv("FORAGE_TIME")
+	if forageTime == "" {
+		// Default case
+		forageTime = "19:00"
+		logrus.WithFields(logrus.Fields{"timezone": forageTime}).Debug("Setting expir to default")
+	}
+
+	forageTimezone := os.Getenv("FORAGE_TIMEZONE")
+	if forageTimezone == "" {
+		// Default case
+		forageTimezone = "America/New_York"
+		logrus.WithFields(logrus.Fields{"timezone": forageTimezone}).Debug("Setting timezone to default")
 	}
 
 	forageLookahead, err := time.ParseDuration(lookaheadStr)
@@ -98,8 +107,9 @@ func main() {
 
 	config := config.Configuration{
 		ContextTimeout: forageContextTimeout,
-		Interval:       forageInterval,
 		Lookahead:      forageLookahead,
+		Time:           forageTime,
+		Timezone:       forageTimezone,
 		LogrusLevel:    level,
 		ListenSocket:   listenSocket,
 		Mongo:          mongoClient,

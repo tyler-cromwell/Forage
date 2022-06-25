@@ -33,8 +33,9 @@ type TwilioHandle interface {
 
 type Configuration struct {
 	ContextTimeout time.Duration
-	Interval       time.Duration
 	Lookahead      time.Duration
+	Time           string
+	Timezone       string
 	LogrusLevel    logrus.Level
 	ListenSocket   string
 	Mongo          MongoHandle  //*clients.Mongo

@@ -33,6 +33,8 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/configure", getConfiguration).Methods("GET")
+	router.HandleFunc("/configure", putConfiguration).Methods("PUT")
 	router.HandleFunc("/documents/{id}", getOneDocument).Methods("GET")
 	router.HandleFunc("/documents/{id}", putOneDocument).Methods("PUT")
 	router.HandleFunc("/documents/{id}", deleteOneDocument).Methods("DELETE")

@@ -22,9 +22,72 @@ import (
 
 var configuration *config.Configuration
 
+func getConfiguration(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getConfigure",
+		"method": "GET",
+	})
+
+	marshalled, _ := json.Marshal(struct {
+		Lookahead time.Duration
+		Time      string
+	}{
+		configuration.Lookahead,
+		configuration.Time,
+	})
+	log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+	response.WriteHeader(http.StatusOK)
+	response.Write(marshalled)
+}
+
+func putConfiguration(response http.ResponseWriter, request *http.Request) {
+	// Specify common fields
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getConfigure",
+		"method": "PUT",
+	})
+
+	// Get configuration fields from body
+	bytes, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	}
+
+	var data struct {
+		Lookahead time.Duration `json:"lookahead"`
+		Time      string        `json:"time"`
+	}
+	err = json.Unmarshal(bytes, &data)
+	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
+		// Invalid request body
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
+		return
+	} else if err != nil {
+		// Something else failed
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to decode update fields")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else {
+		configuration.Lookahead = data.Lookahead
+		configuration.Time = data.Time
+		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
+		response.WriteHeader(http.StatusOK)
+	}
+}
+
 func getExpired(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"at": "api.getExpired"})
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getExpired",
+		"method": "GET",
+	})
 
 	// Filter by food expired already
 	filter := bson.M{"$and": []bson.M{
@@ -67,7 +130,10 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"at": "api.getExpiring"})
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getExpiring",
+		"method": "GET",
+	})
 
 	// Extract query parameters
 	queryParams := request.URL.Query()

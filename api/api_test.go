@@ -66,6 +66,11 @@ func TestAPI(t *testing.T) {
 		response    testResponse
 		mongoClient mocks.MockMongo
 	}{
+		{"getConfiguration", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"Lookahead\":172800000000000,\"Time\":\"\"}"}, mocks.MockMongo{}},
+		{"putConfiguration200", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"24h\"}"))}, testResponse{status: http.StatusOK, body: ""}, mocks.MockMongo{}},
+		{"putConfiguration400", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
+		{"putConfiguration500#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
+		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"time\": \"24h\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
 		{"getExpired200", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
 		{"getExpired500#1", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

@@ -716,10 +716,20 @@ func checkExpirations() {
 			log.WithFields(logrus.Fields{"expiring": quantityExpiring, "expired": quantityExpired}).Info("Restocking required")
 		}
 
+		namesExpired := utils.StringSliceFromBsonM(documentsExpired, "name")
+		for _, name := range namesExpired {
+			log.WithFields(logrus.Fields{"name": name}).Info("Expired")
+		}
+
+		namesExpiring := utils.StringSliceFromBsonM(documentsExpiring, "name")
+		for _, name := range namesExpiring {
+			log.WithFields(logrus.Fields{"name": name}).Info("Expiring")
+		}
+
 		// Construct list of names of items to shop for
 		var groceries []string
-		groceries = append(groceries, utils.StringSliceFromBsonM(documentsExpired, "name")...)
-		groceries = append(groceries, utils.StringSliceFromBsonM(documentsExpiring, "name")...)
+		groceries = append(groceries, namesExpired...)
+		groceries = append(groceries, namesExpiring...)
 
 		// Construct shopping list due date
 		now := time.Now()

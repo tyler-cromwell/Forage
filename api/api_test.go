@@ -255,8 +255,7 @@ func TestAPI(t *testing.T) {
 						return nil, fmt.Errorf("failure")
 					} else {
 						return []bson.M{
-							map[string]interface{}{"key1": "value1"},
-							map[string]interface{}{"key2": "value2"},
+							map[string]interface{}{"name": "value1"},
 						}, nil
 					}
 				},
@@ -301,8 +300,7 @@ func TestAPI(t *testing.T) {
 						return nil, fmt.Errorf("failure")
 					} else {
 						return []bson.M{
-							map[string]interface{}{"key1": "value1"},
-							map[string]interface{}{"key2": "value2"},
+							map[string]interface{}{"name": "value1"},
 						}, nil
 					}
 				},
@@ -335,8 +333,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -346,9 +343,13 @@ func TestAPI(t *testing.T) {
 				logrus.InfoLevel,
 				logrus.InfoLevel,
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Added to Trello card",
 				"Sent Twilio message",
 			},
@@ -359,8 +360,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -372,11 +372,15 @@ func TestAPI(t *testing.T) {
 			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 				logrus.ErrorLevel,
 				logrus.InfoLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Failed to get Trello card",
 				"Sent Twilio message",
 			},
@@ -387,8 +391,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -402,9 +405,13 @@ func TestAPI(t *testing.T) {
 				logrus.InfoLevel,
 				logrus.InfoLevel,
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Created Trello card",
 				"Sent Twilio message",
 			},
@@ -415,8 +422,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -428,11 +434,15 @@ func TestAPI(t *testing.T) {
 			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 				logrus.ErrorLevel,
 				logrus.InfoLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Failed to add to Trello card",
 				"Sent Twilio message",
 			},
@@ -443,8 +453,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -459,11 +468,15 @@ func TestAPI(t *testing.T) {
 			mocks.MockTwilio{},
 			[]logrus.Level{
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 				logrus.ErrorLevel,
 				logrus.InfoLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Failed to create Trello card",
 				"Sent Twilio message",
 			},
@@ -474,8 +487,7 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{
 				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 					return []bson.M{
-						map[string]interface{}{"key1": "value1"},
-						map[string]interface{}{"key2": "value2"},
+						map[string]interface{}{"name": "value1"},
 					}, nil
 				},
 			},
@@ -497,11 +509,15 @@ func TestAPI(t *testing.T) {
 			},
 			[]logrus.Level{
 				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
 				logrus.ErrorLevel,
 				logrus.ErrorLevel,
 			},
 			[]string{
 				"Restocking required",
+				"Expired",
+				"Expiring",
 				"Failed to create Trello card",
 				"Failed to send Twilio message",
 			},

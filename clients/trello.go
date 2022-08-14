@@ -2,7 +2,6 @@ package clients
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/adlio/trello"
@@ -174,7 +173,7 @@ func (tc *Trello) CreateShoppingList(dueDate *time.Time, applyLabels []string, l
 	return card.URL, nil
 }
 
-func (tc *Trello) AddToShoppingList(itemNames []string) (string, error) {
+func (tc *Trello) AddToShoppingList(itemText []string) (string, error) {
 	card, err := tc.GetShoppingList()
 	if err != nil {
 		return "", err
@@ -189,23 +188,11 @@ func (tc *Trello) AddToShoppingList(itemNames []string) (string, error) {
 	if err != nil {
 		return "", err
 	} else {
-		existingItems := checklist.CheckItems
-
-		// Add items to the checklist
-		for _, name := range itemNames {
-			exists := false
-			for _, existingItem := range existingItems {
-				if strings.HasPrefix(existingItem.Name, name) {
-					exists = true
-					break
-				}
-			}
-
-			if !exists {
-				_, err := checklist.CreateCheckItem(name)
-				if err != nil {
-					return "", err
-				}
+		checklist.CheckItems = []trello.CheckItem{}
+		for _, text := range itemText {
+			_, err := checklist.CreateCheckItem(text)
+			if err != nil {
+				return "", err
 			}
 		}
 	}

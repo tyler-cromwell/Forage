@@ -15,7 +15,7 @@ let documents = [
         attributes: {
             family: 'sauce',
             flavor: 'Roasted Garlic',
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -35,7 +35,7 @@ let documents = [
         attributes: {
             family: 'sauce',
             flavor: 'Roasted Garlic',
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -68,7 +68,7 @@ let documents = [
             unit: 'piece'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -87,10 +87,10 @@ let documents = [
     {
         amount: {
             value: 1,
-            unit: 'piece'
+            unit: 'pound'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -108,6 +108,10 @@ let documents = [
             unit: 'count'
         },
         lifespan: {
+            freezer: {
+                value: 1,
+                unit: 'year'
+            },
             pantry: {
                 value: 2,
                 unit: 'day'
@@ -116,10 +120,6 @@ let documents = [
                 value: 1,
                 unit: 'month'
             },
-            freezer: {
-                value: 1,
-                unit: 'year'
-            }
         },
         name: 'Bagel',
         type: 'ingredient',
@@ -147,8 +147,8 @@ let documents = [
         },
         attributes: {
             cooked: false,
-            refreeze: false,
-            unopened: true
+            opened: false,
+            refreeze: false
         },
         lifespan: {
             freezer: {
@@ -171,7 +171,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -245,7 +245,7 @@ let documents = [
         },
         attributes: {
             cooked: false,
-            unopened: true,
+            opened: false,
         },
         lifespan: {
             pantry: {
@@ -264,7 +264,7 @@ let documents = [
         },
         attributes: {
             cooked: false,
-            unopened: false,
+            opened: true,
         },
         lifespan: {
             pantry: {
@@ -344,7 +344,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -367,7 +367,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -400,7 +400,7 @@ let documents = [
             value: 1
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -418,7 +418,7 @@ let documents = [
             value: 1
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -466,7 +466,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -484,7 +484,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -566,7 +566,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -588,7 +588,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             freezer: {
@@ -658,7 +658,7 @@ let documents = [
             brand: 'The Heatonist',
             family: 'sauce',
             flavor: 'Los Calientes',
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -679,7 +679,7 @@ let documents = [
             brand: 'The Heatonist',
             family: 'sauce',
             flavor: 'Los Calientes',
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -700,7 +700,7 @@ let documents = [
             brand: 'The Spicy Shark',
             family: 'sauce',
             flavor: 'Original Habanero',
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -721,7 +721,7 @@ let documents = [
             brand: 'The Spicy Shark',
             family: 'sauce',
             flavor: 'Original Habanero',
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -741,7 +741,7 @@ let documents = [
         attributes: {
             brand: "Smucker's",
             flavor: 'Grape',
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -765,7 +765,7 @@ let documents = [
         attributes: {
             brand: "Smucker's",
             flavor: 'Grape',
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -785,7 +785,7 @@ let documents = [
         attributes: {
             brand: "Smucker's",
             flavor: 'Raspberry',
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -809,7 +809,7 @@ let documents = [
         attributes: {
             brand: "Smucker's",
             flavor: 'Raspberry',
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -843,7 +843,7 @@ let documents = [
         },
         attributes: {
             cooked: false,
-            unopened: true,
+            opened: false,
         },
         lifespan: {
             pantry: {
@@ -862,7 +862,7 @@ let documents = [
         },
         attributes: {
             cooked: false,
-            unopened: false,
+            opened: true,
         },
         lifespan: {
             pantry: {
@@ -881,7 +881,7 @@ let documents = [
         },
         attributes: {
             genuine: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -904,7 +904,7 @@ let documents = [
         },
         attributes: {
             genuine: true,
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -922,7 +922,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: true,
+            opened: false,
             store: true
         },
         lifespan: {
@@ -941,7 +941,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: false,
+            opened: true,
             store: true
         },
         lifespan: {
@@ -1008,7 +1008,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1026,7 +1026,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -1090,7 +1090,7 @@ let documents = [
         },
         attributes: {
             type: 'Extra Virgin',
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -1109,7 +1109,7 @@ let documents = [
         },
         attributes: {
             type: 'Extra Virgin',
-            unopened: false
+            opened: true
         },
         lifespan: {
             pantry: {
@@ -1166,7 +1166,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -1184,7 +1184,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1202,7 +1202,7 @@ let documents = [
             unit: 'ounce'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -1252,7 +1252,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -1275,7 +1275,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1293,7 +1293,7 @@ let documents = [
             unit: 'jar'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1313,7 +1313,7 @@ let documents = [
         attributes: {
             cooked: false,
             lowHumidity: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -1333,7 +1333,7 @@ let documents = [
         attributes: {
             cooked: true,
             lowHumidity: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1382,7 +1382,7 @@ let documents = [
         },
         attributes: {
             lowHumidity: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -1424,7 +1424,7 @@ let documents = [
             unit: 'fluid ounce'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -1442,7 +1442,7 @@ let documents = [
             unit: 'fluid ounce'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -1495,7 +1495,7 @@ let documents = [
         attributes: {
             cooked: false,
             refreeze: false,
-            unopened: true
+            opened: false
         },
         lifespan: {
             freezer: {
@@ -1518,7 +1518,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            unopened: true
+            opened: false
         },
         lifespan: {
             refrigerator: {
@@ -1606,7 +1606,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: true
+            opened: false
         },
         lifespan: {
             pantry: {
@@ -1624,7 +1624,7 @@ let documents = [
             unit: 'cup'
         },
         attributes: {
-            unopened: false
+            opened: true
         },
         lifespan: {
             pantry: {

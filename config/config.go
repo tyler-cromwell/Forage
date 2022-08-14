@@ -34,6 +34,7 @@ type TwilioHandle interface {
 type Configuration struct {
 	ContextTimeout time.Duration
 	Lookahead      time.Duration
+	Silence        bool
 	Time           string
 	Timezone       string
 	LogrusLevel    logrus.Level

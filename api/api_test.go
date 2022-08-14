@@ -66,11 +66,11 @@ func TestAPI(t *testing.T) {
 		response    testResponse
 		mongoClient mocks.MockMongo
 	}{
-		{"getConfiguration", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"Lookahead\":172800000000000,\"Time\":\"\"}"}, mocks.MockMongo{}},
+		{"getConfiguration", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"\"}"}, mocks.MockMongo{}},
 		{"putConfiguration200", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"24h\"}"))}, testResponse{status: http.StatusOK, body: ""}, mocks.MockMongo{}},
 		{"putConfiguration400", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
 		{"putConfiguration500#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
-		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"time\": \"24h\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
+		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"silence\": false, \"time\": \"24h\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
 		{"getExpired200", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
 		{"getExpired500#1", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
@@ -506,6 +506,34 @@ func TestAPI(t *testing.T) {
 				"Failed to send Twilio message",
 			},
 		},
+		{
+			// Success #4, items expired/expiring added to new Trello card and SMS message skipped.
+			"checkExpirationsSuccess#4",
+			mocks.MockMongo{
+				OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+					return []bson.M{
+						map[string]interface{}{"name": "value1"},
+						map[string]interface{}{"name": "value2", "attributes": map[string]string{}},
+					}, nil
+				},
+			},
+			mocks.MockTrello{
+				OverrideGetShoppingList: func() (*trello.Card, error) {
+					return nil, nil
+				},
+			},
+			mocks.MockTwilio{},
+			[]logrus.Level{
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+				logrus.InfoLevel,
+			},
+			[]string{
+				"Restocking required",
+				"Created Trello card",
+				"Skipped Twilio message",
+			},
+		},
 	}
 	t.Run("checkExpirations", func(t *testing.T) {
 		// Capture logrus output so we can assert
@@ -518,6 +546,12 @@ func TestAPI(t *testing.T) {
 			configuration.Mongo = &st.mongoClient
 			configuration.Trello = &st.mocksClient
 			configuration.Twilio = &st.twilioClient
+
+			if st.name == "checkExpirationsSuccess#4" {
+				configuration.Silence = true
+			} else {
+				configuration.Silence = false
+			}
 
 			// Act
 			checkExpirations()

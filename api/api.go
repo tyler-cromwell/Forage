@@ -31,10 +31,12 @@ func getConfiguration(response http.ResponseWriter, request *http.Request) {
 	})
 
 	marshalled, _ := json.Marshal(struct {
-		Lookahead time.Duration
-		Time      string
+		Lookahead time.Duration `json:"lookahead"`
+		Silence   bool          `json:"silence"`
+		Time      string        `json:"time"`
 	}{
 		configuration.Lookahead,
+		configuration.Silence,
 		configuration.Time,
 	})
 	log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
@@ -58,11 +60,12 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var data struct {
+	var body struct {
 		Lookahead time.Duration `json:"lookahead"`
+		Silence   bool          `json:"silence"`
 		Time      string        `json:"time"`
 	}
-	err = json.Unmarshal(bytes, &data)
+	err = json.Unmarshal(bytes, &body)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
@@ -76,8 +79,9 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else {
-		configuration.Lookahead = data.Lookahead
-		configuration.Time = data.Time
+		configuration.Lookahead = body.Lookahead
+		configuration.Silence = body.Silence
+		configuration.Time = body.Time
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
 		response.WriteHeader(http.StatusOK)
 	}
@@ -780,14 +784,18 @@ func checkExpirations() {
 		var message = configuration.Twilio.ComposeMessage(quantityExpiring, quantityExpired, url)
 
 		// Send the Twilio message
-		innerTwilio := reflect.ValueOf(configuration.Twilio).Elem()
-		from := *innerTwilio.FieldByName("From").Addr().Interface().(*string)
-		to := *innerTwilio.FieldByName("To").Addr().Interface().(*string)
-		_, err = configuration.Twilio.SendMessage(from, to, message)
-		if err != nil {
-			log.WithFields(logrus.Fields{"from": from, "to": to}).WithError(err).Error("Failed to send Twilio message")
+		if !configuration.Silence {
+			innerTwilio := reflect.ValueOf(configuration.Twilio).Elem()
+			from := *innerTwilio.FieldByName("From").Addr().Interface().(*string)
+			to := *innerTwilio.FieldByName("To").Addr().Interface().(*string)
+			_, err = configuration.Twilio.SendMessage(from, to, message)
+			if err != nil {
+				log.WithFields(logrus.Fields{"from": from, "to": to}).WithError(err).Error("Failed to send Twilio message")
+			} else {
+				log.WithFields(logrus.Fields{"from": from, "to": to}).Info("Sent Twilio message")
+			}
 		} else {
-			log.WithFields(logrus.Fields{"from": from, "to": to}).Info("Sent Twilio message")
+			log.WithFields(logrus.Fields{"silence": configuration.Silence}).Info("Skipped Twilio message")
 		}
 	}
 }

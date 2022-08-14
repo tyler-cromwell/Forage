@@ -366,6 +366,24 @@ func TestTrelloClient(t *testing.T) {
 			require.Empty(t, url)
 		})
 
+		t.Run("NilChecklist", func(t *testing.T) {
+			router := mux.NewRouter().StrictSlash(true)
+			router = mocks.MockGetMember(router)
+			router = mocks.MockMemberGetBoards(router)
+			router = mocks.MockBoardGetLists(router)
+			router = mocks.MockListGetCardsWithCheckLists(router)
+			router = mocks.MockGetChecklistNil(router)
+			router = mocks.MockCreateCheckItem(router)
+			server := httptest.NewServer(router)
+			defer server.Close()
+			client := mocks.NewTrelloClientWrapper(server, "apikey", "apitoken", "mid", "Board", "List", "Label")
+			require.NotNil(t, client)
+
+			url, err := client.AddToShoppingList([]string{""})
+			require.Error(t, err)
+			require.Empty(t, url)
+		})
+
 		t.Run("ErrorCreateCheckItem", func(t *testing.T) {
 			router := mux.NewRouter().StrictSlash(true)
 			router = mocks.MockGetMember(router)

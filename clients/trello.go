@@ -184,9 +184,19 @@ func (tc *Trello) AddToShoppingList(itemText []string) (string, error) {
 		return "", fmt.Errorf("no checklists attached to card")
 	}
 
-	checklist, err := tc.Client.GetChecklist(checklistIDs[0], trello.Defaults())
-	if err != nil {
-		return "", err
+	var checklist *trello.Checklist
+	for _, cid := range checklistIDs {
+		c, err := tc.Client.GetChecklist(cid, trello.Defaults())
+		if err != nil {
+			return "", err
+		} else if c.Name == "Groceries" {
+			checklist = c
+			break
+		}
+	}
+
+	if checklist == nil {
+		return "", fmt.Errorf("%s checklist not found", "Groceries")
 	} else {
 		checklist.CheckItems = []trello.CheckItem{}
 		for _, text := range itemText {

@@ -240,7 +240,7 @@ let documents = [
     },
     {
         amount: {
-            unit: pound,
+            unit: 'pound',
             value: 1
         },
         attributes: {
@@ -259,7 +259,7 @@ let documents = [
     },
     {
         amount: {
-            unit: pound,
+            unit: 'pound',
             value: 1
         },
         attributes: {
@@ -838,7 +838,7 @@ let documents = [
     },
     {
         amount: {
-            unit: pound,
+            unit: 'pound',
             value: 1
         },
         attributes: {
@@ -857,7 +857,7 @@ let documents = [
     },
     {
         amount: {
-            unit: pound,
+            unit: 'pound',
             value: 1
         },
         attributes: {
@@ -876,8 +876,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'cup'
+            unit: 'cup',
+            value: 1
         },
         attributes: {
             genuine: true,
@@ -899,8 +899,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'cup'
+            unit: 'cup',
+            value: 1
         },
         attributes: {
             genuine: true,
@@ -918,8 +918,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'cup'
+            unit: 'cup',
+            value: 1
         },
         attributes: {
             opened: false,
@@ -937,8 +937,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'cup'
+            unit: 'cup',
+            value: 1
         },
         attributes: {
             opened: true,
@@ -956,8 +956,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'gallon'
+            unit: 'gallon',
+            value: 1
         },
         lifespan: {
             refrigerator: {
@@ -971,8 +971,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'fluid ounce'
+            unit: 'fluid ounce',
+            value: 1
         },
         lifespan: {
             pantry: {
@@ -1004,8 +1004,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         attributes: {
             opened: false
@@ -1022,8 +1022,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         attributes: {
             opened: true
@@ -1040,8 +1040,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         lifespan: {
             refrigerator: {
@@ -1055,8 +1055,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'cup'
+            unit: 'cup',
+            value: 1
         },
         lifespan: {
             refrigerator: {
@@ -1070,8 +1070,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         lifespan: {
             pantry: {
@@ -1123,8 +1123,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'head'
+            unit: 'head',
+            value: 1
         },
         attributes: {
             "cut": false,
@@ -1146,8 +1146,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'box'
+            unit: 'box',
+            value: 1
         },
         lifespan: {
             pantry: {
@@ -1180,8 +1180,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         attributes: {
             opened: false
@@ -1198,8 +1198,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'ounce'
+            unit: 'ounce',
+            value: 1
         },
         attributes: {
             opened: true
@@ -1216,8 +1216,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            unit: 'jar',
+            value: 1
         },
         lifespan: {
             pantry: {
@@ -1231,8 +1231,8 @@ let documents = [
     },
     {
         amount: {
-            value: 1,
-            unit: 'jar'
+            unit: 'jar',
+            value: 1
         },
         lifespan: {
             pantry: {

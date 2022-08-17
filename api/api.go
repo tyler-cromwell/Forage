@@ -26,10 +26,16 @@ var configuration *config.Configuration
 func getConfiguration(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.getConfigure",
+		"at":     "api.getConfiguration",
 		"method": "GET",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
+	// Prepare the response data
 	marshalled, _ := json.Marshal(struct {
 		Lookahead time.Duration `json:"lookahead"`
 		Silence   bool          `json:"silence"`
@@ -39,7 +45,10 @@ func getConfiguration(response http.ResponseWriter, request *http.Request) {
 		configuration.Silence,
 		configuration.Time,
 	})
-	log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+
+	// Log & Respond
+	log.WithFields(logrus.Fields{"size": len(marshalled), "state": "marshalled", "value": string(marshalled)}).Debug("Response body")
+	log.WithFields(logrus.Fields{"status": http.StatusOK}).Info("Succeeded")
 	response.WriteHeader(http.StatusOK)
 	response.Write(marshalled)
 }
@@ -47,19 +56,27 @@ func getConfiguration(response http.ResponseWriter, request *http.Request) {
 func putConfiguration(response http.ResponseWriter, request *http.Request) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
-		"at":     "api.getConfigure",
+		"at":     "api.putConfiguration",
 		"method": "PUT",
 	})
 
-	// Get configuration fields from body
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
+	// Read in request body
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to read request body")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"size": len(bytes), "state": "marshalled", "value": string(bytes)}).Debug("Request body")
 	}
 
+	// Parse request body
 	var body struct {
 		Lookahead time.Duration `json:"lookahead"`
 		Silence   bool          `json:"silence"`
@@ -79,10 +96,12 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else {
+		log.WithFields(logrus.Fields{"lookahead": body.Lookahead, "silence": body.Silence, "time": body.Time}).Debug("Parsed data")
 		configuration.Lookahead = body.Lookahead
 		configuration.Silence = body.Silence
 		configuration.Time = body.Time
-		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
+		log.WithFields(logrus.Fields{"state": "unmarshalled", "value": body}).Debug("Request body")
+		log.WithFields(logrus.Fields{"status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -93,6 +112,11 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 		"at":     "api.getExpired",
 		"method": "GET",
 	})
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
 
 	// Filter by food expired already
 	filter := bson.M{"$and": []bson.M{
@@ -107,10 +131,12 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 			},
 		},
 	}}
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Define sorting criteria
 	opts := options.Find()
 	opts.SetSort(bson.D{{"expirationDate", 1}})
+	log.WithFields(logrus.Fields{"value": opts.Sort}).Debug("Sorting criteria")
 
 	// Grab the documents
 	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
@@ -119,6 +145,8 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
+		log.WithFields(logrus.Fields{"quantity": len(documents), "value": documents}).Debug("Documents found")
+
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
@@ -126,7 +154,7 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 		} else {
-			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -139,11 +167,19 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		"at":     "api.getExpiring",
 		"method": "GET",
 	})
+	qpNameFrom := "from"
+	qpNameTo := "to"
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
 
 	// Extract query parameters
 	queryParams := request.URL.Query()
-	qpFrom := queryParams.Get("from")
-	qpTo := queryParams.Get("to")
+	qpFrom := queryParams.Get(qpNameFrom)
+	qpTo := queryParams.Get(qpNameTo)
+	log.WithFields(logrus.Fields{"value": queryParams}).Debug("Query parameters")
 
 	// Check if query parameters are present
 	var timeFrom time.Time = time.Now()
@@ -156,9 +192,11 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if qpFrom != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameFrom, "value": qpFrom})
+		l.Trace("Query parameter handling")
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
+			l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse number")
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte(err.Error()))
 			return
@@ -171,9 +209,11 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 	if qpTo != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameTo, "value": qpTo})
+		l.Trace("Query parameter handling")
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
+			l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse number")
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte(err.Error()))
 			return
@@ -186,7 +226,9 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 
+	// Is this even necessary?
 	if qpFrom != "" && qpTo != "" {
+		log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
 				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
@@ -204,10 +246,12 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 			},
 		},
 	}}
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Define sorting criteria
 	opts := options.Find()
 	opts.SetSort(bson.D{{"expirationDate", 1}})
+	log.WithFields(logrus.Fields{"value": opts.Sort}).Debug("Sorting criteria")
 
 	// Grab the documents
 	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
@@ -216,6 +260,9 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
+		l := log.WithFields(logrus.Fields{"quantity": len(documents)})
+		l.WithFields(logrus.Fields{"value": documents}).Debug("Documents found")
+
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
@@ -223,7 +270,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 		} else {
-			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			l.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -237,9 +284,15 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 		"method": "GET",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
 	// Extract route parameter
 	vars := mux.Vars(request)
 	id := vars["id"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -259,7 +312,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Create filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{"filter": filter})
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to get the document
 	document, err := configuration.Mongo.FindOneDocument(request.Context(), filter)
@@ -274,6 +327,8 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
+		log.WithFields(logrus.Fields{"value": document}).Debug("Document found")
+
 		// Prepare to respond with document
 		marshalled, err := json.Marshal(document)
 		if err != nil {
@@ -281,7 +336,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 		} else {
-			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -294,14 +349,25 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"at":     "api.getManyDocuments",
 		"method": "GET",
 	})
+	qpNameFrom := "from"
+	qpNameHaveStocked := "haveStocked"
+	qpNameName := "name"
+	qpNameType := "type"
+	qpNameTo := "to"
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
 
 	// Extract query parameters
 	queryParams := request.URL.Query()
-	qpFrom := queryParams.Get("from")
-	qpHaveStocked := queryParams.Get("haveStocked")
-	qpName := queryParams.Get("name")
-	qpType := queryParams.Get("type")
-	qpTo := queryParams.Get("to")
+	qpFrom := queryParams.Get(qpNameFrom)
+	qpHaveStocked := queryParams.Get(qpNameHaveStocked)
+	qpName := queryParams.Get(qpNameName)
+	qpType := queryParams.Get(qpNameType)
+	qpTo := queryParams.Get(qpNameTo)
+	log.WithFields(logrus.Fields{"value": queryParams}).Debug("Query parameters")
 
 	// Check if query parameters are present
 	var timeFrom time.Time
@@ -316,6 +382,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if qpFrom != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameFrom, "value": qpFrom})
+		l.Trace("Query parameter handling")
 		from, err := strconv.ParseInt(qpFrom, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
@@ -331,12 +399,18 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		}
 	}
 	if qpName != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameName, "value": qpName})
+		l.Trace("Query parameter handling")
 		filterName = bson.M{"name": qpName}
 	}
 	if qpType != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameType, "value": qpType})
+		l.Trace("Query parameter handling")
 		filterType = bson.M{"type": qpType}
 	}
 	if qpTo != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameTo, "value": qpTo})
+		l.Trace("Query parameter handling")
 		to, err := strconv.ParseInt(qpTo, 10, 64)
 		if err != nil {
 			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
@@ -353,6 +427,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if qpFrom != "" && qpTo != "" {
+		log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
 				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
@@ -362,6 +437,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if qpHaveStocked != "" {
+		l := log.WithFields(logrus.Fields{"name": qpNameHaveStocked, "value": qpHaveStocked})
+		l.Trace("Query parameter handling")
 		b, err := strconv.ParseBool(qpHaveStocked)
 		if err != nil {
 			// Invalid query parameter value provided
@@ -385,7 +462,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		filterType,
 		filterExpires,
 	}}
-	log = log.WithFields(logrus.Fields{"filter": filter})
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to get the documents
 	documents, err := configuration.Mongo.FindDocuments(request.Context(), filter, nil)
@@ -394,6 +471,9 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
+		l := log.WithFields(logrus.Fields{"quantity": len(documents)})
+		l.WithFields(logrus.Fields{"value": documents}).Debug("Documents found")
+
 		// Prepare to respond with documents
 		marshalled, err := json.Marshal(documents)
 		if err != nil {
@@ -401,7 +481,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 		} else {
-			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Debug("Success")
+			l.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
 			response.WriteHeader(http.StatusOK)
 			response.Write(marshalled)
 		}
@@ -415,6 +495,11 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"method": "POST",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
 	// Get documents from body
 	bytes, err := ioutil.ReadAll(request.Body)
 	if err != nil {
@@ -422,11 +507,13 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"size": len(bytes), "state": "marshalled", "value": string(bytes)}).Debug("Request body")
 	}
 
 	// Parse documents
-	var data []interface{}
-	err = json.Unmarshal(bytes, &data)
+	var body []interface{}
+	err = json.Unmarshal(bytes, &body)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode documents")
@@ -439,11 +526,15 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"state": "unmarshalled", "value": body}).Debug("Request body")
 	}
 
 	// Construct insert instructions
 	documents := []interface{}{}
-	documents = append(documents, data...)
+	documents = append(documents, body...)
+	l := log.WithFields(logrus.Fields{"quantity": len(documents)})
+	l.WithFields(logrus.Fields{"value": documents}).Debug("Documents received")
 
 	// Attempt to put the document
 	err = configuration.Mongo.InsertManyDocuments(request.Context(), documents)
@@ -453,7 +544,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
-		log.WithFields(logrus.Fields{"quantity": len(documents), "status": http.StatusCreated}).Debug("Success")
+		l.WithFields(logrus.Fields{"status": http.StatusCreated}).Info("Succeeded")
 		response.WriteHeader(http.StatusCreated)
 	}
 }
@@ -465,21 +556,27 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 		"method": "PUT",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
 	// Extract route parameter
 	vars := mux.Vars(request)
 	id := vars["id"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
@@ -487,7 +584,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Construct filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{"filter": filter})
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Get document fields from body
 	bytes, err := ioutil.ReadAll(request.Body)
@@ -496,6 +593,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"size": len(bytes), "state": "marshalled", "value": string(bytes)}).Debug("Request body")
 	}
 
 	// Parse update fields
@@ -513,6 +612,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"value": fields}).Trace("Update fields")
 	}
 
 	// Construct update instructions
@@ -520,14 +621,17 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	for k, v := range fields {
 		interim[k] = v
 	}
+	log.WithFields(logrus.Fields{"step": 1, "value": interim}).Trace("Interim update instructions")
 
 	// Ignore _id field since it's immutable and will error
 	_, ok := interim["_id"]
 	if ok {
 		delete(interim, "_id")
 	}
+	log.WithFields(logrus.Fields{"step": 2, "value": interim}).Trace("Interim update instructions")
 
 	update := bson.M{"$set": interim}
+	log.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
 
 	// Attempt to put the document
 	matched, _, err := configuration.Mongo.UpdateOneDocument(request.Context(), filter, update)
@@ -542,7 +646,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
-		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
+		log.WithFields(logrus.Fields{"quantity": matched, "status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -554,21 +658,27 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 		"method": "DELETE",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
 	// Extract route parameter
 	vars := mux.Vars(request)
 	id := vars["id"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
-		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		log.WithFields(logrus.Fields{"id": id, "status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
@@ -576,7 +686,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Create filter
 	filter := bson.D{{"_id", oid}}
-	log = log.WithFields(logrus.Fields{"filter": filter})
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to delete the document
 	err = configuration.Mongo.DeleteOneDocument(request.Context(), filter)
@@ -591,7 +701,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
-		log.WithFields(logrus.Fields{"status": http.StatusOK}).Debug("Success")
+		log.WithFields(logrus.Fields{"status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -603,6 +713,11 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"method": "DELETE",
 	})
 
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
 	// Delete by list of IDs (for now)
 	// Get document fields from body
 	bytes, err := ioutil.ReadAll(request.Body)
@@ -611,6 +726,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"size": len(bytes), "state": "marshalled", "value": string(bytes)}).Debug("Request body")
 	}
 
 	// Parse update fields
@@ -622,6 +739,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
+	} else {
+		log.WithFields(logrus.Fields{"value": ids}).Debug("Document IDs")
 	}
 
 	// Create filter
@@ -629,7 +748,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	for _, id := range ids {
 		oid, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse id")
+			log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Error("Failed to parse id")
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte(err.Error()))
 			return
@@ -637,8 +756,9 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 			interim = append(interim, oid)
 		}
 	}
+	log.WithFields(logrus.Fields{"step": 1, "value": interim}).Trace("Interim update instructions")
 	filter := bson.M{"_id": bson.M{"$in": interim}}
-	log = log.WithFields(logrus.Fields{"filter": filter})
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to delete the documents
 	deleted, err := configuration.Mongo.DeleteManyDocuments(request.Context(), filter)
@@ -653,7 +773,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte("no documents found"))
 	} else {
-		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Debug("Success")
+		log.WithFields(logrus.Fields{"quantity": deleted, "status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
 	}
 }
@@ -667,6 +787,10 @@ func checkExpirations() {
 		"at":        "api.checkExpirations",
 		"lookahead": configuration.Lookahead,
 	})
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	defer log.Trace("End function")
 
 	// Filter by food expired already
 	now := time.Now().UnixNano() / int64(time.Millisecond)
@@ -683,9 +807,10 @@ func checkExpirations() {
 			},
 		},
 	}}
+	log.WithFields(logrus.Fields{"type": "expired", "value": filterExpired}).Debug("Filter data")
 
 	// Filter by food expiring within the given search window
-	filter := bson.M{"$and": []bson.M{
+	filterExpiring := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{
 				"$gte": now,
@@ -698,6 +823,7 @@ func checkExpirations() {
 			},
 		},
 	}}
+	log.WithFields(logrus.Fields{"type": "expiring", "value": filterExpiring}).Debug("Filter data")
 
 	// Grab the documents
 	documentsExpired, err := configuration.Mongo.FindDocuments(ctx, filterExpired, nil)
@@ -706,7 +832,7 @@ func checkExpirations() {
 		return
 	}
 
-	documentsExpiring, err := configuration.Mongo.FindDocuments(ctx, filter, nil)
+	documentsExpiring, err := configuration.Mongo.FindDocuments(ctx, filterExpiring, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 	} else {
@@ -720,6 +846,9 @@ func checkExpirations() {
 		} else {
 			log.WithFields(logrus.Fields{"expiring": quantityExpiring, "expired": quantityExpired}).Info("Restocking required")
 		}
+
+		log.WithFields(logrus.Fields{"quantity": quantityExpired, "value": documentsExpired}).Debug("Expired items")
+		log.WithFields(logrus.Fields{"quantity": quantityExpiring, "value": documentsExpiring}).Debug("Expiring items")
 
 		// Construct list of names of items to shop for
 		var groceries []string
@@ -749,11 +878,13 @@ func checkExpirations() {
 
 			groceries = append(groceries, text)
 		}
+		log.WithFields(logrus.Fields{"quantity": len(groceries), "value": groceries}).Debug("Groceries")
 
 		// Construct shopping list due date
 		now := time.Now()
 		rounded := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		dueDate := rounded.Add(configuration.Lookahead + (time.Hour * 24))
+		log.WithFields(logrus.Fields{"value": dueDate}).Debug("Card due date")
 
 		var url string
 		shoppingListCard, err := configuration.Trello.GetShoppingList()

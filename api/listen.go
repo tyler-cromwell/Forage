@@ -17,12 +17,18 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 	configuration = c
 
 	// Specify common fields
-	log := logrus.WithFields(logrus.Fields{"at": "ListenAndServe"})
+	log := logrus.WithFields(logrus.Fields{"at": "listen.ListenAndServe"})
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	defer log.Trace("End function")
 
 	// Load timezone
 	loc, err := time.LoadLocation(configuration.Timezone)
 	if err != nil {
 		log.WithFields(logrus.Fields{"timezone": configuration.Timezone}).WithError(err).Fatal("Failed to obtain timezone")
+	} else {
+		log.WithFields(logrus.Fields{"timezone": configuration.Timezone}).Info("Parsed timezone")
 	}
 
 	// Launch job to periodically check for expiring food
@@ -45,7 +51,7 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 	router.HandleFunc("/expired", getExpired).Methods("GET")
 
 	// Specify common fields
-	log = logrus.WithFields(logrus.Fields{"socket": configuration.ListenSocket})
+	log = log.WithFields(logrus.Fields{"socket": configuration.ListenSocket})
 
 	// Listen for HTTP requests
 	log.Info("Listening for HTTP requests")

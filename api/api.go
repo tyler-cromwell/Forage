@@ -85,7 +85,15 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(bytes, &body)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
+		log.WithFields(logrus.Fields{"case": 1}).Trace("Invalid request body")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to decode update fields")
+		response.WriteHeader(http.StatusBadRequest)
+		response.Write([]byte(err.Error()))
+		return
+	} else if err != nil && err.Error() == "unexpected end of JSON input" {
+		// Invalid request body
+		log.WithFields(logrus.Fields{"case": 2}).Trace("Invalid request body")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to decode update fields")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
@@ -602,7 +610,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(bytes, &fields)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode update fields")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to decode update fields")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
@@ -624,8 +632,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"step": 1, "value": interim}).Trace("Interim update instructions")
 
 	// Ignore _id field since it's immutable and will error
-	_, ok := interim["_id"]
-	if ok {
+	_, found := interim["_id"]
+	if found {
 		delete(interim, "_id")
 	}
 	log.WithFields(logrus.Fields{"step": 2, "value": interim}).Trace("Interim update instructions")
@@ -635,16 +643,20 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to put the document
 	matched, _, err := configuration.Mongo.UpdateOneDocument(request.Context(), filter, update)
-	if matched == 0 {
-		// Put completed but no document was found
-		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to put document")
-		response.WriteHeader(http.StatusNotFound)
+	if err != nil && strings.Contains(err.Error(), "You must specify a field like so") {
+		// Empty request body
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to put document")
+		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 	} else if err != nil {
 		// Put failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to put document")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
+	} else if matched == 0 {
+		// Put completed but no document was found
+		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).Warn("Failed to put document")
+		response.WriteHeader(http.StatusNotFound)
 	} else {
 		log.WithFields(logrus.Fields{"quantity": matched, "status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
@@ -735,7 +747,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	err = json.Unmarshal(bytes, &ids)
 	if err != nil {
 		// Something else failed
-		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to decode delete fields")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to decode delete fields")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
@@ -748,7 +760,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	for _, id := range ids {
 		oid, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
-			log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Error("Failed to parse id")
+			log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse id")
 			response.WriteHeader(http.StatusBadRequest)
 			response.Write([]byte(err.Error()))
 			return

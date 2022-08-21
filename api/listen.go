@@ -33,9 +33,14 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 
 	// Launch job to periodically check for expiring food
 	s := gocron.NewScheduler(loc)
-	s.Every(1).Day().At(configuration.Time).Do(checkExpirations)
-	s.StartAsync()
-	log.Info("Expiration watch job started")
+	_, err = s.Every(1).Day().At(configuration.Time).Do(checkExpirations)
+	if err != nil {
+		log.WithError(err).Fatal("Failed to schedule expriation watch job")
+		return
+	} else {
+		s.StartAsync()
+		log.Info("Expiration watch job scheduled")
+	}
 
 	// Define route actions/methods
 	router := mux.NewRouter().StrictSlash(true)

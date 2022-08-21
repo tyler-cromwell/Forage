@@ -1,11 +1,10 @@
-package tests
+package utils
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/tyler-cromwell/forage/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -20,11 +19,11 @@ func TestUtils(t *testing.T) {
 			err  error
 		}{
 			{"6187e576abc057dac3e7d5e4", t1, nil},
-			{"hello", time.Unix(0, 0).UTC(), fmt.Errorf(utils.ErrInvalidObjectID)},
+			{"hello", time.Unix(0, 0).UTC(), fmt.Errorf(ErrInvalidObjectID)},
 		}
 
 		for _, c := range cases {
-			got, err := utils.ParseDatetimeFromMongoID(c.id)
+			got, err := ParseDatetimeFromMongoID(c.id)
 			if got != c.want {
 				t.Errorf("ParseDatetimeFromMongoID(\"%s\"), got (\"%s\", \"%s\"), want (\"%s\", \"%s\")", c.id, got, err, c.want, c.err)
 			}
@@ -53,7 +52,7 @@ func TestUtils(t *testing.T) {
 		}
 
 		for _, c := range cases {
-			got := utils.StringSliceFromBsonM(c.documents, c.key)
+			got := StringSliceFromBsonM(c.documents, c.key)
 			for i := range got {
 				if got[i] != c.want[i] {
 					t.Errorf("StringSliceFromBsonM(\"%s\", \"%s\")[%d], got (\"%s\"), want (\"%s\")", documents, c.key, i, got[i], c.want[i])

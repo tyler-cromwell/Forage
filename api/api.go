@@ -104,11 +104,36 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else {
+		log.WithFields(logrus.Fields{"state": "unmarshalled", "value": body}).Debug("Request body")
 		log.WithFields(logrus.Fields{"lookahead": body.Lookahead, "silence": body.Silence, "time": body.Time}).Debug("Parsed data")
+
+		if body.Time != "" && len(strings.Split(body.Time, ":")) != 2 {
+			log.WithFields(logrus.Fields{"status": http.StatusBadRequest, "value": body.Time}).Warn("Invalid time format")
+			response.WriteHeader(http.StatusBadRequest)
+			response.Write([]byte("Invalid time format: " + body.Time))
+			return
+		}
+
+		if len(body.Time) != 0 && configuration.Time != body.Time {
+			// Re-schedule expiration job
+			configuration.Scheduler.Clear()
+			log.Info("Scheduler cleared")
+			_, err = configuration.Scheduler.Every(1).Day().At(body.Time).Do(checkExpirations)
+			if err != nil {
+				log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to schedule expriation watch job")
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write([]byte(err.Error()))
+				return
+			} else {
+				configuration.Scheduler.StartAsync()
+				log.Info("Expiration watch job scheduled")
+			}
+		}
+
 		configuration.Lookahead = body.Lookahead
 		configuration.Silence = body.Silence
 		configuration.Time = body.Time
-		log.WithFields(logrus.Fields{"state": "unmarshalled", "value": body}).Debug("Request body")
+
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
 	}

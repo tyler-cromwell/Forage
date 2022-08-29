@@ -32,13 +32,13 @@ func ListenAndServe(ctx context.Context, c *config.Configuration) {
 	}
 
 	// Launch job to periodically check for expiring food
-	s := gocron.NewScheduler(loc)
-	_, err = s.Every(1).Day().At(configuration.Time).Do(checkExpirations)
+	configuration.Scheduler = gocron.NewScheduler(loc)
+	_, err = configuration.Scheduler.Every(1).Day().At(configuration.Time).Do(checkExpirations)
 	if err != nil {
 		log.WithError(err).Fatal("Failed to schedule expriation watch job")
 		return
 	} else {
-		s.StartAsync()
+		configuration.Scheduler.StartAsync()
 		log.Info("Expiration watch job scheduled")
 	}
 

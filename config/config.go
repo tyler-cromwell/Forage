@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/adlio/trello"
+	"github.com/go-co-op/gocron"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -39,6 +40,7 @@ type Configuration struct {
 	Timezone       string
 	LogrusLevel    logrus.Level
 	ListenSocket   string
+	Scheduler      *gocron.Scheduler
 	Mongo          MongoHandle  //*clients.Mongo
 	Trello         TrelloHandle //*clients.Trello
 	Twilio         TwilioHandle //*clients.Twilio

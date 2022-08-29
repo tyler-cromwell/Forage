@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/adlio/trello"
+	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
@@ -51,12 +52,14 @@ func TestAPI(t *testing.T) {
 	forageContextTimeout, _ := time.ParseDuration("5s")
 	forageLookahead, _ := time.ParseDuration("48h")
 	listenSocket := ":8001"
+	loc, _ := time.LoadLocation("America/New_York")
 
 	configuration = &config.Configuration{
 		ContextTimeout: forageContextTimeout,
 		Lookahead:      forageLookahead,
 		LogrusLevel:    logrus.DebugLevel,
 		ListenSocket:   listenSocket,
+		Scheduler:      gocron.NewScheduler(loc),
 	}
 
 	subtests := []struct {
@@ -67,11 +70,13 @@ func TestAPI(t *testing.T) {
 		mongoClient mocks.MockMongo
 	}{
 		{"getConfiguration", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"\"}"}, mocks.MockMongo{}},
-		{"putConfiguration200", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"24h\"}"))}, testResponse{status: http.StatusOK, body: ""}, mocks.MockMongo{}},
+		{"putConfiguration200", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19:00\"}"))}, testResponse{status: http.StatusOK, body: ""}, mocks.MockMongo{}},
 		{"putConfiguration400#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
 		{"putConfiguration400#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader(""))}, testResponse{status: http.StatusBadRequest, body: "unexpected end of JSON input"}, mocks.MockMongo{}},
+		{"putConfiguration400#3", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19/00\"}"))}, testResponse{status: http.StatusBadRequest, body: "Invalid time format: 19/00"}, mocks.MockMongo{}},
 		{"putConfiguration500#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
-		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"silence\": false, \"time\": \"24h\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
+		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"silence\": false, \"time\": \"19:00\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
+		{"putConfiguration500#3", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"18:0z\"}"))}, testResponse{status: http.StatusInternalServerError, body: "the given time format is not supported"}, mocks.MockMongo{}},
 		{"getExpired200", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
 		{"getExpired500#1", getExpired, testRequest{method: "GET", endpoint: "/expired", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

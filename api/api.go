@@ -155,7 +155,7 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 	filter := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{
-				"$lte": time.Now().UnixNano() / int64(time.Millisecond),
+				"$lte": int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		},
 		{
@@ -219,8 +219,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	var timeTo time.Time = time.Now().Add(configuration.Lookahead)
 	filterExpires := bson.M{
 		"expirationDate": bson.M{
-			"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
-			"$lte": timeTo.UnixNano() / int64(time.Millisecond),
+			"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
+			"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
 		},
 	}
 
@@ -237,7 +237,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
+				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -254,7 +254,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
+				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -264,8 +264,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 		log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
-				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
+				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
+				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -427,7 +427,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
+				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -454,7 +454,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		timeTo = time.Unix(0, to*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
+				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -463,8 +463,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
 		filterExpires = bson.M{
 			"expirationDate": bson.M{
-				"$gte": timeFrom.UnixNano() / int64(time.Millisecond),
-				"$lte": timeTo.UnixNano() / int64(time.Millisecond),
+				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
+				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
 			},
 		}
 	}
@@ -830,8 +830,8 @@ func checkExpirations() {
 	defer log.Trace("End function")
 
 	// Filter by food expired already
-	now := time.Now().UnixNano() / int64(time.Millisecond)
-	later := time.Now().Add(configuration.Lookahead).UnixNano() / int64(time.Millisecond)
+	now := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
+	later := int64(time.Now().Add(configuration.Lookahead).UTC().UnixNano()) / int64(time.Millisecond)
 	filterExpired := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{

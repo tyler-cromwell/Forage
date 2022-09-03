@@ -249,7 +249,7 @@ func TestAPI(t *testing.T) {
 					expectation := bson.M{"$and": []bson.M{
 						{
 							"expirationDate": bson.M{
-								"$lte": time.Now().UnixNano() / int64(time.Millisecond),
+								"$lte": int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond),
 							},
 						},
 						{
@@ -294,8 +294,8 @@ func TestAPI(t *testing.T) {
 					expectation := bson.M{"$and": []bson.M{
 						{
 							"expirationDate": bson.M{
-								"$gte": time.Now().UnixNano() / int64(time.Millisecond),
-								"$lte": time.Now().Add(configuration.Lookahead).UnixNano() / int64(time.Millisecond),
+								"$gte": int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond),
+								"$lte": int64(time.Now().Add(configuration.Lookahead).UTC().UnixNano()) / int64(time.Millisecond),
 							},
 						},
 						{

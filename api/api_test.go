@@ -88,7 +88,21 @@ func TestAPI(t *testing.T) {
 				return []bson.M{map[string]interface{}{"key": make(chan int)}}, nil
 			},
 		}},
-		{"getExpiring200", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "10", "to": "20"}, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
+		{"getExpiring200#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "10", "to": "20"}, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
+		{"getExpiring200#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "20", "to": "30"}, body: nil}, testResponse{status: http.StatusOK, body: "[{\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{
+			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				m1 := filter["$and"].([]bson.M)
+				m2 := m1[0]["expirationDate"].(bson.M)
+				low := m2["$gte"].(int64)
+				high := m2["$lte"].(int64)
+				expirationDate := int64(25)
+				if expirationDate >= low && expirationDate <= high {
+					return []bson.M{map[string]interface{}{"expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
+				} else {
+					return []bson.M{}, nil
+				}
+			},
+		}},
 		{"getExpiring400#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "x", "to": "20"}, body: nil}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
 		{"getExpiring400#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: map[string]string{"from": "10", "to": "y"}, body: nil}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
 		{"getExpiring500#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
@@ -120,7 +134,21 @@ func TestAPI(t *testing.T) {
 				return nil, fmt.Errorf("failure")
 			},
 		}},
-		{"getManyDocuments200", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
+		{"getManyDocuments200#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}, body: nil}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
+		{"getManyDocuments200#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}, body: nil}, testResponse{status: http.StatusOK, body: "[{\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{
+			OverrideFindManyDocuments: func(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				m1 := filter["$and"].([]bson.M)
+				m2 := m1[3]["expirationDate"].(bson.M)
+				low := m2["$gte"].(int64)
+				high := m2["$lte"].(int64)
+				expirationDate := int64(25)
+				if expirationDate >= low && expirationDate <= high {
+					return []bson.M{map[string]interface{}{"expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
+				} else {
+					return []bson.M{}, nil
+				}
+			},
+		}},
 		{"getManyDocuments400#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}, body: nil}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
 		{"getManyDocuments400#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}, body: nil}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
 		{"getManyDocuments400#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: nil, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}, body: nil}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseBool: parsing \"lol\": invalid syntax"}, mocks.MockMongo{}},

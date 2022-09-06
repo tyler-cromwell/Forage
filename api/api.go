@@ -424,6 +424,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 			response.Write([]byte(err.Error()))
 			return
 		}
+		l.WithFields(logrus.Fields{"old": timeFrom.UnixNano() / int64(time.Millisecond), "new": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond)}).Debug("Something")
 		timeFrom = time.Unix(0, from*int64(time.Millisecond))
 		filterExpires = bson.M{
 			"expirationDate": bson.M{

@@ -1,12 +1,14 @@
 print('======================================')
 let database = connect('127.0.0.1:27017/forage')
 
-let resultDrop = database.data.drop()
-print('Dropped:', resultDrop)
+let resultIngredientsDrop = database.ingredients.drop()
+print('Ingredients Dropped:', resultIngredientsDrop)
+let resultRecipesDrop = database.ingredients.drop()
+print('Recipes Dropped:', resultRecipesDrop)
 
 // Production will include expiration date
 let dateUpdated = new Date().getTime()
-let documents = [
+let ingredients = [
     {
         amount: {
             unit: 'ounces',
@@ -23,9 +25,7 @@ let documents = [
                 value: 4
             }
         },
-        name: 'Aioli',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Aioli'
     },
     {
         amount: {
@@ -43,9 +43,7 @@ let documents = [
                 value: 4
             }
         },
-        name: 'Aioli',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Aioli'
     },
     {
         amount: {
@@ -58,9 +56,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Apples',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Apples'
     },
     {
         amount: {
@@ -80,9 +76,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Bacon',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bacon'
     },
     {
         amount: {
@@ -98,9 +92,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Bacon',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bacon'
     },
     {
         amount: {
@@ -121,9 +113,7 @@ let documents = [
                 unit: 'month'
             },
         },
-        name: 'Bagel',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bagel'
     },
     {
         amount: {
@@ -136,9 +126,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Bananas',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bananas'
     },
     {
         amount: {
@@ -160,9 +148,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Beef',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Beef'
     },
     {
         amount: {
@@ -171,7 +157,7 @@ let documents = [
         },
         attributes: {
             cooked: true,
-            opened: false
+            opened: true
         },
         lifespan: {
             refrigerator: {
@@ -179,9 +165,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Beef',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Beef'
     },
     {
         amount: {
@@ -194,9 +178,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Black Pepper',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Black Pepper'
     },
     {
         amount: {
@@ -212,9 +194,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Broccoli',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Broccoli'
     },
     {
         amount: {
@@ -234,9 +214,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Brussel Sprouts',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Brussel Sprouts'
     },
     {
         amount: {
@@ -253,9 +231,7 @@ let documents = [
                 value: 3
             }
         },
-        name: 'Bucatini',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bucatini'
     },
     {
         amount: {
@@ -272,9 +248,7 @@ let documents = [
                 value: 1
             }
         },
-        name: 'Bucatini',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Bucatini'
     },
     {
         amount: {
@@ -287,9 +261,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Butter',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Butter'
     },
     {
         amount: {
@@ -302,9 +274,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Carrots',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Carrots'
     },
     {
         amount: {
@@ -317,9 +287,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Celery',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Celery'
     },
     {
         amount: {
@@ -332,9 +300,24 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Cheerios',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Cheerios'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: false,
+            type: 'American'
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'month',
+                value: 5
+            }
+        },
+        name: 'Cheese'
     },
     {
         amount: {
@@ -356,9 +339,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Chicken',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Chicken'
     },
     {
         amount: {
@@ -375,9 +356,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Chicken',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Chicken'
     },
     {
         amount: {
@@ -390,9 +369,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Chili Flakes',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Chili Flakes'
     },
     {
         amount: {
@@ -408,9 +385,7 @@ let documents = [
                 value: 2
             }
         },
-        name: 'Cream Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Cream Cheese'
     },
     {
         amount: {
@@ -426,9 +401,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Cream Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Cream Cheese'
     },
     {
         amount: {
@@ -441,9 +414,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Cucumber',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Cucumber'
     },
     {
         amount: {
@@ -456,9 +427,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Cumin',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Cumin'
     },
     {
         amount: {
@@ -474,9 +443,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Dijon Mustard',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Dijon Mustard'
     },
     {
         amount: {
@@ -492,9 +459,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Dijon Mustard',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Dijon Mustard'
     },
     {
         amount: {
@@ -507,9 +472,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Eggs',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Eggs'
     },
     {
         amount: {
@@ -522,9 +485,7 @@ let documents = [
                 value: 3
             }
         },
-        name: 'Garlic',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Garlic'
     },
     {
         amount: {
@@ -542,8 +503,7 @@ let documents = [
             }
         },
         name: "Gnocchi",
-        type: "ingredient",
-        updated: dateUpdated
+        type: "ingredient"
     },
     {
         amount: {
@@ -556,9 +516,7 @@ let documents = [
                 value: 5
             }
         },
-        name: 'Grape Tomatoes',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Grape Tomatoes'
     },
     {
         amount: {
@@ -578,9 +536,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Greek Yogurt',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Greek Yogurt'
     },
     {
         amount: {
@@ -600,9 +556,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Greek Yogurt',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Greek Yogurt'
     },
     {
         amount: {
@@ -615,10 +569,9 @@ let documents = [
                 value: 12
             }
         },
-        name: 'Green Leaf Lettuce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Green Leaf Lettuce'
     },
+    /*
     {
         amount: {
             value: 1,
@@ -631,9 +584,9 @@ let documents = [
             }
         },
         name: 'Gyoza',
-        type: 'Meal',
-        updated: dateUpdated
+        type: 'Meal'
     },
+    */
     {
         amount: {
             unit: 'ounce',
@@ -645,9 +598,7 @@ let documents = [
                 value: 2
             }
         },
-        name: 'Hamburger Seasoning',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Hamburger Seasoning'
     },
     {
         amount: {
@@ -666,9 +617,7 @@ let documents = [
                 value: 6
             }
         },
-        name: 'Hot Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Hot Sauce'
     },
     {
         amount: {
@@ -687,9 +636,7 @@ let documents = [
                 value: 2
             }
         },
-        name: 'Hot Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Hot Sauce'
     },
     {
         amount: {
@@ -708,9 +655,7 @@ let documents = [
                 value: 6
             }
         },
-        name: 'Hot Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Hot Sauce'
     },
     {
         amount: {
@@ -729,9 +674,7 @@ let documents = [
                 value: 2
             }
         },
-        name: 'Hot Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Hot Sauce'
     },
     {
         amount: {
@@ -753,9 +696,7 @@ let documents = [
                 value: 2
             }
         },
-        name: 'Jam',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Jam'
     },
     {
         amount: {
@@ -773,9 +714,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Jam',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Jam'
     },
     {
         amount: {
@@ -797,9 +736,7 @@ let documents = [
                 value: 20
             }
         },
-        name: 'Jam',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Jam'
     },
     {
         amount: {
@@ -817,9 +754,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Jam',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Jam'
     },
     {
         amount: {
@@ -832,9 +767,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Lettuce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Lettuce'
     },
     {
         amount: {
@@ -851,9 +784,7 @@ let documents = [
                 value: 3
             }
         },
-        name: 'Linguine',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Linguine'
     },
     {
         amount: {
@@ -870,9 +801,7 @@ let documents = [
                 value: 1
             }
         },
-        name: 'Linguine',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Linguine'
     },
     {
         amount: {
@@ -893,9 +822,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Maple Syrup',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Maple Syrup'
     },
     {
         amount: {
@@ -912,9 +839,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Maple Syrup',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Maple Syrup'
     },
     {
         amount: {
@@ -931,9 +856,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Mayonnaise',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mayonnaise'
     },
     {
         amount: {
@@ -950,9 +873,7 @@ let documents = [
                 unit: 'weeks'
             }
         },
-        name: 'Mayonnaise',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mayonnaise'
     },
     {
         amount: {
@@ -965,9 +886,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Milk',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Milk'
     },
     {
         amount: {
@@ -980,9 +899,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Mirin',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mirin'
     },
     {
         amount: {
@@ -998,9 +915,7 @@ let documents = [
                 value: 3
             }
         },
-        name: 'Mozzarella Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mozzarella Cheese'
     },
     {
         amount: {
@@ -1016,9 +931,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Mozzarella Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mozzarella Cheese'
     },
     {
         amount: {
@@ -1034,9 +947,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Mozzarella Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Mozzarella Cheese'
     },
     {
         amount: {
@@ -1049,9 +960,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Muenster Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Muenster Cheese'
     },
     {
         amount: {
@@ -1064,9 +973,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Napa Cabbage',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Napa Cabbage'
     },
     {
         amount: {
@@ -1079,9 +986,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Nori',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Nori'
     },
     {
         amount: {
@@ -1098,9 +1003,7 @@ let documents = [
                 value: 20
             }
         },
-        name: 'Olive Oil',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Olive Oil'
     },
     {
         amount: {
@@ -1117,9 +1020,7 @@ let documents = [
                 value: 6
             }
         },
-        name: 'Olive Oil',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Olive Oil'
     },
     {
         amount: {
@@ -1140,9 +1041,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Onion',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Onion'
     },
     {
         amount: {
@@ -1155,9 +1054,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Panko Bread Crumbs',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Panko Bread Crumbs'
     },
     {
         amount: {
@@ -1174,9 +1071,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Pasta',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Pasta'
     },
     {
         amount: {
@@ -1192,9 +1087,7 @@ let documents = [
                 value: 3
             }
         },
-        name: 'Parmesan Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Parmesan Cheese'
     },
     {
         amount: {
@@ -1210,9 +1103,7 @@ let documents = [
                 value: 6
             }
         },
-        name: 'Parmesan Cheese',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Parmesan Cheese'
     },
     {
         amount: {
@@ -1225,9 +1116,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Peanut Butter',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Peanut Butter'
     },
     {
         amount: {
@@ -1240,9 +1129,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Pickles',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Pickles'
     },
     {
         amount: {
@@ -1264,9 +1151,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Pork',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Pork'
     },
     {
         amount: {
@@ -1283,9 +1168,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Pork',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Pork'
     },
     {
         amount: {
@@ -1301,9 +1184,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Ranch Dressing',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Ranch Dressing'
     },
     {
         amount: {
@@ -1321,9 +1202,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Rice',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Rice'
     },
     {
         amount: {
@@ -1341,9 +1220,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Rice',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Rice'
     },
     {
         amount: {
@@ -1356,9 +1233,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Rice Vinegar',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Rice Vinegar'
     },
     {
         amount: {
@@ -1371,9 +1246,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Salt',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Salt'
     },
     {
         amount: {
@@ -1395,9 +1268,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Scallions',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Scallions'
     },
     {
         amount: {
@@ -1414,9 +1285,7 @@ let documents = [
                 unit: 'week'
             }
         },
-        name: 'Shallot',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Shallot'
     },
     {
         amount: {
@@ -1432,9 +1301,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Soy Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Soy Sauce'
     },
     {
         amount: {
@@ -1450,9 +1317,7 @@ let documents = [
                 unit: 'month'
             }
         },
-        name: 'Soy Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Soy Sauce'
     },
     {
         amount: {
@@ -1465,9 +1330,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Sugar',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Sugar'
     },
     {
         amount: {
@@ -1483,9 +1346,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Turkey',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Turkey'
     },
     {
         amount: {
@@ -1507,9 +1368,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Turkey',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Turkey'
     },
     {
         amount: {
@@ -1526,9 +1385,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Turkey',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Turkey'
     },
     {
         amount: {
@@ -1545,9 +1402,7 @@ let documents = [
                 unit: 'day'
             }
         },
-        name: 'Unagi',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Unagi'
     },
     {
         amount: {
@@ -1560,9 +1415,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Vegetable Oil',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Vegetable Oil'
     },
     {
         amount: {
@@ -1578,9 +1431,7 @@ let documents = [
                 unit: 'days'
             }
         },
-        name: 'White Bread',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'White Bread'
     },
     {
         amount: {
@@ -1596,9 +1447,7 @@ let documents = [
                 unit: 'days'
             }
         },
-        name: 'Whole Wheat Bread',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Whole Wheat Bread'
     },
     {
         amount: {
@@ -1614,9 +1463,7 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Worcestershire Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Worcestershire Sauce'
     },
     {
         amount: {
@@ -1632,13 +1479,12 @@ let documents = [
                 unit: 'year'
             }
         },
-        name: 'Worcestershire Sauce',
-        type: 'ingredient',
-        updated: dateUpdated
+        name: 'Worcestershire Sauce'
     }
 ]
 
-documents.forEach((document) => {
+// Prep ingredient documents for insertion
+ingredients.forEach((document) => {
     let lifespan = document.lifespan
     let maxDays = 1
     let maxEnv = ""
@@ -1685,12 +1531,53 @@ documents.forEach((document) => {
     document.haveStocked = false
     document.stockedDate = 0
     document.storeIn = maxEnv
+    document.type = 'ingredient'
+    document.updated = dateUpdated
 })
 
-let resultInsertMany = database.data.insertMany(documents)
-print('Inserted', documents.length, 'of', resultInsertMany.insertedIds.length, 'documents')
+// Insert the ingredients
+let resultInsertIngredients = database.ingredients.insertMany(ingredients)
+let ingredientIDs = resultInsertIngredients.insertedIds
+print('Inserted', ingredients.length, 'of', ingredientIDs.length, 'ingredient documents')
+if (ingredients.length != ingredientIDs.length) {
+    // error
+}
+
+let recipes = [
+    { name: 'Bacon, Egg, and Cheese' }
+]
+
+// Prep recipe documents for insertion
+recipes.forEach((document) => {
+    document.canMake = false
+    document.type = 'recipe'
+    document.updated = dateUpdated
+})
+
+// Insert the recipes
+let resultInsertRecipies = database.recipes.insertMany(recipes)
+let recipeIDs = resultInsertRecipies.insertedIds
+print('Inserted', recipes.length, 'of', recipeIDs.length, 'recipe documents')
+if (recipes.length != recipeIDs.length) {
+    // error
+}
+
+// Link ingredients to recipes
+database.recipes.update(
+    { _id: recipeIDs[0] },
+    {
+      $set: {
+        ingredients: [
+            ingredientIDs[3],  // Bacon (unopened)
+            ingredientIDs[18], // Cheese (American)
+            ingredientIDs[28]  // Eggs
+        ],
+      }
+    }
+ )
+
 /*
-let resultFind = database.data.find()
+let resultFind = database.ingredients.find()
 print('Find:', resultFind)
 
 while (resultFind.hasNext()) {

@@ -10,6 +10,24 @@ import (
 )
 
 func TestUtils(t *testing.T) {
+	t.Run("Contains", func(t *testing.T) {
+		cases := []struct {
+			array []string
+			value string
+			want  bool
+		}{
+			{[]string{"ingredients", "recipes"}, "recipes", true},
+			{[]string{"ingredients", "recipes"}, "nope", false},
+		}
+
+		for _, c := range cases {
+			got := Contains(c.array, c.value)
+			if got != c.want {
+				t.Errorf("Contains(%v, \"%s\"), got (\"%t\"), want (\"%t\")", c.array, c.value, got, c.want)
+			}
+		}
+	})
+
 	t.Run("ParseDatetimeFromMongoID", func(t *testing.T) {
 		t1, _ := time.Parse("2006-01-02T15:04:05.000Z", "2021-11-07T14:40:54.000Z")
 

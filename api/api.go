@@ -175,7 +175,7 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 	// Grab the documents
 	documents, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filter, opts)
 	if err != nil {
-		log.WithError(err).Error("Failed to identify expired items")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to identify expired items")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
@@ -340,6 +340,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
+		err := fmt.Errorf("collection not found: %s", collection)
 		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
@@ -428,7 +429,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
-		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		err := fmt.Errorf("collection not found: %s", collection)
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
 		return
@@ -590,7 +592,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
-		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		err := fmt.Errorf("collection not found: %s", collection)
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
 		return
@@ -674,7 +677,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
-		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		err := fmt.Errorf("collection not found: %s", collection)
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
 		return
@@ -798,7 +802,8 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
-		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		err := fmt.Errorf("collection not found: %s", collection)
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
 		return
@@ -870,7 +875,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 		response.Write([]byte(err.Error()))
 		return
 	} else if !utils.Contains(collections, collection) {
-		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		err := fmt.Errorf("collection not found: %s", collection)
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
 		return

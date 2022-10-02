@@ -24,7 +24,7 @@ import (
 var configuration *config.Configuration
 
 func getConfiguration(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getConfiguration",
 		"method": "GET",
@@ -54,7 +54,7 @@ func getConfiguration(response http.ResponseWriter, request *http.Request) {
 }
 
 func putConfiguration(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.putConfiguration",
 		"method": "PUT",
@@ -140,7 +140,8 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 }
 
 func getExpired(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getExpired",
 		"method": "GET",
@@ -172,7 +173,7 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": opts.Sort}).Debug("Sorting criteria")
 
 	// Grab the documents
-	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
+	documents, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expired items")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -195,7 +196,8 @@ func getExpired(response http.ResponseWriter, request *http.Request) {
 }
 
 func getExpiring(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getExpiring",
 		"method": "GET",
@@ -287,7 +289,7 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": opts.Sort}).Debug("Sorting criteria")
 
 	// Grab the documents
-	documents, err := configuration.Mongo.FindDocuments(context.Background(), filter, opts)
+	documents, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -311,7 +313,8 @@ func getExpiring(response http.ResponseWriter, request *http.Request) {
 }
 
 func getOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getOneDocument",
 		"method": "GET",
@@ -322,22 +325,38 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
 	defer log.Trace("End function")
 
-	// Extract route parameter
+	// Extract route parameters
 	vars := mux.Vars(request)
+	collection := vars["collection"]
 	id := vars["id"]
 	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).WithError(err).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil && err.Error() == utils.ErrInvalidObjectID {
 		// Invalid document id provided
-		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
+		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
 		response.Write([]byte(err.Error()))
 		return
 	} else if err != nil {
 		// Something else failed
-		log.WithFields(logrus.Fields{"id": id, "status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse document id")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 		return
@@ -346,9 +365,10 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Create filter
 	filter := bson.D{{"_id", oid}}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+	log = log.WithFields(logrus.Fields{"id": id})
 
 	// Attempt to get the document
-	document, err := configuration.Mongo.FindOneDocument(request.Context(), filter)
+	document, err := configuration.Mongo.FindOneDocument(ctx, collection, filter)
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
@@ -377,7 +397,8 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 }
 
 func getManyDocuments(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.getManyDocuments",
 		"method": "GET",
@@ -392,6 +413,26 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log.Trace("Begin function")
 	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
 	defer log.Trace("End function")
+
+	// Extract route parameters
+	vars := mux.Vars(request)
+	collection := vars["collection"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Extract query parameters
 	queryParams := request.URL.Query()
@@ -499,7 +540,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to get the documents
-	documents, err := configuration.Mongo.FindDocuments(request.Context(), filter, nil)
+	documents, err := configuration.Mongo.FindDocuments(request.Context(), collection, filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -523,7 +564,8 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 }
 
 func postManyDocuments(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.postManyDocuments",
 		"method": "POST",
@@ -533,6 +575,26 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log.Trace("Begin function")
 	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
 	defer log.Trace("End function")
+
+	// Extract route parameters
+	vars := mux.Vars(request)
+	collection := vars["collection"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Get documents from body
 	bytes, err := ioutil.ReadAll(request.Body)
@@ -567,24 +629,26 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	// Construct insert instructions
 	documents := []interface{}{}
 	documents = append(documents, body...)
-	l := log.WithFields(logrus.Fields{"quantity": len(documents)})
-	l.WithFields(logrus.Fields{"value": documents}).Debug("Documents received")
+	log = log.WithFields(logrus.Fields{"quantity": len(documents)})
+	log.WithFields(logrus.Fields{"value": documents}).Debug("Documents received")
 
 	// Attempt to put the document
-	err = configuration.Mongo.InsertManyDocuments(request.Context(), documents)
+	err = configuration.Mongo.InsertManyDocuments(ctx, collection, documents)
 	if err != nil {
 		// Post failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post documents")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
 	} else {
-		l.WithFields(logrus.Fields{"status": http.StatusCreated}).Info("Succeeded")
-		response.WriteHeader(http.StatusCreated)
+		log.WithFields(logrus.Fields{"status": http.StatusCreated}).Info("Succeeded")
 	}
+
+	response.WriteHeader(http.StatusCreated)
 }
 
 func putOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.putOneDocument",
 		"method": "PUT",
@@ -597,8 +661,24 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Extract route parameter
 	vars := mux.Vars(request)
+	collection := vars["collection"]
 	id := vars["id"]
 	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -619,6 +699,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Construct filter
 	filter := bson.D{{"_id", oid}}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+	log = log.WithFields(logrus.Fields{"id": id})
 
 	// Get document fields from body
 	bytes, err := ioutil.ReadAll(request.Body)
@@ -668,7 +749,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
 
 	// Attempt to put the document
-	matched, _, err := configuration.Mongo.UpdateOneDocument(request.Context(), filter, update)
+	matched, _, err := configuration.Mongo.UpdateOneDocument(ctx, collection, filter, update)
 	if err != nil && strings.Contains(err.Error(), "You must specify a field like so") {
 		// Empty request body
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to put document")
@@ -690,7 +771,8 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 }
 
 func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.deleteOneDocument",
 		"method": "DELETE",
@@ -703,8 +785,24 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Extract route parameter
 	vars := mux.Vars(request)
+	collection := vars["collection"]
 	id := vars["id"]
 	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
@@ -725,9 +823,10 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 	// Create filter
 	filter := bson.D{{"_id", oid}}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+	log = log.WithFields(logrus.Fields{"id": id})
 
 	// Attempt to delete the document
-	err = configuration.Mongo.DeleteOneDocument(request.Context(), filter)
+	err = configuration.Mongo.DeleteOneDocument(ctx, collection, filter)
 	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
@@ -745,7 +844,8 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 }
 
 func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
-	// Specify common fields
+	// Setup
+	ctx := request.Context()
 	log := logrus.WithFields(logrus.Fields{
 		"at":     "api.deleteManyDocuments",
 		"method": "DELETE",
@@ -755,6 +855,26 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log.Trace("Begin function")
 	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
 	defer log.Trace("End function")
+
+	// Extract route parameters
+	vars := mux.Vars(request)
+	collection := vars["collection"]
+	log.WithFields(logrus.Fields{"value": vars}).Debug("Route variables")
+	log = log.WithFields(logrus.Fields{"collection": collection})
+
+	// Validate collection route variable
+	collections, err := configuration.Mongo.Collections(ctx)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed list collection names")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+		return
+	} else if !utils.Contains(collections, collection) {
+		log.WithFields(logrus.Fields{"collections": collections, "status": http.StatusNotFound}).Warn("Failed to find collection")
+		response.WriteHeader(http.StatusNotFound)
+		response.Write([]byte(err.Error()))
+		return
+	}
 
 	// Delete by list of IDs (for now)
 	// Get document fields from body
@@ -799,7 +919,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to delete the documents
-	deleted, err := configuration.Mongo.DeleteManyDocuments(request.Context(), filter)
+	deleted, err := configuration.Mongo.DeleteManyDocuments(ctx, collection, filter)
 	if err != nil {
 		// Delete failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to delete documents")
@@ -817,10 +937,8 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 }
 
 func checkExpirations() {
-	// Define a context
+	// Setup
 	ctx := context.Background()
-
-	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":        "api.checkExpirations",
 		"lookahead": configuration.Lookahead,
@@ -864,13 +982,13 @@ func checkExpirations() {
 	log.WithFields(logrus.Fields{"type": "expiring", "value": filterExpiring}).Debug("Filter data")
 
 	// Grab the documents
-	documentsExpired, err := configuration.Mongo.FindDocuments(ctx, filterExpired, nil)
+	documentsExpired, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filterExpired, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expired items")
 		return
 	}
 
-	documentsExpiring, err := configuration.Mongo.FindDocuments(ctx, filterExpiring, nil)
+	documentsExpiring, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filterExpiring, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to identify expiring items")
 	} else {

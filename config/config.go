@@ -11,14 +11,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const MongoCollectionIngredients = "ingredients"
+const MongoCollectionRecipes = "recipes"
+
 type MongoHandle interface {
-	FindOneDocument(context.Context, bson.D) (*bson.M, error)
-	FindDocuments(context.Context, bson.M, *options.FindOptions) ([]bson.M, error)
-	//InsertOneDocument(context.Context, interface{}) error
-	InsertManyDocuments(context.Context, []interface{}) error
-	UpdateOneDocument(context.Context, bson.D, interface{}) (int64, int64, error)
-	DeleteOneDocument(context.Context, bson.D) error
-	DeleteManyDocuments(context.Context, bson.M) (int64, error)
+	Collections(context.Context) ([]string, error)
+	FindOneDocument(context.Context, string, bson.D) (*bson.M, error)
+	FindDocuments(context.Context, string, bson.M, *options.FindOptions) ([]bson.M, error)
+	//InsertOneDocument(context.Context, string, interface{}) error
+	InsertManyDocuments(context.Context, string, []interface{}) error
+	UpdateOneDocument(context.Context, string, bson.D, interface{}) (int64, int64, error)
+	DeleteOneDocument(context.Context, string, bson.D) error
+	DeleteManyDocuments(context.Context, string, bson.M) (int64, error)
 }
 
 type TrelloHandle interface {

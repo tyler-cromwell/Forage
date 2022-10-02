@@ -18,7 +18,7 @@ import (
 func TestMongoClient(t *testing.T) {
 	// Discard logging output
 	logrus.SetOutput(ioutil.Discard)
-
+	collection := "someCollection"
 	// Setup context
 	//	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -61,20 +61,20 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1)
 		filter := bson.D{{"_id", id1}}
-		_, err = client.FindOneDocument(ctx, filter)
+		_, err = client.FindOneDocument(ctx, collection, filter)
 		require.NoError(mt, err)
 
 		// Case: "Failed to find document" (Search completed but document not found)
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
 		filter = bson.D{{"_id", id2}}
-		_, err = client.FindOneDocument(ctx, filter)
+		_, err = client.FindOneDocument(ctx, collection, filter)
 		require.Error(mt, err)
 
 		// Case: "Failed to find document" (Actual failure)
 		mt.ClearMockResponses()
 		filter = bson.D{{"_id", id1}}
-		_, err = client.FindOneDocument(ctx, filter)
+		_, err = client.FindOneDocument(ctx, collection, filter)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
@@ -102,21 +102,21 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1, document2, killCursors)
 		filter := bson.M{"_id": id1}
-		_, err = client.FindDocuments(ctx, filter, nil)
+		_, err = client.FindDocuments(ctx, collection, filter, nil)
 		require.NoError(mt, err)
 
 		// Case: "Failed to find documents"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "mongo: no documents in result"}))
 		filter = bson.M{"_id": id1}
-		_, err = client.FindDocuments(ctx, filter, nil)
+		_, err = client.FindDocuments(ctx, collection, filter, nil)
 		require.Error(mt, err)
 
 		// Case: "Failed to decode documents"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(document1)
 		filter = bson.M{"_id": id1}
-		_, err = client.FindDocuments(ctx, filter, nil)
+		_, err = client.FindDocuments(ctx, collection, filter, nil)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
@@ -160,13 +160,13 @@ func TestMongoClient(t *testing.T) {
 		// Case: "Success"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
-		err = client.InsertManyDocuments(ctx, []interface{}{doc1})
+		err = client.InsertManyDocuments(ctx, collection, []interface{}{doc1})
 		require.NoError(mt, err)
 
 		// Case: "Failed to insert document"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
-		err = client.InsertManyDocuments(ctx, []interface{}{doc1})
+		err = client.InsertManyDocuments(ctx, collection, []interface{}{doc1})
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
@@ -190,14 +190,14 @@ func TestMongoClient(t *testing.T) {
 			{"value", doc1},
 		})
 		filter := bson.D{{"_id", id1}}
-		_, _, err = client.UpdateOneDocument(ctx, filter, bson.M{"$set": doc1})
+		_, _, err = client.UpdateOneDocument(ctx, collection, filter, bson.M{"$set": doc1})
 		require.NoError(mt, err)
 
 		// Case: "Failed to update document"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
 		filter = bson.D{{"_id", id1}}
-		_, _, err = client.UpdateOneDocument(ctx, filter, doc1)
+		_, _, err = client.UpdateOneDocument(ctx, collection, filter, doc1)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
@@ -212,14 +212,14 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
 		filter := bson.D{{"_id", id1}}
-		err = client.DeleteOneDocument(ctx, filter)
+		err = client.DeleteOneDocument(ctx, collection, filter)
 		require.NoError(mt, err)
 
 		// Case: "Failed to delete document"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
 		filter = bson.D{{"_id", id1}}
-		err = client.DeleteOneDocument(ctx, filter)
+		err = client.DeleteOneDocument(ctx, collection, filter)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()
@@ -234,14 +234,14 @@ func TestMongoClient(t *testing.T) {
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateSuccessResponse())
 		filter := bson.M{"_id": bson.M{"$in": []primitive.ObjectID{id1}}}
-		_, err = client.DeleteManyDocuments(ctx, filter)
+		_, err = client.DeleteManyDocuments(ctx, collection, filter)
 		require.NoError(mt, err)
 
 		// Case: "Failed to delete documents"
 		mt.ClearMockResponses()
 		mt.AddMockResponses(mtest.CreateCommandErrorResponse(mtest.CommandError{Message: "command failure"}))
 		filter = bson.M{"_id": bson.M{"$in": []primitive.ObjectID{id1}}}
-		_, err = client.DeleteManyDocuments(ctx, filter)
+		_, err = client.DeleteManyDocuments(ctx, collection, filter)
 		require.Error(mt, err)
 
 		mt.ClearMockResponses()

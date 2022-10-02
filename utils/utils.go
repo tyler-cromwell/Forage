@@ -10,6 +10,16 @@ const ErrNoMatchedDocuments = "no document matching filter"
 const ErrInvalidObjectID = "the provided hex string is not a valid ObjectID"
 const ErrMongoNoDocuments = "mongo: no documents in result"
 
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 func ParseDatetimeFromMongoID(id string) (time.Time, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	return oid.Timestamp(), err

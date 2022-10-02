@@ -11,10 +11,9 @@ import (
 )
 
 type Mongo struct {
-	Uri        string
-	Client     *mongo.Client
-	Database   *mongo.Database
-	Collection *mongo.Collection
+	Uri      string
+	Client   *mongo.Client
+	Database *mongo.Database
 }
 
 func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error) {
@@ -46,16 +45,18 @@ func NewMongoClientWrapper(ctx context.Context, mongoUri string) (*Mongo, error)
 
 	// Specify database & collection
 	database := client.Database("forage")
-	collection := database.Collection("data")
 	return &Mongo{
-		Uri:        mongoUri,
-		Client:     client,
-		Database:   database,
-		Collection: collection,
+		Uri:      mongoUri,
+		Client:   client,
+		Database: database,
 	}, nil
 }
 
-func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, error) {
+func (mc *Mongo) Collections(ctx context.Context) ([]string, error) {
+	return mc.Database.ListCollectionNames(ctx, bson.D{})
+}
+
+func (mc *Mongo) FindOneDocument(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.FindOneDocument",
@@ -69,7 +70,7 @@ func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, e
 
 	// Ask MongoDB to find the document
 	var doc bson.M
-	result := mc.Collection.FindOne(ctx, filter)
+	result := mc.Database.Collection(collection).FindOne(ctx, filter)
 	log.WithFields(logrus.Fields{"value": result}).Debug("Result")
 	err := result.Decode(&doc)
 	if err != nil && err.Error() == mongo.ErrNoDocuments.Error() {
@@ -86,7 +87,7 @@ func (mc *Mongo) FindOneDocument(ctx context.Context, filter bson.D) (*bson.M, e
 	return &doc, nil
 }
 
-func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+func (mc *Mongo) FindDocuments(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.FindDocuments",
@@ -101,7 +102,7 @@ func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options
 
 	// Ask MongoDB to find the documents
 	docs := make([]bson.M, 0)
-	cursor, err := mc.Collection.Find(ctx, filter, opts)
+	cursor, err := mc.Database.Collection(collection).Find(ctx, filter, opts)
 	if err != nil {
 		log.WithError(err).Error("Failed to find documents")
 		return nil, err
@@ -119,7 +120,7 @@ func (mc *Mongo) FindDocuments(ctx context.Context, filter bson.M, opts *options
 }
 
 /*
-func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
+func (mc *Mongo) InsertOneDocument(ctx context.Context, collection string, doc interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertOneDocument",
@@ -132,7 +133,7 @@ func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 	defer log.Trace("End function")
 
 	// Ask MongoDB to insert the document
-	_, err := mc.Collection.InsertOne(ctx, doc, nil)
+	_, err := mc.Database.Collection(collection).InsertOne(ctx, doc, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to insert document")
 		return err
@@ -143,7 +144,7 @@ func (mc *Mongo) InsertOneDocument(ctx context.Context, doc interface{}) error {
 }
 */
 
-func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) error {
+func (mc *Mongo) InsertManyDocuments(ctx context.Context, collection string, docs []interface{}) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.InsertManyDocuments",
@@ -156,7 +157,7 @@ func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) er
 	defer log.Trace("End function")
 
 	// Ask MongoDB to insert the documents
-	_, err := mc.Collection.InsertMany(ctx, docs, nil)
+	_, err := mc.Database.Collection(collection).InsertMany(ctx, docs, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to insert documents")
 		return err
@@ -166,7 +167,7 @@ func (mc *Mongo) InsertManyDocuments(ctx context.Context, docs []interface{}) er
 	}
 }
 
-func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update interface{}) (int64, int64, error) {
+func (mc *Mongo) UpdateOneDocument(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.UpdateOneDocument",
@@ -179,7 +180,7 @@ func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update in
 	defer log.Trace("End function")
 
 	// Ask MongoDB to update the document
-	result, err := mc.Collection.UpdateOne(ctx, filter, update, nil)
+	result, err := mc.Database.Collection(collection).UpdateOne(ctx, filter, update, nil)
 	if err != nil {
 		// Update failed
 		log.WithError(err).Error("Failed to update document")
@@ -190,7 +191,7 @@ func (mc *Mongo) UpdateOneDocument(ctx context.Context, filter bson.D, update in
 	}
 }
 
-func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
+func (mc *Mongo) DeleteOneDocument(ctx context.Context, collection string, filter bson.D) error {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.DeleteOneDocument",
@@ -203,7 +204,7 @@ func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 	defer log.Trace("End function")
 
 	// Ask MongoDB to delete the document
-	_, err := mc.Collection.DeleteOne(ctx, filter)
+	_, err := mc.Database.Collection(collection).DeleteOne(ctx, filter)
 	if err != nil {
 		log.WithError(err).Error("Failed to delete document")
 		return err
@@ -213,7 +214,7 @@ func (mc *Mongo) DeleteOneDocument(ctx context.Context, filter bson.D) error {
 	}
 }
 
-func (mc *Mongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64, error) {
+func (mc *Mongo) DeleteManyDocuments(ctx context.Context, collection string, filter bson.M) (int64, error) {
 	// Specify common fields
 	log := logrus.WithFields(logrus.Fields{
 		"at":       "mongo.DeleteManyDocuments",
@@ -226,7 +227,7 @@ func (mc *Mongo) DeleteManyDocuments(ctx context.Context, filter bson.M) (int64,
 	defer log.Trace("End function")
 
 	// Ask MongoDB to delete the documents
-	result, err := mc.Collection.DeleteMany(ctx, filter)
+	result, err := mc.Database.Collection(collection).DeleteMany(ctx, filter)
 	if err != nil {
 		log.WithError(err).Error("Failed to delete documents")
 		return 0, err

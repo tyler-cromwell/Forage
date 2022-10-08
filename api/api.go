@@ -534,11 +534,6 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		"at":     "api.getManyDocuments",
 		"method": "GET",
 	})
-	qpNameFrom := "from"
-	qpNameHaveStocked := "haveStocked"
-	qpNameName := "name"
-	qpNameType := "type"
-	qpNameTo := "to"
 
 	// Log diagnostic information
 	log.Trace("Begin function")
@@ -567,112 +562,119 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Extract query parameters
+	qpNameFrom := "from"
+	qpNameHaveStocked := "haveStocked"
+	qpNameName := "name"
+	qpNameTo := "to"
+	qpNameType := "type"
 	queryParams := request.URL.Query()
 	qpFrom := queryParams.Get(qpNameFrom)
 	qpHaveStocked := queryParams.Get(qpNameHaveStocked)
 	qpName := queryParams.Get(qpNameName)
-	qpType := queryParams.Get(qpNameType)
 	qpTo := queryParams.Get(qpNameTo)
+	qpType := queryParams.Get(qpNameType)
 	log.WithFields(logrus.Fields{"value": queryParams}).Debug("Query parameters")
 
 	// Check if query parameters are present
-	var timeFrom time.Time
-	var timeTo time.Time
-	filterExpires := bson.M{}
+	var filter bson.M
 	filterName := bson.M{}
-	filterType := bson.M{}
-	filterHaveStocked := bson.M{
-		"haveStocked": bson.M{
-			"$eq": true,
-		},
-	}
-
-	if qpFrom != "" {
-		l := log.WithFields(logrus.Fields{"name": qpNameFrom, "value": qpFrom})
-		l.Trace("Query parameter handling")
-		from, err := strconv.ParseInt(qpFrom, 10, 64)
-		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
-			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte(err.Error()))
-			return
-		}
-		l.WithFields(logrus.Fields{"old": timeFrom.UnixNano() / int64(time.Millisecond), "new": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond)}).Debug("Something")
-		timeFrom = time.Unix(0, from*int64(time.Millisecond))
-		filterExpires = bson.M{
-			"expirationDate": bson.M{
-				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
-			},
-		}
-	}
 	if qpName != "" {
 		l := log.WithFields(logrus.Fields{"name": qpNameName, "value": qpName})
 		l.Trace("Query parameter handling")
 		filterName = bson.M{"name": qpName}
 	}
-	if qpType != "" {
-		l := log.WithFields(logrus.Fields{"name": qpNameType, "value": qpType})
-		l.Trace("Query parameter handling")
-		filterType = bson.M{"type": qpType}
-	}
-	if qpTo != "" {
-		l := log.WithFields(logrus.Fields{"name": qpNameTo, "value": qpTo})
-		l.Trace("Query parameter handling")
-		to, err := strconv.ParseInt(qpTo, 10, 64)
-		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
-			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte(err.Error()))
-			return
-		}
-		timeTo = time.Unix(0, to*int64(time.Millisecond))
-		filterExpires = bson.M{
-			"expirationDate": bson.M{
-				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
+
+	if collection == config.MongoCollectionRecipes {
+		log.Trace("Query parameter handling")
+		// Create filter
+		filter = filterName
+	} else {
+		var timeFrom time.Time
+		var timeTo time.Time
+		filterExpires := bson.M{}
+		filterType := bson.M{}
+		filterHaveStocked := bson.M{
+			"haveStocked": bson.M{
+				"$eq": true,
 			},
 		}
-	}
 
-	if qpFrom != "" && qpTo != "" {
-		log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
-		filterExpires = bson.M{
-			"expirationDate": bson.M{
-				"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
-				"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
-			},
-		}
-	}
-
-	if qpHaveStocked != "" {
-		l := log.WithFields(logrus.Fields{"name": qpNameHaveStocked, "value": qpHaveStocked})
-		l.Trace("Query parameter handling")
-		b, err := strconv.ParseBool(qpHaveStocked)
-		if err != nil {
-			// Invalid query parameter value provided
-			log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse haveStocked")
-			response.WriteHeader(http.StatusBadRequest)
-			response.Write([]byte(err.Error()))
-			return
-		} else {
-			filterHaveStocked = bson.M{
-				"haveStocked": bson.M{
-					"$eq": b,
+		if qpFrom != "" {
+			l := log.WithFields(logrus.Fields{"name": qpNameFrom, "value": qpFrom})
+			l.Trace("Query parameter handling")
+			from, err := strconv.ParseInt(qpFrom, 10, 64)
+			if err != nil {
+				l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse from date")
+				response.WriteHeader(http.StatusBadRequest)
+				response.Write([]byte(err.Error()))
+				return
+			}
+			l.WithFields(logrus.Fields{"old": timeFrom.UnixNano() / int64(time.Millisecond), "new": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond)}).Debug("Something")
+			timeFrom = time.Unix(0, from*int64(time.Millisecond))
+			filterExpires = bson.M{
+				"expirationDate": bson.M{
+					"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
 				},
 			}
 		}
-	}
+		if qpType != "" {
+			l := log.WithFields(logrus.Fields{"name": qpNameType, "value": qpType})
+			l.Trace("Query parameter handling")
+			filterType = bson.M{"type": qpType}
+		}
+		if qpTo != "" {
+			l := log.WithFields(logrus.Fields{"name": qpNameTo, "value": qpTo})
+			l.Trace("Query parameter handling")
+			to, err := strconv.ParseInt(qpTo, 10, 64)
+			if err != nil {
+				l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse to date")
+				response.WriteHeader(http.StatusBadRequest)
+				response.Write([]byte(err.Error()))
+				return
+			}
+			timeTo = time.Unix(0, to*int64(time.Millisecond))
+			filterExpires = bson.M{
+				"expirationDate": bson.M{
+					"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
+				},
+			}
+		}
 
-	// Create filter
-	filter := bson.M{"$and": []bson.M{
-		filterHaveStocked,
-		filterName,
-		filterType,
-		filterExpires,
-	}}
+		if qpFrom != "" && qpTo != "" {
+			log.WithFields(logrus.Fields{"values": []string{qpNameFrom, qpNameTo}}).Trace("Query parameters handling")
+			filterExpires = bson.M{
+				"expirationDate": bson.M{
+					"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
+					"$lte": int64(timeTo.UTC().UnixNano()) / int64(time.Millisecond),
+				},
+			}
+		}
 
-	if collection == config.MongoCollectionRecipes {
+		if qpHaveStocked != "" {
+			l := log.WithFields(logrus.Fields{"name": qpNameHaveStocked, "value": qpHaveStocked})
+			l.Trace("Query parameter handling")
+			b, err := strconv.ParseBool(qpHaveStocked)
+			if err != nil {
+				// Invalid query parameter value provided
+				l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse haveStocked")
+				response.WriteHeader(http.StatusBadRequest)
+				response.Write([]byte(err.Error()))
+				return
+			} else {
+				filterHaveStocked = bson.M{
+					"haveStocked": bson.M{
+						"$eq": b,
+					},
+				}
+			}
+		}
+
+		// Create filter
 		filter = bson.M{"$and": []bson.M{
+			filterHaveStocked,
 			filterName,
+			filterType,
+			filterExpires,
 		}}
 	}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")

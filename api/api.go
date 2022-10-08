@@ -23,6 +23,54 @@ import (
 
 var configuration *config.Configuration
 
+func isCookable(ctx context.Context, recipe *primitive.M) (bool, error) {
+	// Setup
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.isCookable",
+		"recipe": (*recipe)["_id"],
+	})
+
+	// Determine if recipe is cookable
+	log.Trace("Begin cookable determination")
+	defer log.Trace("End cookable determination")
+	iidsRaw := (*recipe)["ingredients"]
+
+	if iidsRaw == nil {
+		log.Warn("No ingredients")
+		return false, nil
+	}
+
+	iids := iidsRaw.(primitive.A) // "ingredients" is a requried attribute
+	filterMany := bson.M{"$and": []bson.M{
+		{
+			"expirationDate": bson.M{
+				"$gt": int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond),
+			},
+		},
+		{
+			"haveStocked": bson.M{
+				"$eq": true,
+			},
+		},
+		{
+			"_id": bson.M{
+				"$in": iids,
+			},
+		},
+	}}
+	log.WithFields(logrus.Fields{"value": filterMany}).Debug("Filter data")
+
+	ingredients, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionIngredients, filterMany, nil)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
+		return false, err
+	} else {
+		result := len(ingredients) == len(iids)
+		log.WithFields(logrus.Fields{"expect": len(iids), "have": len(ingredients), "value": result}).Debug("Determined")
+		return result, nil
+	}
+}
+
 func getConfiguration(response http.ResponseWriter, request *http.Request) {
 	// Setup
 	log := logrus.WithFields(logrus.Fields{
@@ -136,6 +184,46 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 
 		log.WithFields(logrus.Fields{"status": http.StatusOK}).Info("Succeeded")
 		response.WriteHeader(http.StatusOK)
+	}
+}
+
+func getCookable(response http.ResponseWriter, request *http.Request) {
+	// Setup
+	ctx := request.Context()
+	log := logrus.WithFields(logrus.Fields{
+		"at":     "api.getCookable",
+		"method": "GET",
+	})
+
+	// Log diagnostic information
+	log.Trace("Begin function")
+	log.WithFields(logrus.Fields{"value": request}).Debug("Request data")
+	defer log.Trace("End function")
+
+	// Create filter
+	filter := bson.M{"canMake": true}
+	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+
+	// Grab the documents
+	documents, err := configuration.Mongo.FindDocuments(ctx, config.MongoCollectionRecipes, filter, nil)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to identify cookable recipes")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+	} else {
+		log.WithFields(logrus.Fields{"quantity": len(documents), "value": documents}).Debug("Documents found")
+
+		// Prepare to respond with documents
+		marshalled, err := json.Marshal(documents)
+		if err != nil {
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
+			response.WriteHeader(http.StatusInternalServerError)
+			response.Write([]byte(err.Error()))
+		} else {
+			log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
+			response.WriteHeader(http.StatusOK)
+			response.Write(marshalled)
+		}
 	}
 }
 
@@ -375,25 +463,68 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		response.WriteHeader(http.StatusNotFound)
 		response.Write([]byte(err.Error()))
+		return
 	} else if err != nil {
 		// Get failed
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get document")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
+		return
 	} else {
 		log.WithFields(logrus.Fields{"value": document}).Debug("Document found")
+	}
 
-		// Prepare to respond with document
-		marshalled, err := json.Marshal(document)
+	// Check if document is a recipe
+	if collection == config.MongoCollectionRecipes {
+		log.Trace("Begin recipe scan")
+		// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
+		l := log.WithFields(logrus.Fields{"recipe": id})
+		originalCanMake := (*document)["canMake"].(bool)
+		canMake, err := isCookable(ctx, document)
 		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
+			// Something broke
+			l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
-		} else {
-			log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
-			response.WriteHeader(http.StatusOK)
-			response.Write(marshalled)
+			return
+		} else if canMake != originalCanMake {
+			// Update if different
+			l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
+			(*document)["canMake"] = canMake
+
+			// Create filter
+			l := log.WithFields(logrus.Fields{"method": "PUT"})
+			l.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+
+			// Define update instructions
+			update := bson.M{"$set": bson.M{"canMake": canMake}}
+			l.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
+
+			// Attempt to put the document
+			matched, _, err := configuration.Mongo.UpdateOneDocument(ctx, collection, filter, update)
+			if err != nil {
+				// Put failed
+				l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to put document")
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write([]byte(err.Error()))
+				return
+			} else {
+				l.WithFields(logrus.Fields{"method": "PUT", "quantity": matched, "status": http.StatusOK}).Info("Succeeded")
+			}
 		}
+		log.Trace("End recipe scan")
+	}
+
+	// Prepare to respond with document
+	marshalled, err := json.Marshal(document)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode document")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+	} else {
+		log.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
+		response.WriteHeader(http.StatusOK)
+		response.Write(marshalled)
 	}
 }
 
@@ -539,29 +670,80 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 		filterType,
 		filterExpires,
 	}}
+
+	if collection == config.MongoCollectionRecipes {
+		filter = bson.M{"$and": []bson.M{
+			filterName,
+		}}
+	}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Attempt to get the documents
-	documents, err := configuration.Mongo.FindDocuments(request.Context(), collection, filter, nil)
+	documents, err := configuration.Mongo.FindDocuments(ctx, collection, filter, nil)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
+		return
 	} else {
-		l := log.WithFields(logrus.Fields{"quantity": len(documents)})
-		l.WithFields(logrus.Fields{"value": documents}).Debug("Documents found")
+		log.WithFields(logrus.Fields{"quantity": len(documents), "value": documents}).Debug("Documents found")
+	}
 
-		// Prepare to respond with documents
-		marshalled, err := json.Marshal(documents)
-		if err != nil {
-			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
-			response.WriteHeader(http.StatusInternalServerError)
-			response.Write([]byte(err.Error()))
-		} else {
-			l.WithFields(logrus.Fields{"size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
-			response.WriteHeader(http.StatusOK)
-			response.Write(marshalled)
+	// Check if document is a recipe
+	if collection == config.MongoCollectionRecipes {
+		log.Trace("Begin recipe scan")
+		for _, document := range documents {
+			// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
+			id := document["_id"]
+			l := log.WithFields(logrus.Fields{"recipe": id})
+			originalCanMake := document["canMake"].(bool)
+			canMake, err := isCookable(ctx, &document)
+			if err != nil {
+				// Something broke
+				l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write([]byte(err.Error()))
+				return
+			} else if canMake != originalCanMake {
+				// Update if different
+				l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
+				document["canMake"] = canMake
+
+				// Create filter
+				filter := bson.D{{"_id", id}}
+				l = l.WithFields(logrus.Fields{"method": "PUT"})
+				l.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
+
+				// Define update instructions
+				update := bson.M{"$set": bson.M{"canMake": canMake}}
+				l.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
+
+				// Attempt to put the document
+				matched, _, err := configuration.Mongo.UpdateOneDocument(ctx, collection, filter, update) // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Change to a PUT Many after this for loop once this commit is done
+				if err != nil {
+					// Put failed
+					l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to update recipe")
+					response.WriteHeader(http.StatusInternalServerError)
+					response.Write([]byte(err.Error()))
+					return
+				} else {
+					l.WithFields(logrus.Fields{"quantity": matched}).Info("Updated recipe")
+				}
+			}
 		}
+		log.Trace("End recipe scan")
+	}
+
+	// Prepare to respond with documents
+	marshalled, err := json.Marshal(documents)
+	if err != nil {
+		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to encode documents")
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(err.Error()))
+	} else {
+		log.WithFields(logrus.Fields{"quantity": len(documents), "size": len(marshalled), "status": http.StatusOK}).Info("Succeeded")
+		response.WriteHeader(http.StatusOK)
+		response.Write(marshalled)
 	}
 }
 
@@ -611,7 +793,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Parse documents
-	var body []interface{}
+	var body []primitive.M
 	err = json.Unmarshal(bytes, &body)
 	if err != nil && strings.HasPrefix(err.Error(), "invalid character") {
 		// Invalid request body
@@ -629,11 +811,38 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		log.WithFields(logrus.Fields{"state": "unmarshalled", "value": body}).Debug("Request body")
 	}
 
-	// Construct insert instructions
+	log = log.WithFields(logrus.Fields{"quantity": len(body)})
+	log.WithFields(logrus.Fields{"value": body}).Debug("Documents received")
+
+	// Check if document is a recipe & prepare for insertion
 	documents := []interface{}{}
-	documents = append(documents, body...)
-	log = log.WithFields(logrus.Fields{"quantity": len(documents)})
-	log.WithFields(logrus.Fields{"value": documents}).Debug("Documents received")
+	if collection == config.MongoCollectionRecipes {
+		log.Trace("Begin recipe scan")
+		for _, document := range body {
+			// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
+			originalCanMake := document["canMake"].(bool)
+			canMake, err := isCookable(ctx, &document)
+			l := log.WithFields(logrus.Fields{"recipe": document["_id"]})
+			if err != nil {
+				// Something broke
+				l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
+				response.WriteHeader(http.StatusInternalServerError)
+				response.Write([]byte(err.Error()))
+				return
+			} else if canMake != originalCanMake {
+				// Update if different
+				l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
+				document["canMake"] = canMake
+			}
+
+			documents = append(documents, document)
+		}
+		log.Trace("End recipe scan")
+	} else {
+		for _, document := range body {
+			documents = append(documents, document)
+		}
+	}
 
 	// Attempt to put the document
 	err = configuration.Mongo.InsertManyDocuments(ctx, collection, documents)
@@ -642,6 +851,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to post documents")
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(err.Error()))
+		return
 	} else {
 		log.WithFields(logrus.Fields{"status": http.StatusCreated}).Info("Succeeded")
 	}

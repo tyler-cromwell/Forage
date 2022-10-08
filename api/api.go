@@ -478,18 +478,17 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	if collection == config.MongoCollectionRecipes {
 		log.Trace("Begin recipe scan")
 		// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
-		l := log.WithFields(logrus.Fields{"recipe": id})
 		originalCanMake := (*document)["canMake"].(bool)
 		canMake, err := isCookable(ctx, document)
 		if err != nil {
 			// Something broke
-			l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
+			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 			return
 		} else if canMake != originalCanMake {
 			// Update if different
-			l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
+			log.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
 			(*document)["canMake"] = canMake
 
 			// Create filter

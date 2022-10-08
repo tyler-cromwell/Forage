@@ -116,7 +116,7 @@ func (mc *Mongo) FindDocuments(ctx context.Context, collection string, filter bs
 		log.WithError(err).Error("Failed to decode documents")
 		return nil, err
 	} else {
-		log.Info("Succeeded")
+		log.WithFields(logrus.Fields{"quantity": len(docs)}).Info("Succeeded")
 		return docs, nil
 	}
 }

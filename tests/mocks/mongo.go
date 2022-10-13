@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/tyler-cromwell/forage/clients"
+	"github.com/tyler-cromwell/forage/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -24,7 +25,7 @@ func (mmc *MockMongo) Collections(ctx context.Context) ([]string, error) {
 	if mmc.OverrideCollections != nil {
 		return mmc.OverrideCollections(ctx)
 	} else {
-		names := []string{"ingredients", "recipes"}
+		names := []string{config.MongoCollectionIngredients, config.MongoCollectionRecipes}
 		return names, nil
 	}
 }

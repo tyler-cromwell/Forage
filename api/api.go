@@ -720,7 +720,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 				l.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
 
 				// Attempt to put the document
-				matched, _, err := configuration.Mongo.UpdateOneDocument(ctx, collection, filter, update) // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Change to a PUT Many after this for loop once this commit is done
+				matched, _, err := configuration.Mongo.UpdateOneDocument(ctx, collection, filter, update)
 				if err != nil {
 					// Put failed
 					l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to update recipe")

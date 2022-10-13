@@ -127,7 +127,27 @@ func TestAPI(t *testing.T) {
 				return []bson.M{map[string]interface{}{"key": make(chan int)}}, nil
 			},
 		}},
-		{"getOneDocument200", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "null"}, mocks.MockMongo{}},
+		{"getOneDocument200#1a", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "null"}, mocks.MockMongo{}},
+		{"getOneDocument200#1b", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"canMake\":true,\"ingredients\":[1337]}"}, mocks.MockMongo{
+			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
+				var doc bson.M = bson.M{
+					"canMake":     false,
+					"ingredients": bson.A{1337},
+				}
+				return &doc, nil
+			},
+			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				and := filter["$and"].([]bson.M)
+				expirationDate := and[0]["expirationDate"].(bson.M)
+				value := expirationDate["$gt"].(int64)
+				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
+				if current >= value {
+					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
+				} else {
+					return []bson.M{}, nil
+				}
+			},
+		}},
 		{"getOneDocument400", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "hello"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusBadRequest, body: "the provided hex string is not a valid ObjectID"}, mocks.MockMongo{}},
 		{"getOneDocument404#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "dfhsrgaweg", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusNotFound, body: "collection not found: dfhsrgaweg"}, mocks.MockMongo{}},
 		{"getOneDocument404#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{
@@ -147,7 +167,42 @@ func TestAPI(t *testing.T) {
 				return &doc, nil
 			},
 		}},
-		{"getOneDocument500#4", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
+		{"getOneDocument500#4", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
+			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
+				var doc bson.M = bson.M{
+					"canMake":     false,
+					"ingredients": bson.A{1337},
+				}
+				return &doc, nil
+			},
+			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				return nil, fmt.Errorf("failure")
+			},
+		}},
+		{"getOneDocument500#5", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
+			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
+				var doc bson.M = bson.M{
+					"canMake":     false,
+					"ingredients": bson.A{1337},
+				}
+				return &doc, nil
+			},
+			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				and := filter["$and"].([]bson.M)
+				expirationDate := and[0]["expirationDate"].(bson.M)
+				value := expirationDate["$gt"].(int64)
+				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
+				if current >= value {
+					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
+				} else {
+					return []bson.M{}, nil
+				}
+			},
+			OverrideUpdateOneDocument: func(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
+				return 0, 0, fmt.Errorf("failure")
+			},
+		}},
+		{"getOneDocument500#6", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients", "id": "6187e576abc057dac3e7d5dc"}, queryParameters: nil, body: nil}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
 			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 				return nil, fmt.Errorf("failure")
 			},

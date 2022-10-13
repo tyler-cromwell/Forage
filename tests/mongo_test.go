@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/tyler-cromwell/forage/clients"
+	"github.com/tyler-cromwell/forage/config"
 	"github.com/tyler-cromwell/forage/tests/mocks"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -43,6 +44,30 @@ func TestMongoClient(t *testing.T) {
 		client, err = clients.NewMongoClientWrapper(ctx, "mongodb://0.0.0.0:1")
 		require.Error(mt, err)
 		require.Nil(mt, client)
+	})
+
+	mt.Run("Collections", func(mt *mtest.T) {
+		client, err := mocks.NewMongoClientWrapper(mt, ctx, "")
+		require.NoError(mt, err)
+
+		document1 := mtest.CreateCursorResponse(1, "foo.bar", mtest.FirstBatch, bson.D{
+			{"name", config.MongoCollectionIngredients},
+		})
+		document2 := mtest.CreateCursorResponse(1, "foo.bar", mtest.NextBatch, bson.D{
+			{"name", config.MongoCollectionRecipes},
+		})
+
+		mt.ClearMockResponses()
+		mt.AddMockResponses(document1)
+		mt.AddMockResponses(document2)
+		names, err := client.Collections(ctx)
+
+		require.NoError(mt, err)
+		require.Equal(mt, 2, len(names))
+		require.Equal(mt, config.MongoCollectionIngredients, names[0])
+		require.Equal(mt, config.MongoCollectionRecipes, names[1])
+
+		mt.ClearMockResponses()
 	})
 
 	mt.Run("FindOneDocument", func(mt *mtest.T) {

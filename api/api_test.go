@@ -70,7 +70,7 @@ func TestAPI(t *testing.T) {
 		response    testResponse
 		mongoClient mocks.MockMongo
 	}{
-		{"getConfiguration", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"\"}"}, mocks.MockMongo{}},
+		{"getConfiguration200", getConfiguration, testRequest{method: "GET", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: nil}, testResponse{status: http.StatusOK, body: "{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"\"}"}, mocks.MockMongo{}},
 		{"putConfiguration200", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19:00\"}"))}, testResponse{status: http.StatusOK, body: ""}, mocks.MockMongo{}},
 		{"putConfiguration400#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
 		{"putConfiguration400#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", routeVariables: nil, queryParameters: nil, body: io.NopCloser(strings.NewReader(""))}, testResponse{status: http.StatusBadRequest, body: "unexpected end of JSON input"}, mocks.MockMongo{}},

@@ -132,7 +132,7 @@ func TestAPI(t *testing.T) {
 			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 				var doc bson.M = bson.M{
 					"canMake":     false,
-					"ingredients": bson.A{1337},
+					"ingredients": []interface{}{1337},
 				}
 				return &doc, nil
 			},
@@ -172,7 +172,7 @@ func TestAPI(t *testing.T) {
 			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 				var doc bson.M = bson.M{
 					"canMake":     false,
-					"ingredients": bson.A{1337},
+					"ingredients": []interface{}{1337},
 				}
 				return &doc, nil
 			},
@@ -184,7 +184,7 @@ func TestAPI(t *testing.T) {
 			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 				var doc bson.M = bson.M{
 					"canMake":     false,
-					"ingredients": bson.A{1337},
+					"ingredients": []interface{}{1337},
 				}
 				return &doc, nil
 			},
@@ -228,7 +228,7 @@ func TestAPI(t *testing.T) {
 					var docs []bson.M = make([]bson.M, 1)
 					docs[0] = bson.M{
 						"canMake":     false,
-						"ingredients": bson.A{1337},
+						"ingredients": []interface{}{1337},
 					}
 					return docs, nil
 				} else {
@@ -265,7 +265,7 @@ func TestAPI(t *testing.T) {
 					var docs []bson.M = make([]bson.M, 1)
 					docs[0] = bson.M{
 						"canMake":     false,
-						"ingredients": bson.A{1337},
+						"ingredients": []interface{}{1337},
 					}
 					return docs, nil
 				} else {
@@ -279,7 +279,7 @@ func TestAPI(t *testing.T) {
 					var docs []bson.M = make([]bson.M, 1)
 					docs[0] = bson.M{
 						"canMake":     false,
-						"ingredients": bson.A{1337},
+						"ingredients": []interface{}{1337},
 					}
 					return docs, nil
 				} else {
@@ -304,7 +304,21 @@ func TestAPI(t *testing.T) {
 				return []bson.M{map[string]interface{}{"key": make(chan int)}}, nil
 			},
 		}},
-		{"postManyDocuments200", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusCreated, body: ""}, mocks.MockMongo{}},
+		{"postManyDocuments200#1a", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusCreated, body: ""}, mocks.MockMongo{}},
+		{"postManyDocuments200#1b", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\", \"ingredients\": []}]"))}, testResponse{status: http.StatusCreated, body: ""}, mocks.MockMongo{
+			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				// For isCookable
+				and := filter["$and"].([]bson.M)
+				expirationDate := and[0]["expirationDate"].(bson.M)
+				value := expirationDate["$gt"].(int64)
+				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
+				if current >= value {
+					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
+				} else {
+					return []bson.M{}, nil
+				}
+			},
+		}},
 		{"postManyDocuments400", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
 		{"postManyDocuments404", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "dfhsrgaweg"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusNotFound, body: "collection not found: dfhsrgaweg"}, mocks.MockMongo{}},
 		{"postManyDocuments500#1", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
@@ -314,7 +328,12 @@ func TestAPI(t *testing.T) {
 		}},
 		{"postManyDocuments500#2", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
 		{"postManyDocuments500#3", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("{}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal object into Go value of type []primitive.M"}, mocks.MockMongo{}},
-		{"postManyDocuments500#4", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
+		{"postManyDocuments500#4", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\", \"ingredients\": [1337]}]"))}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
+			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+				return nil, fmt.Errorf("failure")
+			},
+		}},
+		{"postManyDocuments500#5", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": "ingredients"}, queryParameters: nil, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusInternalServerError, body: "failure"}, mocks.MockMongo{
 			OverrideInsertManyDocuments: func(ctx context.Context, collection string, docs []interface{}) error {
 				return fmt.Errorf("failure")
 			},
@@ -804,8 +823,8 @@ func TestAPI(t *testing.T) {
 			err    error
 		}{
 			{mc, primitive.M{"_id": "hello"}, false, nil},
-			{mcErr, primitive.M{"_id": "hello", "ingredients": primitive.A{}}, false, fmt.Errorf("failure")},
-			{mc, primitive.M{"_id": "hello", "ingredients": primitive.A{}}, true, nil},
+			{mcErr, primitive.M{"_id": "hello", "ingredients": []interface{}{}}, false, fmt.Errorf("failure")},
+			{mc, primitive.M{"_id": "hello", "ingredients": []interface{}{}}, true, nil},
 		}
 		for _, c := range cases {
 			configuration.Mongo = &c.mock

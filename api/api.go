@@ -36,11 +36,10 @@ func isCookable(ctx context.Context, recipe *primitive.M) (bool, error) {
 	iidsRaw := (*recipe)["ingredients"]
 
 	if iidsRaw == nil {
-		log.Warn("No ingredients")
-		return false, nil
+		return false, fmt.Errorf("no ingredients specified")
 	}
 
-	iids := iidsRaw.(primitive.A) // "ingredients" is a requried attribute
+	iids := iidsRaw.([]interface{}) // "ingredients" is a requried attribute
 	filterMany := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{
@@ -821,7 +820,6 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		log.Trace("Begin recipe scan")
 		for _, document := range body {
 			// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
-			originalCanMake := document["canMake"].(bool)
 			canMake, err := isCookable(ctx, &document)
 			l := log.WithFields(logrus.Fields{"recipe": document["_id"]})
 			if err != nil {
@@ -830,9 +828,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 				response.WriteHeader(http.StatusInternalServerError)
 				response.Write([]byte(err.Error()))
 				return
-			} else if canMake != originalCanMake {
-				// Update if different
-				l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
+			} else {
+				l.WithFields(logrus.Fields{"canMake": canMake}).Debug("Updating canMake")
 				document["canMake"] = canMake
 			}
 
@@ -855,9 +852,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		return
 	} else {
 		log.WithFields(logrus.Fields{"status": http.StatusCreated}).Info("Succeeded")
+		response.WriteHeader(http.StatusCreated)
 	}
-
-	response.WriteHeader(http.StatusCreated)
 }
 
 func putOneDocument(response http.ResponseWriter, request *http.Request) {

@@ -670,10 +670,10 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 		// Create filter
 		filter = bson.M{"$and": []bson.M{
+			filterExpires,
 			filterHaveStocked,
 			filterName,
 			filterType,
-			filterExpires,
 		}}
 	}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")

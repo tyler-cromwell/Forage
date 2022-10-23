@@ -61,6 +61,49 @@ func OverrideFindManyDocumentsSuccess(ctx context.Context, collection string, fi
 	}, nil
 }
 
+func OverrideFindManyDocumentsIngredient(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+	// For isCookable
+	and := filter["$and"].([]bson.M)
+	expirationDate := and[0]["expirationDate"].(bson.M)
+	value := expirationDate["$gt"].(int64)
+	current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
+	if current >= value {
+		return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
+	} else {
+		return []bson.M{}, nil
+	}
+}
+
+func OverrideFindManyDocumentsIngredientRange(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+	m1 := filter["$and"].([]bson.M)
+	m2 := m1[0]["expirationDate"].(bson.M)
+	low := m2["$gte"].(int64)
+	high := m2["$lte"].(int64)
+	expirationDate := int64(25)
+	if expirationDate >= low && expirationDate <= high {
+		return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
+	} else {
+		return []bson.M{}, nil
+	}
+}
+
+func OverrideFindManyDocumentsRecipe(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+	var docs []bson.M = make([]bson.M, 1)
+	docs[0] = bson.M{
+		"canMake":     false,
+		"ingredients": []interface{}{1337},
+	}
+	return docs, nil
+}
+
+func OverrideFindManyDocumentsSuper(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+	if collection == config.MongoCollectionRecipes {
+		return OverrideFindManyDocumentsRecipe(ctx, collection, filter, opts)
+	} else {
+		return OverrideFindManyDocumentsIngredient(ctx, collection, filter, opts)
+	}
+}
+
 func OverrideFindManyDocumentsErrorBasic(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	return nil, fmt.Errorf(errorBasic)
 }
@@ -147,40 +190,13 @@ func TestAPI(t *testing.T) {
 		{"getExpired500#1", getExpired, testRequest{method: "GET", endpoint: "/expired"}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"getExpired500#2", getExpired, testRequest{method: "GET", endpoint: "/expired"}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"getExpiring200#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "10", "to": "20"}}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
-		{"getExpiring200#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				m1 := filter["$and"].([]bson.M)
-				m2 := m1[0]["expirationDate"].(bson.M)
-				low := m2["$gte"].(int64)
-				high := m2["$lte"].(int64)
-				expirationDate := int64(25)
-				if expirationDate >= low && expirationDate <= high {
-					return []bson.M{map[string]interface{}{"expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
-				} else {
-					return []bson.M{}, nil
-				}
-			},
-		}},
+		{"getExpiring200#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
 		{"getExpiring400#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "x", "to": "20"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
 		{"getExpiring400#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
 		{"getExpiring500#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring"}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"getExpiring500#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring"}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"getOneDocument200#1a", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusOK, body: "null"}, mocks.MockMongo{}},
-		{"getOneDocument200#1b", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusOK, body: "{\"canMake\":true,\"ingredients\":[1337]}"}, mocks.MockMongo{
-			OverrideFindOneDocument: OverrideFindOneDocumentRecipe,
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				// For isCookable
-				and := filter["$and"].([]bson.M)
-				expirationDate := and[0]["expirationDate"].(bson.M)
-				value := expirationDate["$gt"].(int64)
-				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-				if current >= value {
-					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-				} else {
-					return []bson.M{}, nil
-				}
-			},
-		}},
+		{"getOneDocument200#1b", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusOK, body: "{\"canMake\":true,\"ingredients\":[1337]}"}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsIngredient}},
 		{"getOneDocument400#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
 		{"getOneDocument404#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid, "id": documentId}}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"getOneDocument404#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{
@@ -197,59 +213,10 @@ func TestAPI(t *testing.T) {
 			},
 		}},
 		{"getOneDocument500#4", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
-		{"getOneDocument500#5", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{
-			OverrideFindOneDocument: OverrideFindOneDocumentRecipe,
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				and := filter["$and"].([]bson.M)
-				expirationDate := and[0]["expirationDate"].(bson.M)
-				value := expirationDate["$gt"].(int64)
-				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-				if current >= value {
-					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-				} else {
-					return []bson.M{}, nil
-				}
-			},
-			OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic,
-		}},
+		{"getOneDocument500#5", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsIngredient, OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"getOneDocument500#6", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentErrorBasic}},
-		{"getManyDocuments200#1a", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				m1 := filter["$and"].([]bson.M)
-				m2 := m1[3]["expirationDate"].(bson.M)
-				low := m2["$gte"].(int64)
-				high := m2["$lte"].(int64)
-				expirationDate := int64(25)
-				if expirationDate >= low && expirationDate <= high {
-					return []bson.M{map[string]interface{}{"expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
-				} else {
-					return []bson.M{}, nil
-				}
-			},
-		}},
-		{"getManyDocuments200#1b", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"canMake\":true,\"ingredients\":[1337]}]"}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				if collection == config.MongoCollectionRecipes {
-					var docs []bson.M = make([]bson.M, 1)
-					docs[0] = bson.M{
-						"canMake":     false,
-						"ingredients": []interface{}{1337},
-					}
-					return docs, nil
-				} else {
-					// For isCookable
-					and := filter["$and"].([]bson.M)
-					expirationDate := and[0]["expirationDate"].(bson.M)
-					value := expirationDate["$gt"].(int64)
-					current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-					if current >= value {
-						return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-					} else {
-						return []bson.M{}, nil
-					}
-				}
-			},
-		}},
+		{"getManyDocuments200#1a", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
+		{"getManyDocuments200#1b", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusOK, body: "[{\"canMake\":true,\"ingredients\":[1337]}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuper}},
 		{"getManyDocuments400#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
 		{"getManyDocuments400#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
 		{"getManyDocuments400#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseBool: parsing \"lol\": invalid syntax"}, mocks.MockMongo{}},
@@ -259,59 +226,18 @@ func TestAPI(t *testing.T) {
 		{"getManyDocuments500#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{
 			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 				if collection == config.MongoCollectionRecipes {
-					var docs []bson.M = make([]bson.M, 1)
-					docs[0] = bson.M{
-						"canMake":     false,
-						"ingredients": []interface{}{1337},
-					}
-					return docs, nil
+					return OverrideFindManyDocumentsRecipe(ctx, collection, filter, opts)
 				} else {
-					return nil, fmt.Errorf(errorBasic)
+					return OverrideFindManyDocumentsErrorBasic(ctx, collection, filter, opts)
 				}
 			},
 		}},
-		{"getManyDocuments500#4", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				if collection == config.MongoCollectionRecipes {
-					var docs []bson.M = make([]bson.M, 1)
-					docs[0] = bson.M{
-						"canMake":     false,
-						"ingredients": []interface{}{1337},
-					}
-					return docs, nil
-				} else {
-					// For isCookable
-					and := filter["$and"].([]bson.M)
-					expirationDate := and[0]["expirationDate"].(bson.M)
-					value := expirationDate["$gt"].(int64)
-					current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-					if current >= value {
-						return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-					} else {
-						return []bson.M{}, nil
-					}
-				}
-			},
-			OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic,
-		}},
+		{"getManyDocuments500#4", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuper, OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"getManyDocuments500#5", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"postManyDocuments200#1a", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusCreated}, mocks.MockMongo{}},
-		{"postManyDocuments200#1b", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\", \"ingredients\": []}]"))}, testResponse{status: http.StatusCreated}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				// For isCookable
-				and := filter["$and"].([]bson.M)
-				expirationDate := and[0]["expirationDate"].(bson.M)
-				value := expirationDate["$gt"].(int64)
-				current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-				if current >= value {
-					return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-				} else {
-					return []bson.M{}, nil
-				}
-			},
-		}},
-		{"postManyDocuments400", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
-		{"postManyDocuments404", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
+		{"postManyDocuments200#1b", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\", \"ingredients\": []}]"))}, testResponse{status: http.StatusCreated}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredient}},
+		{"postManyDocuments400#1", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
+		{"postManyDocuments404#1", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"postManyDocuments500#1", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[{\"name\": \"Document\"}]"))}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"postManyDocuments500#2", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
 		{"postManyDocuments500#3", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("{}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal object into Go value of type []primitive.M"}, mocks.MockMongo{}},

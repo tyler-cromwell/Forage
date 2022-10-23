@@ -42,6 +42,10 @@ func OverrideCollectionsErrorBasic(ctx context.Context) ([]string, error) {
 	return nil, fmt.Errorf(errorBasic)
 }
 
+func OverrideFindOneDocumentNone(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
+	return nil, fmt.Errorf(utils.ErrMongoNoDocuments)
+}
+
 func OverrideFindOneDocumentRecipe(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 	var doc bson.M = bson.M{
 		"canMake":     false,
@@ -116,7 +120,7 @@ func OverrideInsertManyDocumentsErrorBasic(ctx context.Context, collection strin
 	return fmt.Errorf(errorBasic)
 }
 
-func OverrideUpdateOneDocumentNone(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
+func OverrideUpdateOneDocumentZero(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
 	return 0, 0, nil
 }
 
@@ -124,11 +128,15 @@ func OverrideUpdateOneDocumentErrorBasic(ctx context.Context, collection string,
 	return 0, 0, fmt.Errorf(errorBasic)
 }
 
+func OverrideDeleteOneDocumentNone(ctx context.Context, collection string, filter bson.D) error {
+	return fmt.Errorf(utils.ErrMongoNoDocuments)
+}
+
 func OverrideDeleteOneDocumentErrorBasic(ctx context.Context, collection string, filter bson.D) error {
 	return fmt.Errorf(errorBasic)
 }
 
-func OverrideDeleteManyDocumentsNone(ctx context.Context, collection string, filter bson.M) (int64, error) {
+func OverrideDeleteManyDocumentsZero(ctx context.Context, collection string, filter bson.M) (int64, error) {
 	return 0, nil
 }
 
@@ -203,11 +211,7 @@ func TestAPI(t *testing.T) {
 		{"getOneDocument200#1b", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusOK, body: "{\"canMake\":true,\"ingredients\":[1337]}"}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsIngredient}},
 		{"getOneDocument400#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
 		{"getOneDocument404#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid, "id": documentId}}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
-		{"getOneDocument404#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{
-			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
-				return nil, fmt.Errorf(utils.ErrMongoNoDocuments)
-			},
-		}},
+		{"getOneDocument404#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentNone}},
 		{"getOneDocument500#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"getOneDocument500#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}}, testResponse{status: http.StatusInternalServerError, body: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
 		{"getOneDocument500#3", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{
@@ -256,7 +260,7 @@ func TestAPI(t *testing.T) {
 			},
 		}},
 		{"putOneDocument404#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid, "id": documentId}, body: io.NopCloser(strings.NewReader("{\"_id\": \"6187e576abc057dac3e7d5dc\", \"name\": \"Document\"}"))}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
-		{"putOneDocument404#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(strings.NewReader("{}"))}, testResponse{status: http.StatusNotFound}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentNone}},
+		{"putOneDocument404#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(strings.NewReader("{}"))}, testResponse{status: http.StatusNotFound}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentZero}},
 		{"putOneDocument500#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(strings.NewReader("{\"_id\": \"6187e576abc057dac3e7d5dc\", \"name\": \"Document\"}"))}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"putOneDocument500#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}}, testResponse{status: http.StatusInternalServerError, body: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
 		{"putOneDocument500#3", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
@@ -265,11 +269,7 @@ func TestAPI(t *testing.T) {
 		{"deleteOneDocument200#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusOK}, mocks.MockMongo{}},
 		{"deleteOneDocument400#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
 		{"deleteOneDocument404#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid, "id": documentId}}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
-		{"deleteOneDocument404#2", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{
-			OverrideDeleteOneDocument: func(ctx context.Context, collection string, filter bson.D) error {
-				return fmt.Errorf(utils.ErrMongoNoDocuments)
-			},
-		}},
+		{"deleteOneDocument404#2", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{OverrideDeleteOneDocument: OverrideDeleteOneDocumentNone}},
 		{"deleteOneDocument500#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"deleteOneDocument500#2", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}}, testResponse{status: http.StatusInternalServerError, body: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
 		{"deleteOneDocument500#3", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideDeleteOneDocument: OverrideDeleteOneDocumentErrorBasic}},
@@ -277,7 +277,7 @@ func TestAPI(t *testing.T) {
 		{"deleteManyDocuments400#1", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("{:}"))}, testResponse{status: http.StatusBadRequest, body: "invalid character ':' looking for beginning of object key string"}, mocks.MockMongo{}},
 		{"deleteManyDocuments400#2", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[\"hello\"]"))}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
 		{"deleteManyDocuments404#1", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid}, body: io.NopCloser(strings.NewReader("[\"6187e576abc057dac3e7d5dc\"]"))}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
-		{"deleteManyDocuments404#2", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[\"6187e576abc057dac3e7d5dc\"]"))}, testResponse{status: http.StatusNotFound, body: "no documents found"}, mocks.MockMongo{OverrideDeleteManyDocuments: OverrideDeleteManyDocumentsNone}},
+		{"deleteManyDocuments404#2", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[\"6187e576abc057dac3e7d5dc\"]"))}, testResponse{status: http.StatusNotFound, body: "no documents found"}, mocks.MockMongo{OverrideDeleteManyDocuments: OverrideDeleteManyDocumentsZero}},
 		{"deleteManyDocuments500#1", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[\"6187e576abc057dac3e7d5dc\"]"))}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"deleteManyDocuments500#2", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(errReader(0))}, testResponse{status: http.StatusInternalServerError, body: "test error"}, mocks.MockMongo{}},
 		{"deleteManyDocuments500#3", deleteManyDocuments, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: io.NopCloser(strings.NewReader("[\"6187e576abc057dac3e7d5dc\"]"))}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideDeleteManyDocuments: OverrideDeleteManyDocumentsErrorBasic}},

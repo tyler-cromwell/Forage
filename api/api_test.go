@@ -48,6 +48,7 @@ const errorCollectionIdInvalid = "collection not found: " + collectionIdInvalid
 const errorDecodeFail = "json: unsupported type: chan int"
 const errorDocumentIdInvalid = "the provided hex string is not a valid ObjectID"
 const errorDocumentIdEncodeFail = "encoding/hex: invalid byte: U+0078 'x'"
+const errorEmptyUpdateInstructions = "write exception: write errors: ['$set' is empty. You must specify a field like so: {$set: {<field>: ...}}]"
 const errorIoutilReadAll = "ioutil.ReadAll error"
 const errorJsonUndecodable = "invalid character ':' looking for beginning of object key string"
 
@@ -131,6 +132,10 @@ func OverrideFindManyDocumentsDecodeFail(ctx context.Context, collection string,
 
 func OverrideInsertManyDocumentsErrorBasic(ctx context.Context, collection string, docs []interface{}) error {
 	return fmt.Errorf(errorBasic)
+}
+
+func OverrideUpdateOneDocumentEmptyUpdate(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
+	return 0, 0, fmt.Errorf(errorEmptyUpdateInstructions)
 }
 
 func OverrideUpdateOneDocumentZero(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
@@ -267,11 +272,7 @@ func TestAPI(t *testing.T) {
 		{"putOneDocument200#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyIngredient}, testResponse{status: http.StatusOK}, mocks.MockMongo{}},
 		{"putOneDocument400#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
 		{"putOneDocument400#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyJsonUndecodable}, testResponse{status: http.StatusBadRequest, body: errorJsonUndecodable}, mocks.MockMongo{}},
-		{"putOneDocument400#3", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyEmptySet}, testResponse{status: http.StatusBadRequest, body: "write exception: write errors: ['$set' is empty. You must specify a field like so: {$set: {<field>: ...}}]"}, mocks.MockMongo{
-			OverrideUpdateOneDocument: func(ctx context.Context, collection string, filter bson.D, update interface{}) (int64, int64, error) {
-				return 0, 0, fmt.Errorf("write exception: write errors: ['$set' is empty. You must specify a field like so: {$set: {<field>: ...}}]")
-			},
-		}},
+		{"putOneDocument400#3", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyEmptySet}, testResponse{status: http.StatusBadRequest, body: errorEmptyUpdateInstructions}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentEmptyUpdate}},
 		{"putOneDocument404#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid, "id": documentId}, body: bodyIngredient}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"putOneDocument404#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyEmptySet}, testResponse{status: http.StatusNotFound}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentZero}},
 		{"putOneDocument500#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyIngredient}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},

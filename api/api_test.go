@@ -193,7 +193,7 @@ func TestAPI(t *testing.T) {
 		{
 			// Error #1, Could not obtain expired items
 			"checkExpirationsError#1",
-			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsCheckExpirations1},
+			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic},
 			mocks.MockTrello{},
 			mocks.MockTwilio{},
 			[]logrus.Level{logrus.ErrorLevel},

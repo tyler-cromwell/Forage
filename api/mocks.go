@@ -132,38 +132,6 @@ func OverrideFindManyDocumentsDecodeFail(ctx context.Context, collection string,
 	return []bson.M{map[string]interface{}{"key": make(chan int)}}, nil
 }
 
-func OverrideFindManyDocumentsCheckExpirations1(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-	expectation := bson.M{"$and": []bson.M{
-		{
-			"expirationDate": bson.M{
-				"$lte": int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond),
-			},
-		},
-		{
-			"haveStocked": bson.M{
-				"$eq": true,
-			},
-		},
-	}}
-	e, err := bson.Marshal(expectation)
-	if err != nil {
-		return nil, err
-	}
-	f, err := bson.Marshal(filter)
-	if err != nil {
-		return nil, err
-	}
-
-	if bytes.Equal(f, e) {
-		return nil, fmt.Errorf(errorBasic)
-	} else {
-		return []bson.M{
-			map[string]interface{}{"name": "value1"},
-			map[string]interface{}{"name": "value2", "attributes": map[string]string{}},
-		}, nil
-	}
-}
-
 func OverrideFindManyDocumentsCheckExpirations2(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	expectation := bson.M{"$and": []bson.M{
 		{
@@ -178,14 +146,8 @@ func OverrideFindManyDocumentsCheckExpirations2(ctx context.Context, collection 
 			},
 		},
 	}}
-	e, err := bson.Marshal(expectation)
-	if err != nil {
-		return nil, err
-	}
-	f, err := bson.Marshal(filter)
-	if err != nil {
-		return nil, err
-	}
+	e, _ := bson.Marshal(expectation)
+	f, _ := bson.Marshal(filter)
 
 	if bytes.Equal(f, e) {
 		return nil, fmt.Errorf(errorBasic)

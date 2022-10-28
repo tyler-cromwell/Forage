@@ -75,37 +75,32 @@ func OverrideFindManyDocumentsSuccess(ctx context.Context, collection string, fi
 
 func OverrideFindManyDocumentsIngredient(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	// For isCookable
-	and := filter["$and"].([]bson.M)
-	expirationDate := and[0]["expirationDate"].(bson.M)
-	value := expirationDate["$gt"].(int64)
+	//	and := filter["$and"].([]bson.M)
+	//	expirationDate := and[0]["expirationDate"].(bson.M)
+	//	value := expirationDate["$gt"].(int64)
 	current := int64(time.Now().UTC().UnixNano()) / int64(time.Millisecond)
-	if current >= value {
-		return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
-	} else {
-		return []bson.M{}, nil
-	}
+	//	if current >= value {
+	return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": current, "haveStocked": "true", "name": "hello", "type": "thing"}}, nil
+	//	} else {
+	//		return []bson.M{}, nil
+	//	}
 }
 
 func OverrideFindManyDocumentsIngredientRange(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-	m1 := filter["$and"].([]bson.M)
-	m2 := m1[0]["expirationDate"].(bson.M)
-	low := m2["$gte"].(int64)
-	high := m2["$lte"].(int64)
+	//	m1 := filter["$and"].([]bson.M)
+	//	m2 := m1[0]["expirationDate"].(bson.M)
+	//	low := m2["$gte"].(int64)
+	//	high := m2["$lte"].(int64)
 	expirationDate := int64(25)
-	if expirationDate >= low && expirationDate <= high {
-		return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
-	} else {
-		return []bson.M{}, nil
-	}
+	//	if expirationDate >= low && expirationDate <= high {
+	return []bson.M{map[string]interface{}{"_id": 1337, "expirationDate": expirationDate, "haveStocked": "false", "name": "hello", "type": "thing"}}, nil
+	//	} else {
+	//		return []bson.M{}, nil
+	//	}
 }
 
 func OverrideFindManyDocumentsRecipe(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-	var docs []bson.M = make([]bson.M, 1)
-	docs[0] = bson.M{
-		"canMake":     false,
-		"ingredients": []interface{}{1337},
-	}
-	return docs, nil
+	return []bson.M{map[string]interface{}{"canMake": false, "ingredients": []interface{}{1337}}}, nil
 }
 
 func OverrideFindManyDocumentsSuper(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

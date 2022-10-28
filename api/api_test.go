@@ -39,6 +39,7 @@ var queryParameters2030 = map[string]string{"from": "20", "to": "30"}
 var queryParametersAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
 var queryParametersAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
 
+const bodyExpiring = "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"
 const collectionIdInvalid = "dfhsrgaweg"
 const documentId = "6187e576abc057dac3e7d5dc"
 const documentIdInvalid = "hello"
@@ -50,7 +51,10 @@ const errorDocumentIdInvalid = "the provided hex string is not a valid ObjectID"
 const errorDocumentIdEncodeFail = "encoding/hex: invalid byte: U+0078 'x'"
 const errorEmptyUpdateInstructions = "write exception: write errors: ['$set' is empty. You must specify a field like so: {$set: {<field>: ...}}]"
 const errorIoutilReadAll = "ioutil.ReadAll error"
+const errorJsonEnd = "unexpected end of JSON input"
 const errorJsonUndecodable = "invalid character ':' looking for beginning of object key string"
+const errorStrconvX = "strconv.ParseInt: parsing \"x\": invalid syntax"
+const errorStrconvY = "strconv.ParseInt: parsing \"y\": invalid syntax"
 
 func OverrideCollectionsErrorBasic(ctx context.Context) ([]string, error) {
 	return nil, fmt.Errorf(errorBasic)
@@ -70,6 +74,11 @@ func OverrideFindOneDocumentRecipe(ctx context.Context, collection string, filte
 
 func OverrideFindOneDocumentErrorBasic(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 	return nil, fmt.Errorf(errorBasic)
+}
+
+func OverrideFindOneDocumentErrorDecodeFail(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
+	var doc bson.M = map[string]interface{}{"key": make(chan int)}
+	return &doc, nil
 }
 
 func OverrideFindManyDocumentsSuccess(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
@@ -126,6 +135,14 @@ func OverrideFindManyDocumentsErrorBasic(ctx context.Context, collection string,
 	return nil, fmt.Errorf(errorBasic)
 }
 
+func OverrideFindManyDocumentsRecipeOrErrorBasic(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
+	if collection == config.MongoCollectionRecipes {
+		return OverrideFindManyDocumentsRecipe(ctx, collection, filter, opts)
+	} else {
+		return OverrideFindManyDocumentsErrorBasic(ctx, collection, filter, opts)
+	}
+}
+
 func OverrideFindManyDocumentsDecodeFail(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
 	return []bson.M{map[string]interface{}{"key": make(chan int)}}, nil
 }
@@ -160,6 +177,14 @@ func OverrideDeleteManyDocumentsZero(ctx context.Context, collection string, fil
 
 func OverrideDeleteManyDocumentsErrorBasic(ctx context.Context, collection string, filter bson.M) (int64, error) {
 	return 0, fmt.Errorf(errorBasic)
+}
+
+func OverrideGetShoppingListNil() (*trello.Card, error) {
+	return nil, nil
+}
+
+func OverrideCreateShoppingListErrorBasic(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
+	return "", fmt.Errorf(errorBasic)
 }
 
 type testRequest struct {
@@ -208,7 +233,7 @@ func TestAPI(t *testing.T) {
 		{"getConfiguration200#1", getConfiguration, testRequest{method: "GET", endpoint: "/configure"}, testResponse{status: http.StatusOK, body: "{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"\"}"}, mocks.MockMongo{}},
 		{"putConfiguration200#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19:00\"}"))}, testResponse{status: http.StatusOK}, mocks.MockMongo{}},
 		{"putConfiguration400#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: bodyJsonUndecodable}, testResponse{status: http.StatusBadRequest, body: errorJsonUndecodable}, mocks.MockMongo{}},
-		{"putConfiguration400#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: io.NopCloser(strings.NewReader(""))}, testResponse{status: http.StatusBadRequest, body: "unexpected end of JSON input"}, mocks.MockMongo{}},
+		{"putConfiguration400#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: io.NopCloser(strings.NewReader(""))}, testResponse{status: http.StatusBadRequest, body: errorJsonEnd}, mocks.MockMongo{}},
 		{"putConfiguration400#3", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19/00\"}"))}, testResponse{status: http.StatusBadRequest, body: "Invalid time format: 19/00"}, mocks.MockMongo{}},
 		{"putConfiguration500#1", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: bodyUnreadable}, testResponse{status: http.StatusInternalServerError, body: errorIoutilReadAll}, mocks.MockMongo{}},
 		{"putConfiguration500#2", putConfiguration, testRequest{method: "PUT", endpoint: "/configure", body: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"silence\": false, \"time\": \"19:00\"}"))}, testResponse{status: http.StatusInternalServerError, body: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
@@ -220,9 +245,9 @@ func TestAPI(t *testing.T) {
 		{"getExpired500#1", getExpired, testRequest{method: "GET", endpoint: "/expired"}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"getExpired500#2", getExpired, testRequest{method: "GET", endpoint: "/expired"}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"getExpiring200#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: queryParameters1020}, testResponse{status: http.StatusOK, body: "[]"}, mocks.MockMongo{}},
-		{"getExpiring200#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: queryParameters2030}, testResponse{status: http.StatusOK, body: "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
-		{"getExpiring400#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "x", "to": "20"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
-		{"getExpiring400#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
+		{"getExpiring200#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: queryParameters2030}, testResponse{status: http.StatusOK, body: bodyExpiring}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
+		{"getExpiring400#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "x", "to": "20"}}, testResponse{status: http.StatusBadRequest, body: errorStrconvX}, mocks.MockMongo{}},
+		{"getExpiring400#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring", queryParameters: map[string]string{"from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: errorStrconvY}, mocks.MockMongo{}},
 		{"getExpiring500#1", getExpiring, testRequest{method: "GET", endpoint: "/expiring"}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"getExpiring500#2", getExpiring, testRequest{method: "GET", endpoint: "/expiring"}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"getOneDocument200#1a", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusOK, body: "null"}, mocks.MockMongo{}},
@@ -232,32 +257,19 @@ func TestAPI(t *testing.T) {
 		{"getOneDocument404#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusNotFound, body: utils.ErrMongoNoDocuments}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentNone}},
 		{"getOneDocument500#1", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"getOneDocument500#2", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}}, testResponse{status: http.StatusInternalServerError, body: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
-		{"getOneDocument500#3", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{
-			OverrideFindOneDocument: func(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
-				var doc bson.M = map[string]interface{}{"key": make(chan int)}
-				return &doc, nil
-			},
-		}},
+		{"getOneDocument500#3", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentErrorDecodeFail}},
 		{"getOneDocument500#4", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"getOneDocument500#5", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentRecipe, OverrideFindManyDocuments: OverrideFindManyDocumentsIngredient, OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"getOneDocument500#6", getOneDocument, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindOneDocument: OverrideFindOneDocumentErrorBasic}},
-		{"getManyDocuments200#1a", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusOK, body: "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
+		{"getManyDocuments200#1a", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusOK, body: bodyExpiring}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsIngredientRange}},
 		{"getManyDocuments200#1b", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusOK, body: "[{\"canMake\":true,\"ingredients\":[1337]}]"}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuper}},
-		{"getManyDocuments400#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"x\": invalid syntax"}, mocks.MockMongo{}},
-		{"getManyDocuments400#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseInt: parsing \"y\": invalid syntax"}, mocks.MockMongo{}},
+		{"getManyDocuments400#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "x", "to": ""}}, testResponse{status: http.StatusBadRequest, body: errorStrconvX}, mocks.MockMongo{}},
+		{"getManyDocuments400#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "y"}}, testResponse{status: http.StatusBadRequest, body: errorStrconvY}, mocks.MockMongo{}},
 		{"getManyDocuments400#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: map[string]string{"name": "hello", "type": "thing", "haveStocked": "lol", "from": "10", "to": "20"}}, testResponse{status: http.StatusBadRequest, body: "strconv.ParseBool: parsing \"lol\": invalid syntax"}, mocks.MockMongo{}},
 		{"getManyDocuments404#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": collectionIdInvalid}, queryParameters: queryParametersAll1020}, testResponse{status: http.StatusNotFound, body: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"getManyDocuments500#1", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: queryParametersAll1020}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"getManyDocuments500#2", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: queryParametersAll1020}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
-		{"getManyDocuments500#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{
-			OverrideFindManyDocuments: func(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-				if collection == config.MongoCollectionRecipes {
-					return OverrideFindManyDocumentsRecipe(ctx, collection, filter, opts)
-				} else {
-					return OverrideFindManyDocumentsErrorBasic(ctx, collection, filter, opts)
-				}
-			},
-		}},
+		{"getManyDocuments500#3", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsRecipeOrErrorBasic}},
 		{"getManyDocuments500#4", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionRecipes}, queryParameters: queryParametersAll2030}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuper, OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"getManyDocuments500#5", getManyDocuments, testRequest{method: "GET", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, queryParameters: queryParametersAll1020}, testResponse{status: http.StatusInternalServerError, body: errorDecodeFail}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsDecodeFail}},
 		{"postManyDocuments200#1a", postManyDocuments, testRequest{method: "POST", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients}, body: bodyIngredients}, testResponse{status: http.StatusCreated}, mocks.MockMongo{}},
@@ -278,7 +290,7 @@ func TestAPI(t *testing.T) {
 		{"putOneDocument500#1", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyIngredient}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"putOneDocument500#2", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}}, testResponse{status: http.StatusInternalServerError, body: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
 		{"putOneDocument500#3", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyUnreadable}, testResponse{status: http.StatusInternalServerError, body: errorIoutilReadAll}, mocks.MockMongo{}},
-		{"putOneDocument500#4", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(strings.NewReader("[{}"))}, testResponse{status: http.StatusInternalServerError, body: "unexpected end of JSON input"}, mocks.MockMongo{}},
+		{"putOneDocument500#4", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: io.NopCloser(strings.NewReader("[{}"))}, testResponse{status: http.StatusInternalServerError, body: errorJsonEnd}, mocks.MockMongo{}},
 		{"putOneDocument500#5", putOneDocument, testRequest{method: "PUT", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}, body: bodyIngredient}, testResponse{status: http.StatusInternalServerError, body: errorBasic}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"deleteOneDocument200#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}}, testResponse{status: http.StatusOK}, mocks.MockMongo{}},
 		{"deleteOneDocument400#1", deleteOneDocument, testRequest{method: "DELETE", endpoint: "/documents", routeVariables: map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}}, testResponse{status: http.StatusBadRequest, body: errorDocumentIdInvalid}, mocks.MockMongo{}},
@@ -378,12 +390,8 @@ func TestAPI(t *testing.T) {
 			},
 			mocks.MockTrello{},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.ErrorLevel,
-			},
-			[]string{
-				"Failed to identify expired items",
-			},
+			[]logrus.Level{logrus.ErrorLevel},
+			[]string{"Failed to identify expired items"},
 		},
 		{
 			// Error #2, Could not obtain expiring items
@@ -424,12 +432,8 @@ func TestAPI(t *testing.T) {
 			},
 			mocks.MockTrello{},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.ErrorLevel,
-			},
-			[]string{
-				"Failed to identify expiring items",
-			},
+			[]logrus.Level{logrus.ErrorLevel},
+			[]string{"Failed to identify expiring items"},
 		},
 		{
 			// Success #1, No expired/expiring items, no need to proceed.
@@ -437,12 +441,8 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{},
 			mocks.MockTrello{},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking not required",
-			},
+			[]logrus.Level{logrus.InfoLevel},
+			[]string{"Restocking not required"},
 		},
 		{
 			// Success #2, items expired/expiring added to existing Trello card and SMS message sent.
@@ -450,16 +450,8 @@ func TestAPI(t *testing.T) {
 			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuccess},
 			mocks.MockTrello{},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Added to Trello card",
-				"Sent Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.InfoLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Added to Trello card", "Sent Twilio message"},
 		},
 		{
 			// Error #3, items expired/expiring but could not obtain Trello card, SMS message still sent.
@@ -471,37 +463,17 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.ErrorLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Failed to get Trello card",
-				"Sent Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.ErrorLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Failed to get Trello card", "Sent Twilio message"},
 		},
 		{
 			// Success #3, items expired/expiring added to new Trello card and SMS message sent.
 			"checkExpirationsSuccess#3",
 			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuccess},
-			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*trello.Card, error) {
-					return nil, nil
-				},
-			},
+			mocks.MockTrello{OverrideGetShoppingList: OverrideGetShoppingListNil},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Created Trello card",
-				"Sent Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.InfoLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Created Trello card", "Sent Twilio message"},
 		},
 		{
 			// Error #4, items expired/expiring but could not add to existing card Trello card, SMS message still sent.
@@ -513,53 +485,23 @@ func TestAPI(t *testing.T) {
 				},
 			},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.ErrorLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Failed to add to Trello card",
-				"Sent Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.ErrorLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Failed to add to Trello card", "Sent Twilio message"},
 		},
 		{
 			// Error #5, items expired/expiring but could not create new card Trello card, SMS message still sent.
 			"checkExpirationsError#5",
 			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuccess},
-			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*trello.Card, error) {
-					return nil, nil
-				},
-				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
-					return "", fmt.Errorf(errorBasic)
-				},
-			},
+			mocks.MockTrello{OverrideGetShoppingList: OverrideGetShoppingListNil, OverrideCreateShoppingList: OverrideCreateShoppingListErrorBasic},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.ErrorLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Failed to create Trello card",
-				"Sent Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.ErrorLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Failed to create Trello card", "Sent Twilio message"},
 		},
 		{
 			// Error #6, items expired/expiring but could not create new card Trello card or send SMS message.
 			"checkExpirationsError#6",
 			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuccess},
-			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*trello.Card, error) {
-					return nil, nil
-				},
-				OverrideCreateShoppingList: func(dueDate *time.Time, applyLabels []string, listItems []string) (string, error) {
-					return "", fmt.Errorf(errorBasic)
-				},
-			},
+			mocks.MockTrello{OverrideGetShoppingList: OverrideGetShoppingListNil, OverrideCreateShoppingList: OverrideCreateShoppingListErrorBasic},
 			mocks.MockTwilio{
 				OverrideComposeMessage: func(quantity, quantityExpired int, url string) string {
 					return ""
@@ -568,37 +510,17 @@ func TestAPI(t *testing.T) {
 					return "", fmt.Errorf(errorBasic)
 				},
 			},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.ErrorLevel,
-				logrus.ErrorLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Failed to create Trello card",
-				"Failed to send Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.ErrorLevel, logrus.ErrorLevel},
+			[]string{"Restocking required", "Failed to create Trello card", "Failed to send Twilio message"},
 		},
 		{
 			// Success #4, items expired/expiring added to new Trello card and SMS message skipped.
 			"checkExpirationsSuccess#4",
 			mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsSuccess},
-			mocks.MockTrello{
-				OverrideGetShoppingList: func() (*trello.Card, error) {
-					return nil, nil
-				},
-			},
+			mocks.MockTrello{OverrideGetShoppingList: OverrideGetShoppingListNil},
 			mocks.MockTwilio{},
-			[]logrus.Level{
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-				logrus.InfoLevel,
-			},
-			[]string{
-				"Restocking required",
-				"Created Trello card",
-				"Skipped Twilio message",
-			},
+			[]logrus.Level{logrus.InfoLevel, logrus.InfoLevel, logrus.InfoLevel},
+			[]string{"Restocking required", "Created Trello card", "Skipped Twilio message"},
 		},
 	}
 	t.Run("checkExpirations", func(t *testing.T) {

@@ -6,9 +6,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const ErrNoMatchedDocuments = "no document matching filter"
-const ErrInvalidObjectID = "the provided hex string is not a valid ObjectID"
-const ErrMongoNoDocuments = "mongo: no documents in result"
+const ErrorNoMatchedDocuments = "no document matching filter"
+const ErrorInvalidObjectID = "the provided hex string is not a valid ObjectID"
+const ErrorMongoNoDocuments = "mongo: no documents in result"
 
 func Contains(s []string, str string) bool {
 	for _, v := range s {

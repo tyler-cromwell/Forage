@@ -436,7 +436,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil && err.Error() == utils.ErrInvalidObjectID {
+	if err != nil && err.Error() == utils.ErrorInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
@@ -457,7 +457,7 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to get the document
 	document, err := configuration.Mongo.FindOneDocument(ctx, collection, filter)
-	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
+	if err != nil && err.Error() == utils.ErrorMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		response.WriteHeader(http.StatusNotFound)
@@ -893,7 +893,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil && err.Error() == utils.ErrInvalidObjectID {
+	if err != nil && err.Error() == utils.ErrorInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
@@ -1018,7 +1018,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Parse document id
 	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil && err.Error() == utils.ErrInvalidObjectID {
+	if err != nil && err.Error() == utils.ErrorInvalidObjectID {
 		// Invalid document id provided
 		log.WithFields(logrus.Fields{"id": id, "status": http.StatusBadRequest}).WithError(err).Warn("Failed to parse document id")
 		response.WriteHeader(http.StatusBadRequest)
@@ -1039,7 +1039,7 @@ func deleteOneDocument(response http.ResponseWriter, request *http.Request) {
 
 	// Attempt to delete the document
 	err = configuration.Mongo.DeleteOneDocument(ctx, collection, filter)
-	if err != nil && err.Error() == utils.ErrMongoNoDocuments {
+	if err != nil && err.Error() == utils.ErrorMongoNoDocuments {
 		// Get completed but no document was found
 		log.WithFields(logrus.Fields{"status": http.StatusNotFound}).WithError(err).Warn("Failed to get document")
 		response.WriteHeader(http.StatusNotFound)

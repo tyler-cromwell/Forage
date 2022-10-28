@@ -37,7 +37,7 @@ func TestUtils(t *testing.T) {
 			err  error
 		}{
 			{"6187e576abc057dac3e7d5e4", t1, nil},
-			{"hello", time.Unix(0, 0).UTC(), fmt.Errorf(ErrInvalidObjectID)},
+			{"hello", time.Unix(0, 0).UTC(), fmt.Errorf(ErrorInvalidObjectID)},
 		}
 
 		for _, c := range cases {

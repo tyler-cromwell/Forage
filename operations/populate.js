@@ -3,11 +3,11 @@ let database = connect('127.0.0.1:27017/forage')
 
 let resultIngredientsDrop = database.ingredients.drop()
 print('Ingredients Dropped:', resultIngredientsDrop)
-let resultRecipesDrop = database.ingredients.drop()
+let resultRecipesDrop = database.recipes.drop()
 print('Recipes Dropped:', resultRecipesDrop)
 
 // Production will include expiration date
-let dateUpdated = new Date().getTime()
+let dateUpdated = new Date()
 let ingredients = [
     {
         amount: {
@@ -321,6 +321,124 @@ let ingredients = [
     },
     {
         amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: false,
+            type: 'Cream'
+        },
+        lifespan: {
+            freezer: {
+                unit: 'month',
+                value: 2
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: true,
+            type: 'Cream'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 10,
+                unit: 'day'
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: false,
+            type: 'Mozzarella'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 6,
+                unit: 'week'
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: true,
+            type: 'Mozzarella'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 5,
+                unit: 'day'
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            type: 'Muenster'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 3,
+                unit: 'week'
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: false,
+            type: 'Parmesan'
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'month',
+                value: 3
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
+            unit: 'ounce',
+            value: 1
+        },
+        attributes: {
+            opened: true,
+            type: 'Parmesan'
+        },
+        lifespan: {
+            refrigerator: {
+                unit: 'week',
+                value: 6
+            }
+        },
+        name: 'Cheese'
+    },
+    {
+        amount: {
             value: 1,
             unit: 'pound'
         },
@@ -370,38 +488,6 @@ let ingredients = [
             }
         },
         name: 'Chili Flakes'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: false
-        },
-        lifespan: {
-            freezer: {
-                unit: 'month',
-                value: 2
-            }
-        },
-        name: 'Cream Cheese'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: true
-        },
-        lifespan: {
-            refrigerator: {
-                value: 10,
-                unit: 'day'
-            }
-        },
-        name: 'Cream Cheese'
     },
     {
         amount: {
@@ -903,67 +989,6 @@ let ingredients = [
     },
     {
         amount: {
-            unit: 'pound',
-            value: 1
-        },
-        attributes: {
-            form: 'Loaf'
-        },
-        lifespan: {
-            refrigerator: {
-                unit: 'week',
-                value: 3
-            }
-        },
-        name: 'Mozzarella Cheese'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: false
-        },
-        lifespan: {
-            refrigerator: {
-                value: 6,
-                unit: 'week'
-            }
-        },
-        name: 'Mozzarella Cheese'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: true
-        },
-        lifespan: {
-            refrigerator: {
-                value: 5,
-                unit: 'day'
-            }
-        },
-        name: 'Mozzarella Cheese'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        lifespan: {
-            refrigerator: {
-                value: 3,
-                unit: 'week'
-            }
-        },
-        name: 'Muenster Cheese'
-    },
-    {
-        amount: {
             unit: 'cup',
             value: 1
         },
@@ -1072,38 +1097,6 @@ let ingredients = [
             }
         },
         name: 'Pasta'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: false
-        },
-        lifespan: {
-            refrigerator: {
-                unit: 'month',
-                value: 3
-            }
-        },
-        name: 'Parmesan Cheese'
-    },
-    {
-        amount: {
-            unit: 'ounce',
-            value: 1
-        },
-        attributes: {
-            opened: true
-        },
-        lifespan: {
-            refrigerator: {
-                unit: 'week',
-                value: 6
-            }
-        },
-        name: 'Parmesan Cheese'
     },
     {
         amount: {
@@ -1515,11 +1508,10 @@ ingredients.forEach((document) => {
 
     // Calculate max expiration date
     // Since this is before insertMany, updated is also created date
-    let updatedDate = new Date(document.updated)
     let expirationDate = new Date(
-        updatedDate.getFullYear(),
-        updatedDate.getMonth(),
-        updatedDate.getDate()+maxDays
+        dateUpdated.getFullYear(),
+        dateUpdated.getMonth(),
+        dateUpdated.getDate()+maxDays
     ).getTime()
 
     if (document.expirationDate === undefined && maxDays == 0) {
@@ -1532,7 +1524,7 @@ ingredients.forEach((document) => {
     document.stockedDate = 0
     document.storeIn = maxEnv
     document.type = 'ingredient'
-    document.updated = dateUpdated
+    document.updated = dateUpdated.getTime()
 })
 
 // Insert the ingredients
@@ -1544,14 +1536,31 @@ if (ingredients.length != ingredientIDs.length) {
 }
 
 let recipes = [
-    { name: 'Bacon, Egg, and Cheese' }
+    { name: 'Chicken & Vegetable Quinoa' },
+    { name: 'Bacon, Egg, and Cheese' },
+    { name: 'Hamburgers' },
+    { name: 'Wings' },
+    { name: 'Gyoza' },
+    { name: 'Oyako Don' },
+    { name: 'Sushi' },
+    { name: 'Baked Gnocchi & Broccoli' },
+    { name: 'Bucatini Carbonara (Modern)' },
+    { name: 'Meatballs' },
+    { name: 'Italian Wedding Soup' },
+    { name: 'One Pan Pasta' },
+    { name: 'Slow-Cooked Bolognese Sauce' },
+    { name: 'Strawberry Nutella Semifreddo' },
+    { name: 'Chicken Saltimbocca Alla Romana' },
+    { name: 'Classic Caponata' },
+    { name: 'Chicken Fried Rice' },
+    { name: 'Blueberry Muffins' }
 ]
 
 // Prep recipe documents for insertion
 recipes.forEach((document) => {
     document.canMake = false
     document.type = 'recipe'
-    document.updated = dateUpdated
+    document.updated = dateUpdated.getTime()
 })
 
 // Insert the recipes
@@ -1564,7 +1573,30 @@ if (recipes.length != recipeIDs.length) {
 
 // Link ingredients to recipes
 database.recipes.update(
-    { _id: recipeIDs[0] },
+    { _id: recipeIDs[0] }, // Chicken & Vegetable Quinoa
+    {
+      $set: {
+        ingredients: [
+            ingredientIDs[26], // Chicken
+            // Zucchini
+            // Bell Peppers
+            // Onion (yellow)
+            // Mushrooms
+            // Garlic
+            // Quinoa
+            // Chicken Broth (low fat)
+            // Spinach Leaves
+            // Olive Oil (extra virgin)
+            // Rosemary (Dried, Crushed)
+            // Paprika (Smoked)
+            // Pepper (Black)
+            // Salt
+        ],
+      }
+    }
+)
+database.recipes.update(
+    { _id: recipeIDs[1] }, // Bacon, Egg, and Cheese
     {
       $set: {
         ingredients: [
@@ -1574,7 +1606,19 @@ database.recipes.update(
         ],
       }
     }
- )
+)
+database.recipes.update(
+    { _id: recipeIDs[2] }, // Hamburgers
+    {
+      $set: {
+        ingredients: [
+            ingredientIDs[7],  // Beef
+            ingredientIDs[18], // Cheese (American)
+            ingredientIDs[49]  // Lettuce
+        ],
+      }
+    }
+)
 
 /*
 let resultFind = database.ingredients.find()

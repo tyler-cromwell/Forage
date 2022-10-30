@@ -1559,6 +1559,7 @@ let recipes = [
 // Prep recipe documents for insertion
 recipes.forEach((document) => {
     document.canMake = false
+    document.ingredients = []
     document.type = 'recipe'
     document.updated = dateUpdated.getTime()
 })

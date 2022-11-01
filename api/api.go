@@ -206,7 +206,7 @@ func getCookable(response http.ResponseWriter, request *http.Request) {
 	defer log.Trace("End function")
 
 	// Create filter
-	filter := bson.M{"canMake": true}
+	filter := bson.M{"isCookable": true}
 	log.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 	// Grab the documents
@@ -483,25 +483,25 @@ func getOneDocument(response http.ResponseWriter, request *http.Request) {
 	if collection == config.MongoCollectionRecipes {
 		log.Trace("Begin recipe scan")
 		// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
-		originalCanMake := (*document)["canMake"].(bool)
-		canMake, err := isCookable(ctx, document)
+		originalCanMake := (*document)["isCookable"].(bool)
+		isCookable, err := isCookable(ctx, document)
 		if err != nil {
 			// Something broke
 			log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
 			response.WriteHeader(http.StatusInternalServerError)
 			response.Write([]byte(err.Error()))
 			return
-		} else if canMake != originalCanMake {
+		} else if isCookable != originalCanMake {
 			// Update if different
-			log.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
-			(*document)["canMake"] = canMake
+			log.WithFields(logrus.Fields{"original": originalCanMake, "updated": isCookable}).Debug("Updating isCookable")
+			(*document)["isCookable"] = isCookable
 
 			// Create filter
 			l := log.WithFields(logrus.Fields{"method": "PUT"})
 			l.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 			// Define update instructions
-			update := bson.M{"$set": bson.M{"canMake": canMake}}
+			update := bson.M{"$set": bson.M{"isCookable": isCookable}}
 			l.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
 
 			// Attempt to put the document
@@ -567,17 +567,13 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Extract query parameters
+	qpNameCookable := "isCookable"
 	qpNameFrom := "from"
 	qpNameHaveStocked := "haveStocked"
 	qpNameName := "name"
 	qpNameTo := "to"
-	qpNameType := "type"
 	queryParams := request.URL.Query()
-	qpFrom := queryParams.Get(qpNameFrom)
-	qpHaveStocked := queryParams.Get(qpNameHaveStocked)
 	qpName := queryParams.Get(qpNameName)
-	qpTo := queryParams.Get(qpNameTo)
-	qpType := queryParams.Get(qpNameType)
 	log.WithFields(logrus.Fields{"value": queryParams}).Debug("Query parameters")
 
 	// Check if query parameters are present
@@ -590,12 +586,41 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	if collection == config.MongoCollectionRecipes {
-		log.Trace("Query parameter handling")
+		qpCookable := queryParams.Get(qpNameCookable)
+		filterIsCookable := bson.M{}
+
+		if qpCookable != "" {
+			l := log.WithFields(logrus.Fields{"name": qpNameCookable, "value": qpCookable})
+			l.Trace("Query parameter handling")
+			b, err := strconv.ParseBool(qpCookable)
+			if err != nil {
+				// Invalid query parameter value provided
+				l.WithFields(logrus.Fields{"status": http.StatusBadRequest}).WithError(err).Error("Failed to parse isCookable")
+				response.WriteHeader(http.StatusBadRequest)
+				response.Write([]byte(err.Error()))
+				return
+			} else {
+				filterIsCookable = bson.M{
+					"isCookable": bson.M{
+						"$eq": b,
+					},
+				}
+			}
+		}
+
 		// Create filter
-		filter = filterName
+		filter = bson.M{"$and": []bson.M{
+			filterName,
+			filterIsCookable,
+		}}
 	} else {
 		var timeFrom time.Time
 		var timeTo time.Time
+
+		qpFrom := queryParams.Get(qpNameFrom)
+		qpHaveStocked := queryParams.Get(qpNameHaveStocked)
+		qpTo := queryParams.Get(qpNameTo)
+
 		filterExpires := bson.M{}
 		filterType := bson.M{}
 		filterHaveStocked := bson.M{
@@ -621,11 +646,6 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 					"$gte": int64(timeFrom.UTC().UnixNano()) / int64(time.Millisecond),
 				},
 			}
-		}
-		if qpType != "" {
-			l := log.WithFields(logrus.Fields{"name": qpNameType, "value": qpType})
-			l.Trace("Query parameter handling")
-			filterType = bson.M{"type": qpType}
 		}
 		if qpTo != "" {
 			l := log.WithFields(logrus.Fields{"name": qpNameTo, "value": qpTo})
@@ -702,18 +722,18 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 			// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
 			id := document["_id"]
 			l := log.WithFields(logrus.Fields{"recipe": id})
-			originalCanMake := document["canMake"].(bool)
-			canMake, err := isCookable(ctx, &document)
+			originalCanMake := document["isCookable"].(bool)
+			isCookable, err := isCookable(ctx, &document)
 			if err != nil {
 				// Something broke
 				l.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to determine cookable")
 				response.WriteHeader(http.StatusInternalServerError)
 				response.Write([]byte(err.Error()))
 				return
-			} else if canMake != originalCanMake {
+			} else if isCookable != originalCanMake {
 				// Update if different
-				l.WithFields(logrus.Fields{"original": originalCanMake, "updated": canMake}).Debug("Updating canMake")
-				document["canMake"] = canMake
+				l.WithFields(logrus.Fields{"original": originalCanMake, "updated": isCookable}).Debug("Updating isCookable")
+				document["isCookable"] = isCookable
 
 				// Create filter
 				filter := bson.D{{"_id", id}}
@@ -721,7 +741,7 @@ func getManyDocuments(response http.ResponseWriter, request *http.Request) {
 				l.WithFields(logrus.Fields{"value": filter}).Debug("Filter data")
 
 				// Define update instructions
-				update := bson.M{"$set": bson.M{"canMake": canMake}}
+				update := bson.M{"$set": bson.M{"isCookable": isCookable}}
 				l.WithFields(logrus.Fields{"value": update}).Debug("Update instructions")
 
 				// Attempt to put the document
@@ -826,7 +846,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 		log.Trace("Begin recipe scan")
 		for _, document := range body {
 			// Check if recipe can be made (i.e. associated ingredients are stocked and not expiring)
-			canMake, err := isCookable(ctx, &document)
+			isCookable, err := isCookable(ctx, &document)
 			l := log.WithFields(logrus.Fields{"recipe": document["_id"]})
 			if err != nil {
 				// Something broke
@@ -835,8 +855,8 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 				response.Write([]byte(err.Error()))
 				return
 			} else {
-				l.WithFields(logrus.Fields{"canMake": canMake}).Debug("Updating canMake")
-				document["canMake"] = canMake
+				l.WithFields(logrus.Fields{"isCookable": isCookable}).Debug("Updating isCookable")
+				document["isCookable"] = isCookable
 			}
 
 			documents = append(documents, document)

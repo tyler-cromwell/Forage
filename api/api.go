@@ -33,19 +33,19 @@ func isCookable(ctx context.Context, recipe *primitive.M) (bool, error) {
 	// Determine if recipe is cookable
 	log.Trace("Begin cookable determination")
 	defer log.Trace("End cookable determination")
-	iidsRaw := (*recipe)["ingredients"]
+	ingredientNames := (*recipe)["ingredients"]
 
-	if iidsRaw == nil {
+	if ingredientNames == nil {
 		return false, fmt.Errorf("no ingredients specified")
 	}
 
 	var length int
-	if v, ok := iidsRaw.([]interface{}); ok {
+	if v, ok := ingredientNames.([]interface{}); ok {
 		length = len(v)
-	} else if v, ok := iidsRaw.(primitive.A); ok {
+	} else if v, ok := ingredientNames.(primitive.A); ok {
 		length = len(v)
 	}
-	//iids := iidsRaw.([]interface{}) // "ingredients" is a requried attribute
+	//iids := ingreidentNames.([]interface{}) // "ingredients" is a requried attribute
 	filterMany := bson.M{"$and": []bson.M{
 		{
 			"expirationDate": bson.M{
@@ -58,8 +58,8 @@ func isCookable(ctx context.Context, recipe *primitive.M) (bool, error) {
 			},
 		},
 		{
-			"_id": bson.M{
-				"$in": iidsRaw,
+			"name": bson.M{
+				"$in": ingredientNames,
 			},
 		},
 	}}
@@ -70,7 +70,7 @@ func isCookable(ctx context.Context, recipe *primitive.M) (bool, error) {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to get documents")
 		return false, err
 	} else {
-		result := len(ingredients) == length
+		result := len(ingredients) >= length
 		log.WithFields(logrus.Fields{"expect": length, "have": len(ingredients), "value": result}).Debug("Determined")
 		return result, nil
 	}

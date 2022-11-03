@@ -52,7 +52,7 @@ func OverrideFindOneDocumentNone(ctx context.Context, collection string, filter 
 
 func OverrideFindOneDocumentRecipe(ctx context.Context, collection string, filter bson.D) (*bson.M, error) {
 	var doc bson.M = bson.M{
-		"ingredients": primitive.A{1337},
+		"ingredients": primitive.A{"hello"},
 		"isCookable":  false,
 	}
 	return &doc, nil
@@ -101,7 +101,7 @@ func OverrideFindManyDocumentsIngredientRange(ctx context.Context, collection st
 }
 
 func OverrideFindManyDocumentsRecipe(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {
-	return []bson.M{map[string]interface{}{"isCookable": false, "ingredients": primitive.A{1337}}}, nil
+	return []bson.M{map[string]interface{}{"isCookable": false, "ingredients": primitive.A{"hello"}}}, nil
 }
 
 func OverrideFindManyDocumentsSuper(ctx context.Context, collection string, filter bson.M, opts *options.FindOptions) ([]bson.M, error) {

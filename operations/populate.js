@@ -170,6 +170,38 @@ let ingredients = [
     {
         amount: {
             value: 1,
+            unit: 'piece'
+        },
+        attributes: {
+            cooked: false,
+        },
+        lifespan: {
+            refrigerator: {
+                value: 10,
+                unit: 'day'
+            }
+        },
+        name: 'Bell Peppers'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'piece'
+        },
+        attributes: {
+            cooked: true,
+        },
+        lifespan: {
+            refrigerator: {
+                value: 5,
+                unit: 'day'
+            }
+        },
+        name: 'Bell Peppers'
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'ounce'
         },
         lifespan: {
@@ -475,6 +507,54 @@ let ingredients = [
             }
         },
         name: 'Chicken'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            opened: true
+        },
+        lifespan: {
+            freezer: {
+                value: 2,
+                unit: 'month'
+            },
+            pantry: {
+                value: 3,
+                unit: 'day'
+            },
+            refrigerator: {
+                value: 4,
+                unit: 'day'
+            }
+        },
+        name: 'Chicken Broth'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'cup'
+        },
+        attributes: {
+            opened: false
+        },
+        lifespan: {
+            freezer: {
+                value: 1,
+                unit: 'year'
+            },
+            pantry: {
+                value: 1,
+                unit: 'year'
+            },
+            refrigerator: {
+                value: 1,
+                unit: 'year'
+            }
+        },
+        name: 'Chicken Broth'
     },
     {
         amount: {
@@ -989,6 +1069,22 @@ let ingredients = [
     },
     {
         amount: {
+            value: 1,
+            unit: 'piece'
+        },
+        attributes: {
+            type: 'Baby Bella'
+        },
+        lifespan: {
+            pantry: {
+                unit: 'week',
+                value: 1
+            }
+        },
+        name: 'Mushrooms'
+    },
+    {
+        amount: {
             unit: 'cup',
             value: 1
         },
@@ -1046,6 +1142,31 @@ let ingredients = [
             }
         },
         name: 'Olive Oil'
+    },
+    {
+        amount: {
+            unit: 'head',
+            value: 1
+        },
+        attributes: {
+            'cut': false,
+            'type': 'Yellow'
+        },
+        lifespan: {
+            freezer: {
+                value: 8,
+                unit: 'month'
+            },
+            refrigerator: {
+                value: 6,
+                unit: 'week'
+            },
+            pantry: {
+                value: 4,
+                unit: 'week'
+            }
+        },
+        name: 'Onion'
     },
     {
         amount: {
@@ -1473,6 +1594,19 @@ let ingredients = [
             }
         },
         name: 'Worcestershire Sauce'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'piece'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 10,
+                unit: 'day'
+            }
+        },
+        name: 'Zucchini'
     }
 ]
 
@@ -1523,7 +1657,6 @@ ingredients.forEach((document) => {
     document.haveStocked = false
     document.stockedDate = 0
     document.storeIn = maxEnv
-    document.type = 'ingredient'
     document.updated = dateUpdated.getTime()
 })
 
@@ -1535,32 +1668,57 @@ if (ingredients.length != ingredientIDs.length) {
     // error
 }
 
+/*
+idBellPeppers = database.ingredients.find({ name: 'Bell Peppers', "attributes.cooked": { $exists: true, $eq: false } }, { _id: 1 })
+idChicken = database.ingredients.find({ name: 'Chicken', "attributes.cooked": { $exists: true, $eq: false } }, { _id: 1 })
+idGarlic = database.ingredients.find({ name: 'Garlic' }, { _id: 1 })
+idMushroomsBabyBella = database.ingredients.find({ name: 'Mushrooms', "attributes.type": { $exists: true, $eq: "Baby Bella" } }, { _id: 1 })
+idOnionYellow = database.ingredients.find({ name: 'Onion', "attributes.type": { $exists: true, $eq: "Yellow" } }, { _id: 1 })
+idZucchini = database.ingredients.find({ name: 'Zucchini' }, { _id: 1 })
+*/
+
 let recipes = [
-    { name: 'Chicken & Vegetable Quinoa' },
+    {
+        name: 'Chicken & Vegetable Quinoa',
+        ingredients: [
+            "Bell Peppers",
+            "Chicken",
+            "Garlic",
+            "Mushrooms",
+            "Onion",
+            "Zucchini",
+            // Quinoa
+            // Chicken Broth (low fat)
+            // Spinach Leaves
+            // Olive Oil (extra virgin)
+            // Rosemary (Dried, Crushed)
+            // Paprika (Smoked)
+            // Pepper (Black)
+            // Salt
+        ]
+    },
+//    { name: 'Chicken Fried Rice' },
     { name: 'Bacon, Egg, and Cheese' },
     { name: 'Hamburgers' },
-    { name: 'Wings' },
-    { name: 'Gyoza' },
-    { name: 'Oyako Don' },
-    { name: 'Sushi' },
-    { name: 'Baked Gnocchi & Broccoli' },
-    { name: 'Bucatini Carbonara (Modern)' },
-    { name: 'Meatballs' },
-    { name: 'Italian Wedding Soup' },
-    { name: 'One Pan Pasta' },
-    { name: 'Slow-Cooked Bolognese Sauce' },
-    { name: 'Strawberry Nutella Semifreddo' },
-    { name: 'Chicken Saltimbocca Alla Romana' },
-    { name: 'Classic Caponata' },
-    { name: 'Chicken Fried Rice' },
-    { name: 'Blueberry Muffins' }
+//    { name: 'Wings' },
+//    { name: 'Gyoza' },
+//    { name: 'Oyako Don' },
+//    { name: 'Sushi' },
+//    { name: 'Baked Gnocchi & Broccoli' },
+//    { name: 'Bucatini Carbonara (Modern)' },
+//    { name: 'Meatballs' },
+//    { name: 'Italian Wedding Soup' },
+//    { name: 'One Pan Pasta' },
+//    { name: 'Slow-Cooked Bolognese Sauce' },
+//    { name: 'Strawberry Nutella Semifreddo' },
+//    { name: 'Chicken Saltimbocca Alla Romana' },
+//    { name: 'Classic Caponata' },
+//    { name: 'Blueberry Muffins' }
 ]
 
 // Prep recipe documents for insertion
 recipes.forEach((document) => {
     document.isCookable = false
-    document.ingredients = []
-    document.type = 'recipe'
     document.updated = dateUpdated.getTime()
 })
 
@@ -1571,55 +1729,6 @@ print('Inserted', recipes.length, 'of', recipeIDs.length, 'recipe documents')
 if (recipes.length != recipeIDs.length) {
     // error
 }
-
-// Link ingredients to recipes
-database.recipes.update(
-    { _id: recipeIDs[0] }, // Chicken & Vegetable Quinoa
-    {
-      $set: {
-        ingredients: [
-            ingredientIDs[26], // Chicken
-            // Zucchini
-            // Bell Peppers
-            // Onion (yellow)
-            // Mushrooms
-            // Garlic
-            // Quinoa
-            // Chicken Broth (low fat)
-            // Spinach Leaves
-            // Olive Oil (extra virgin)
-            // Rosemary (Dried, Crushed)
-            // Paprika (Smoked)
-            // Pepper (Black)
-            // Salt
-        ],
-      }
-    }
-)
-database.recipes.update(
-    { _id: recipeIDs[1] }, // Bacon, Egg, and Cheese
-    {
-      $set: {
-        ingredients: [
-            ingredientIDs[3],  // Bacon (unopened)
-            ingredientIDs[18], // Cheese (American)
-            ingredientIDs[28]  // Eggs
-        ],
-      }
-    }
-)
-database.recipes.update(
-    { _id: recipeIDs[2] }, // Hamburgers
-    {
-      $set: {
-        ingredients: [
-            ingredientIDs[7],  // Beef
-            ingredientIDs[18], // Cheese (American)
-            ingredientIDs[49]  // Lettuce
-        ],
-      }
-    }
-)
 
 /*
 let resultFind = database.ingredients.find()

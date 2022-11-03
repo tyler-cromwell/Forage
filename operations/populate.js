@@ -1228,6 +1228,19 @@ let ingredients = [
     {
         amount: {
             value: 1,
+            unit: 'count'
+        },
+        lifespan: {
+            refrigerator: {
+                value: 1,
+                unit: 'month'
+            }
+        },
+        name: 'Peas'
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'ounce'
         },
         attributes: {
@@ -1741,11 +1754,11 @@ let recipes = [
     {
         name: 'Chicken Fried Rice',
         ingredients: [
-            // Carrots
+            "Carrots",
             "Chicken",
             "Eggs",
             "Garlic",
-            // Peas
+            "Peas",
             "Rice",
             "Scallions"
             // Soy Sauce

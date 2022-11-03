@@ -202,19 +202,6 @@ let ingredients = [
     {
         amount: {
             value: 1,
-            unit: 'ounce'
-        },
-        lifespan: {
-            pantry: {
-                value: 3,
-                unit: 'year'
-            }
-        },
-        name: 'Black Pepper'
-    },
-    {
-        amount: {
-            value: 1,
             unit: 'head'
         },
         attributes: {
@@ -729,13 +716,16 @@ let ingredients = [
             unit: 'head',
             value: 1
         },
+        attributes: {
+            type: 'Green Leaf'
+        },
         lifespan: {
             refrigerator: {
                 unit: 'day',
                 value: 12
             }
         },
-        name: 'Green Leaf Lettuce'
+        name: 'Lettuce'
     },
     /*
     {
@@ -921,19 +911,6 @@ let ingredients = [
             }
         },
         name: 'Jam'
-    },
-    {
-        amount: {
-            value: 1,
-            unit: 'head'
-        },
-        lifespan: {
-            refrigerator: {
-                value: 1,
-                unit: 'week'
-            }
-        },
-        name: 'Lettuce'
     },
     {
         amount: {
@@ -1204,6 +1181,22 @@ let ingredients = [
     },
     {
         amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            flavor: 'Smoked'
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 3
+            }
+        },
+        name: 'Paprika'
+    },
+    {
+        amount: {
             unit: 'pound',
             value: 1
         },
@@ -1231,6 +1224,22 @@ let ingredients = [
             }
         },
         name: 'Peanut Butter'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
+        },
+        attributes: {
+            type: 'Black',
+        },
+        lifespan: {
+            pantry: {
+                value: 3,
+                unit: 'year'
+            }
+        },
+        name: 'Pepper'
     },
     {
         amount: {
@@ -1287,6 +1296,19 @@ let ingredients = [
     {
         amount: {
             value: 1,
+            unit: 'ounce'
+        },
+        lifespan: {
+            pantry: {
+                value: 2,
+                unit: 'year'
+            }
+        },
+        name: 'Quinoa'
+    },
+    {
+        amount: {
+            value: 1,
             unit: 'jar'
         },
         attributes: {
@@ -1308,12 +1330,13 @@ let ingredients = [
         attributes: {
             cooked: false,
             lowHumidity: true,
-            opened: false
+            opened: false,
+            type: 'White'
         },
         lifespan: {
             pantry: {
-                value: 6,
-                unit: 'month'
+                unit: 'month',
+                value: 6
             }
         },
         name: 'Rice'
@@ -1326,12 +1349,13 @@ let ingredients = [
         attributes: {
             cooked: true,
             lowHumidity: true,
-            opened: false
+            opened: false,
+            type: 'White'
         },
         lifespan: {
             refrigerator: {
-                value: 3,
-                unit: 'day'
+                unit: 'day',
+                value: 3
             }
         },
         name: 'Rice'
@@ -1352,7 +1376,23 @@ let ingredients = [
     {
         amount: {
             value: 1,
-            unit: 'count'
+            unit: 'ounce'
+        },
+        attributes: {
+            type: 'Dried'
+        },
+        lifespan: {
+            pantry: {
+                unit: 'year',
+                value: 1
+            }
+        },
+        name: 'Rosemary'
+    },
+    {
+        amount: {
+            value: 1,
+            unit: 'ounce'
         },
         lifespan: {
             pantry: {
@@ -1365,7 +1405,7 @@ let ingredients = [
     {
         amount: {
             value: 1,
-            unit: 'group'
+            unit: 'stalk'
         },
         attributes: {
             lowHumidity: true,
@@ -1678,42 +1718,63 @@ idZucchini = database.ingredients.find({ name: 'Zucchini' }, { _id: 1 })
 */
 
 let recipes = [
+//    { name: 'Bacon, Egg, and Cheese' },
     {
         name: 'Chicken & Vegetable Quinoa',
         ingredients: [
             "Bell Peppers",
             "Chicken",
+            "Chicken Broth",
             "Garlic",
             "Mushrooms",
+            "Olive Oil", // Extra Virgin
             "Onion",
-            "Zucchini",
-            // Quinoa
-            // Chicken Broth (low fat)
-            // Spinach Leaves
-            // Olive Oil (extra virgin)
-            // Rosemary (Dried, Crushed)
-            // Paprika (Smoked)
-            // Pepper (Black)
-            // Salt
+            "Paprika", // Smoked
+            "Pepper", // Black
+            "Quinoa",
+            "Rosemary", // Dried, Crushed
+            "Salt",
+            // ? Spinach Leaves
+            "Zucchini"
         ]
     },
-//    { name: 'Chicken Fried Rice' },
-    { name: 'Bacon, Egg, and Cheese' },
-    { name: 'Hamburgers' },
-//    { name: 'Wings' },
+    {
+        name: 'Chicken Fried Rice',
+        ingredients: [
+            // Carrots
+            "Chicken",
+            "Eggs",
+            "Garlic",
+            // Peas
+            "Rice",
+            "Scallions"
+            // Soy Sauce
+        ]
+    },
 //    { name: 'Gyoza' },
-//    { name: 'Oyako Don' },
-//    { name: 'Sushi' },
+    {
+        name: 'Hamburgers',
+        ingredients: [
+            "Beef",
+            "Cheese", // American
+            "Lettuce", // Green Leaf
+            "Pepper", // Black
+            "Salt",
+        ]
+    },
 //    { name: 'Baked Gnocchi & Broccoli' },
+//    { name: 'Blueberry Muffins' }
 //    { name: 'Bucatini Carbonara (Modern)' },
-//    { name: 'Meatballs' },
-//    { name: 'Italian Wedding Soup' },
-//    { name: 'One Pan Pasta' },
-//    { name: 'Slow-Cooked Bolognese Sauce' },
-//    { name: 'Strawberry Nutella Semifreddo' },
 //    { name: 'Chicken Saltimbocca Alla Romana' },
 //    { name: 'Classic Caponata' },
-//    { name: 'Blueberry Muffins' }
+//    { name: 'Italian Wedding Soup' },
+//    { name: 'Meatballs' },
+//    { name: 'One Pan Pasta' },
+//    { name: 'Oyako Don' },
+//    { name: 'Slow-Cooked Bolognese Sauce' },
+//    { name: 'Strawberry Nutella Semifreddo' },
+//    { name: 'Sushi' },
+//    { name: 'Wings' },
 ]
 
 // Prep recipe documents for insertion

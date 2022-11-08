@@ -8,20 +8,21 @@ Its goals are to:
 2. Reduce/prevent food waste by alerting (via [Twilio][twilio] SMS) and creating a shopping list (as a [Trello][trello] card) when items are nearing their expiration dates. Food items are defined as [JSON][json] documents in a [MongoDB][mongo] database.
 
 ## Repository Hierarchy
-- `api`: Code that defines the REST API and background job(s).
+- `api/`: Code that defines the REST API and background job(s).
+  - `api_test.go`: Primary test file, containing unit tests for every case in HTTP handlers and their supporting functions.
   - `api.go`: Primary API handler and background job functions.
   - `listen.go`: Code for the listening/serving of HTTP requests.
-  - `respond.go`: Code for constructing standard error responses.
-- `clients`: Code for interfacing with 3rd-party systems.
+  - `mocks.go`: Defines various mock functions and test variables for use in `api_test.go`.
+- `clients/`: Code for interfacing with 3rd-party systems.
   - `mongo.go`: Code for interfacing with MongoDB.
   - `trello.go`: Code for interfacing with Trello.
   - `twilio.go`: Code for interfacing with Twilio.
-- `config`: Definition of global configuration (including client interface definitions).
-- `operations`: Various scripts intended to be run manually.
-  - `populate.js`: Script to populate MongoDB with documents describing each item of food being tracked.
-- `tests`: Unit tests and mocks.
-- `utils`: Miscellaneous helper code.
-- `vendor`: Vendored dependencies.
+- `config/`: Definition of global configuration (including client interface definitions) as well as an abstract MongoDB interface to enable mocking.
+- `operations/'`: Various scripts intended to be run manually.
+  - `populate.js`: Script to populate MongoDB with documents describing each ingredient & recipe being tracked.
+- `tests/`: Unit tests and mocks.
+- `utils/`: Miscellaneous helper code.
+- `vendor/`: Vendored dependencies.
 
 ## Depenencies
 See `go.mod`

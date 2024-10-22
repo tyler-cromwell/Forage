@@ -15,11 +15,11 @@ Presently, *Forage* can handle the following:
 - SMS alerting: be reminded of when its time to go grocery shopping.
 
 ## Depenencies
-- adlio/trello: Trello API client
-- twilio/twilio-go: Twilio API client
-- mongo-driver: MongoDB driver
-- sirupsen/logrus: Logging
-- gorilla/mux: HTTP router/multiplexer
+- [adlio/trello][packageTrello]: Trello API client
+- [twilio/twilio-go][packageTwilio]: Twilio API client
+- [mongo-driver][packageMongo]: MongoDB driver
+- [sirupsen/logrus][packageLogrus]: Logging
+- [gorilla/mux][packageMux]: HTTP router/multiplexer
 
 See `go.mod` for details.
 
@@ -85,6 +85,12 @@ Easy as 1,2,3.
 [mongo]: https://www.mongodb.com/
 [trello]: https://trello.com/
 [twilio]: https://www.twilio.com/
+
+[packageLogrus]: https://pkg.go.dev/github.com/sirupsen/logrus
+[packageMongo]: https://pkg.go.dev/go.mongodb.org/mongo-driver
+[packageMux]: https://pkg.go.dev/github.com/gorilla/mux
+[packageTrello]: https://pkg.go.dev/github.com/adlio/trello
+[packageTwilio]: https://pkg.go.dev/github.com/twilio/twilio-go
 
 [checksAhead]: https://github.com/tyler-cromwell/Forage/blob/master/api/mocks.go#L136
 [checkExpirationsScheduled]: https://github.com/tyler-cromwell/Forage/blob/master/api/listen.go#L36

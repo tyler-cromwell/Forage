@@ -22,11 +22,15 @@ func main() {
 	levelStr := os.Getenv("LOGRUS_LEVEL")
 	if levelStr == "" {
 		log.Fatal("Logging level not specified")
+	} else {
+		log.WithFields(logrus.Fields{"level": levelStr}).Debug("Using specified logging level")
 	}
 
 	level, err := logrus.ParseLevel(levelStr)
 	if err != nil {
 		log.WithFields(logrus.Fields{"level": levelStr}).WithError(err).Fatal("Failed to parse logging level")
+	} else {
+		log.WithFields(logrus.Fields{"level": level}).Debug("Parsed logging level")
 	}
 
 	logrus.SetFormatter(&logrus.TextFormatter{FullTimestamp: true})
@@ -41,11 +45,8 @@ func main() {
 		// Default case
 		contextTimeoutStr = "5s"
 		log.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).Info("Using default context timeout")
-	}
-
-	forageContextTimeout, err := time.ParseDuration(contextTimeoutStr)
-	if err != nil {
-		log.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).WithError(err).Fatal("Failed to parse context timeout")
+	} else {
+		log.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).Debug("Using specified context timeout")
 	}
 
 	intervalStr := os.Getenv("FORAGE_INTERVAL")
@@ -53,6 +54,8 @@ func main() {
 		// Default case
 		intervalStr = "1" // Days
 		log.WithFields(logrus.Fields{"interval": intervalStr}).Info("Using default expiration interval")
+	} else {
+		log.WithFields(logrus.Fields{"interval": intervalStr}).Debug("Using specified expiration interval")
 	}
 
 	lookaheadStr := os.Getenv("FORAGE_LOOKAHEAD")
@@ -60,13 +63,17 @@ func main() {
 		// Default case
 		lookaheadStr = "48h"
 		log.WithFields(logrus.Fields{"lookahead": lookaheadStr}).Info("Using default expiration lookahead")
+	} else {
+		log.WithFields(logrus.Fields{"time": lookaheadStr}).Debug("Using specified expiration lookahead")
 	}
 
 	forageTime := os.Getenv("FORAGE_TIME")
 	if forageTime == "" {
 		// Default case
 		forageTime = "19:00"
-		log.WithFields(logrus.Fields{"timezone": forageTime}).Info("Using default time")
+		log.WithFields(logrus.Fields{"time": forageTime}).Info("Using default expiration check time")
+	} else {
+		log.WithFields(logrus.Fields{"time": forageTime}).Debug("Using specified expiration check time")
 	}
 
 	forageTimezone := os.Getenv("FORAGE_TIMEZONE")
@@ -74,16 +81,29 @@ func main() {
 		// Default case
 		forageTimezone = "America/New_York"
 		log.WithFields(logrus.Fields{"timezone": forageTimezone}).Info("Using default timezone")
+	} else {
+		log.WithFields(logrus.Fields{"timezone": forageTimezone}).Debug("Using specified timezone")
+	}
+
+	forageContextTimeout, err := time.ParseDuration(contextTimeoutStr)
+	if err != nil {
+		log.WithFields(logrus.Fields{"timeout": contextTimeoutStr}).WithError(err).Fatal("Failed to parse context timeout")
+	} else {
+		log.WithFields(logrus.Fields{"timeout": forageContextTimeout}).Debug("Parsed context timeout")
 	}
 
 	forageLookahead, err := time.ParseDuration(lookaheadStr)
 	if err != nil {
 		log.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to parse expiration lookahead")
+	} else {
+		log.WithFields(logrus.Fields{"lookahead": forageLookahead}).Debug("Parsed expiration lookahead")
 	}
 
 	forageInterval, err := strconv.Atoi(intervalStr)
 	if err != nil {
 		log.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to parse expiration interval")
+	} else {
+		log.WithFields(logrus.Fields{"interval": forageInterval}).Debug("Parsed expiration interval")
 	}
 
 	mongoUri := os.Getenv("MONGO_URI")

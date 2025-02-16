@@ -39,6 +39,7 @@ type TwilioHandle interface {
 type Configuration struct {
 	ContextTimeout time.Duration
 	Lookahead      time.Duration
+	Interval       int
 	Silence        bool
 	Time           string
 	Timezone       string

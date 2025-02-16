@@ -26,8 +26,8 @@ See `go.mod` for details.
 ## Usage
 ### Environment Variables
 - `FORAGE_CONTEXT_TIMEOUT`:
-- `FORAGE_INTERVAL` (CURRENTLY UNUSED):
 - `FORAGE_LOOKAHEAD`: the amount of time the Expiration job [checks ahead][checksAhead] for expiring items.
+- `FORAGE_INTERVAL`: the number of time units between executions of the Expiration job (currently in Days).
 - `FORAGE_TIME`: the time of day at which the Expiration job is [scheduled to execute][checkExpirationsScheduled].
 - `FORAGE_TIMEZONE`: the timezone in which this instance is hosted.
 - `LISTEN_SOCKET`: the socket upon which to listen for incoming connections.
@@ -47,8 +47,8 @@ See `go.mod` for details.
 #### Example
 ```
 export FORAGE_CONTEXT_TIMEOUT="5s"
-export FORAGE_INTERVAL="24h"
 export FORAGE_LOOKAHEAD="48h"
+export FORAGE_INTERVAL="1"
 export FORAGE_TIME="19:00"
 export FORAGE_TIMEZONE="America/New_York"
 export LISTEN_SOCKET="127.0.0.1:8001"

@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -50,7 +51,7 @@ func main() {
 	intervalStr := os.Getenv("FORAGE_INTERVAL")
 	if intervalStr == "" {
 		// Default case
-		intervalStr = "24h"
+		intervalStr = "1" // Days
 		log.WithFields(logrus.Fields{"interval": intervalStr}).Info("Using default expiration interval")
 	}
 
@@ -78,6 +79,11 @@ func main() {
 	forageLookahead, err := time.ParseDuration(lookaheadStr)
 	if err != nil {
 		log.WithFields(logrus.Fields{"lookahead": lookaheadStr}).WithError(err).Fatal("Failed to parse expiration lookahead")
+	}
+
+	forageInterval, err := strconv.Atoi(intervalStr)
+	if err != nil {
+		log.WithFields(logrus.Fields{"interval": intervalStr}).WithError(err).Fatal("Failed to parse expiration interval")
 	}
 
 	mongoUri := os.Getenv("MONGO_URI")
@@ -111,6 +117,7 @@ func main() {
 	config := config.Configuration{
 		ContextTimeout: forageContextTimeout,
 		Lookahead:      forageLookahead,
+		Interval:       forageInterval,
 		Time:           forageTime,
 		Timezone:       forageTimezone,
 		LogrusLevel:    level,

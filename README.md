@@ -25,19 +25,19 @@ See `go.mod` for details.
 
 ## Usage
 ### Environment Variables
-- `FORAGE_CONTEXT_TIMEOUT`: 
-- `FORAGE_INTERVAL`: 
-- `FORAGE_LOOKAHEAD`: the amount of time the Expiration job [checks ahead][checksAhead] for expiring items.
-- `FORAGE_TIME`: the time of day at which the Expiration job is [scheduled to execute][checkExpirationsScheduled].
-- `FORAGE_TIMEZONE`: the timezone in which this instance is hosted.
-- `LISTEN_SOCKET`: the socket upon which to listen for incoming connections.
-- `LOGRUS_LEVEL`: the log granularity threshold (e.g. `DEBUG`, `INFO`, `WARN`, `ERROR`).
-- `MONGO_URI`: the database connection string.
+- `FORAGE_CONTEXT_TIMEOUT`: (`"5s"`)
+- `FORAGE_INTERVAL` (CURRENTLY UNUSED): (`"24h"`)
+- `FORAGE_LOOKAHEAD`: the amount of time the Expiration job [checks ahead][checksAhead] for expiring items. (`"48h"`)
+- `FORAGE_TIME`: the time of day at which the Expiration job is [scheduled to execute][checkExpirationsScheduled]. (`"19:00"`)
+- `FORAGE_TIMEZONE`: the timezone in which this instance is hosted. (`"America/New_York"`)
+- `LISTEN_SOCKET`: the socket upon which to listen for incoming connections. (`"127.0.0.1:8001"`)
+- `LOGRUS_LEVEL`: the log granularity threshold (e.g. `DEBUG`, `INFO`, `WARN`, `ERROR`). (`"DEBUG"`)
+- `MONGO_URI`: the database connection string. (`"mongodb://127.0.0.1:27017"`)
 - `TRELLO_MEMBER`: 
 - `TRELLO_BOARD`: the Trello board upon which to place the shopping list card.
 - `TRELLO_LIST`: the Trello list upon which to place the shopping list card.
 - `TRELLO_LABELS`: the Trello labels to be added to the shopping list card.
-- `TRELLO_API_KEY`: 
+- `TRELLO_API_KEY`:
 - `TRELLO_API_TOKEN`: 
 - `TWILIO_ACCOUNT_SID`: 
 - `TWILIO_AUTH_TOKEN`: 
@@ -45,9 +45,9 @@ See `go.mod` for details.
 - `TWILIO_PHONE_TO`: the recipent phone number for SMS messages from Twilio.
 
 ### Steps
-1. `<configure & source environment variables>`
+1. `<start mongodb instance>`
 2. `go build`
-3. `./forage`
+3. `source .env && ./forage`
 
 Easy as 1,2,3.
 

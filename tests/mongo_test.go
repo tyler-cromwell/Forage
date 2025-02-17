@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func TestMongoClient(t *testing.T) {
 
 	mt.Run("NewMongoClientWrapper", func(mt *mtest.T) {
 		// Case: "Success"
-		client, err := clients.NewMongoClientWrapper(ctx, "mongodb://127.0.0.1:27017") // Expects an actual instance running
+		client, err := clients.NewMongoClientWrapper(ctx, os.Getenv("MONGO_URI")) // Expects an actual instance running
 		require.NoError(mt, err)
 		require.NotNil(mt, client)
 

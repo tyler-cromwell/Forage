@@ -57,9 +57,10 @@ export MONGO_URI="mongodb://127.0.0.1:27017"
 ```
 
 ### Steps
-1. `<start mongodb instance>`
-2. `go build`
-3. `source .env && ./forage`
+
+1. Test: `docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from test`
+2. Deploy: `docker-compose up --build`
+3. Cleanup: `docker-compose down -v --remove-orphans`
 
 Easy as 1,2,3.
 

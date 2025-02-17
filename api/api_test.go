@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -46,7 +45,7 @@ func (errReader) Read(p []byte) (n int, err error) {
 
 func TestAPI(t *testing.T) {
 	// Discard logging output
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 
 	forageContextTimeout, _ := time.ParseDuration("5s")
 	forageLookahead, _ := time.ParseDuration("48h")
@@ -318,7 +317,7 @@ func TestAPI(t *testing.T) {
 		}
 
 		// Rever logrus output change
-		logrus.SetOutput(ioutil.Discard)
+		logrus.SetOutput(io.Discard)
 	})
 
 	t.Run("isCookable", func(t *testing.T) {

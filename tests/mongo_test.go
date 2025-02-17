@@ -2,7 +2,7 @@ package tests
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 	"time"
@@ -19,7 +19,7 @@ import (
 
 func TestMongoClient(t *testing.T) {
 	// Discard logging output
-	logrus.SetOutput(ioutil.Discard)
+	logrus.SetOutput(io.Discard)
 	collection := "someCollection"
 	// Setup context
 	//	ctx := context.Background()

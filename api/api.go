@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -119,7 +119,7 @@ func putConfiguration(response http.ResponseWriter, request *http.Request) {
 	defer log.Trace("End function")
 
 	// Read in request body
-	bytes, err := ioutil.ReadAll(request.Body)
+	bytes, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to read request body")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -808,7 +808,7 @@ func postManyDocuments(response http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get documents from body
-	bytes, err := ioutil.ReadAll(request.Body)
+	bytes, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -939,7 +939,7 @@ func putOneDocument(response http.ResponseWriter, request *http.Request) {
 	log = log.WithFields(logrus.Fields{"id": id})
 
 	// Get document fields from body
-	bytes, err := ioutil.ReadAll(request.Body)
+	bytes, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
 		response.WriteHeader(http.StatusInternalServerError)
@@ -1117,7 +1117,7 @@ func deleteManyDocuments(response http.ResponseWriter, request *http.Request) {
 
 	// Delete by list of IDs (for now)
 	// Get document fields from body
-	bytes, err := ioutil.ReadAll(request.Body)
+	bytes, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.WithFields(logrus.Fields{"status": http.StatusInternalServerError}).WithError(err).Error("Failed to parse request body")
 		response.WriteHeader(http.StatusInternalServerError)

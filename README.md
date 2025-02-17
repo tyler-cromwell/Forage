@@ -51,7 +51,7 @@ export FORAGE_LOOKAHEAD="48h"
 export FORAGE_INTERVAL="1"
 export FORAGE_TIME="19:00"
 export FORAGE_TIMEZONE="America/New_York"
-export LISTEN_SOCKET="127.0.0.1:8001"
+export LISTEN_SOCKET=":8001"
 export LOGRUS_LEVEL="DEBUG"
 export MONGO_URI="mongodb://127.0.0.1:27017"
 ```

@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  database:
+    image: mongo:8.0.3
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - database-init-vol:/data/db
+      - ./operations/populate.js:/docker-entrypoint-initdb.d/populate.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 60s
+      retries: 2
+      start_period: 30s
+      timeout: 5s
+
+  test:
+    image: forage:1.5
+    container_name: forage-test
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+    - .env
+    ports:
+      - "8001:8001"
+    command: ["./test.sh"]
+
+volumes:
+  database-init-vol:

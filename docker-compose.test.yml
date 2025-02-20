@@ -17,7 +17,7 @@ services:
       timeout: 5s
 
   test:
-    image: forage:1.5
+    image: forage:1.5-dev
     container_name: forage-test
     depends_on:
       database:

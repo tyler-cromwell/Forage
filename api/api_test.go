@@ -40,7 +40,7 @@ type testResponse struct {
 type errReader int
 
 func (errReader) Read(p []byte) (n int, err error) {
-	return 0, errors.New(errorIoutilReadAll)
+	return 0, errors.New(errorIoReadAll)
 }
 
 func TestAPI(t *testing.T) {
@@ -72,7 +72,7 @@ func TestAPI(t *testing.T) {
 		{"putConfiguration400#1", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(strings.NewReader("{:}"))}, testResponse{s: http400, b: errorJsonUndecodable}, mocks.MockMongo{}},
 		{"putConfiguration400#2", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(strings.NewReader(""))}, testResponse{s: http400, b: errorJsonEnd}, mocks.MockMongo{}},
 		{"putConfiguration400#3", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(strings.NewReader("{\"lookahead\": 172800000000000, \"time\": \"19/00\"}"))}, testResponse{s: http400, b: "Invalid time format: 19/00"}, mocks.MockMongo{}},
-		{"putConfiguration500#1", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoutilReadAll}, mocks.MockMongo{}},
+		{"putConfiguration500#1", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoReadAll}, mocks.MockMongo{}},
 		{"putConfiguration500#2", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(strings.NewReader("{\"lookahead\": \"172800000000000\", \"silence\": false, \"time\": \"19:00\"}"))}, testResponse{s: http500, b: "json: cannot unmarshal string into Go struct field .lookahead of type time.Duration"}, mocks.MockMongo{}},
 		{"putConfiguration500#3", putConfiguration, testRequest{m: "PUT", e: "/configure", b: io.NopCloser(strings.NewReader("{\"lookahead\":172800000000000,\"silence\":false,\"time\":\"18:0z\"}"))}, testResponse{s: http500, b: "the given time format is not supported"}, mocks.MockMongo{}},
 		{"getCookable200#1", getCookable, testRequest{m: "GET", e: "/getCookable"}, testResponse{s: http200, b: bodyEmpty}, mocks.MockMongo{}},
@@ -116,7 +116,7 @@ func TestAPI(t *testing.T) {
 		{"postManyDocuments400#1", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader("{:}"))}, testResponse{s: http400, b: errorJsonUndecodable}, mocks.MockMongo{}},
 		{"postManyDocuments404#1", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsInvalid, b: io.NopCloser(strings.NewReader(documentsBasic))}, testResponse{s: http404, b: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"postManyDocuments500#1", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentsBasic))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
-		{"postManyDocuments500#2", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoutilReadAll}, mocks.MockMongo{}},
+		{"postManyDocuments500#2", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoReadAll}, mocks.MockMongo{}},
 		{"postManyDocuments500#3", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentEmpty))}, testResponse{s: http500, b: "json: cannot unmarshal object into Go value of type []primitive.M"}, mocks.MockMongo{}},
 		{"postManyDocuments500#4", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsRecipes, b: io.NopCloser(strings.NewReader("[{\"name\": \"Document\", \"ingredients\": [\"hello\"]}]"))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideFindManyDocuments: OverrideFindManyDocumentsErrorBasic}},
 		{"postManyDocuments500#5", postManyDocuments, testRequest{m: "POST", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentsBasic))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideInsertManyDocuments: OverrideInsertManyDocumentsErrorBasic}},
@@ -128,7 +128,7 @@ func TestAPI(t *testing.T) {
 		{"putOneDocument404#2", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(strings.NewReader(documentEmpty))}, testResponse{s: http404}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentZero}},
 		{"putOneDocument500#1", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(strings.NewReader(documentBasic))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
 		{"putOneDocument500#2", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDocEncodeFail}, testResponse{s: http500, b: errorDocumentIdEncodeFail}, mocks.MockMongo{}},
-		{"putOneDocument500#3", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoutilReadAll}, mocks.MockMongo{}},
+		{"putOneDocument500#3", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoReadAll}, mocks.MockMongo{}},
 		{"putOneDocument500#4", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(strings.NewReader("[{}"))}, testResponse{s: http500, b: errorJsonEnd}, mocks.MockMongo{}},
 		{"putOneDocument500#5", putOneDocument, testRequest{m: "PUT", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(strings.NewReader(documentBasic))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideUpdateOneDocument: OverrideUpdateOneDocumentErrorBasic}},
 		{"deleteOneDocument200#1", deleteOneDocument, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredientsDoc}, testResponse{s: http200}, mocks.MockMongo{}},
@@ -144,7 +144,7 @@ func TestAPI(t *testing.T) {
 		{"deleteManyDocuments404#1", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsInvalid, b: io.NopCloser(strings.NewReader(documentIds))}, testResponse{s: http404, b: errorCollectionIdInvalid}, mocks.MockMongo{}},
 		{"deleteManyDocuments404#2", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentIds))}, testResponse{s: http404, b: "no documents found"}, mocks.MockMongo{OverrideDeleteManyDocuments: OverrideDeleteManyDocumentsZero}},
 		{"deleteManyDocuments500#1", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentIds))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideCollections: OverrideCollectionsErrorBasic}},
-		{"deleteManyDocuments500#2", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoutilReadAll}, mocks.MockMongo{}},
+		{"deleteManyDocuments500#2", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredientsDoc, b: io.NopCloser(errReader(0))}, testResponse{s: http500, b: errorIoReadAll}, mocks.MockMongo{}},
 		{"deleteManyDocuments500#3", deleteManyDocuments, testRequest{m: "DELETE", e: "/documents", rv: routeVarsIngredients, b: io.NopCloser(strings.NewReader(documentIds))}, testResponse{s: http500, b: errorBasic}, mocks.MockMongo{OverrideDeleteManyDocuments: OverrideDeleteManyDocumentsErrorBasic}},
 	}
 

@@ -15,10 +15,10 @@ import (
 )
 
 // Frequently used test values/functions
-var queryParameters1020 = map[string]string{"from": "10", "to": "20"}
-var queryParameters2030 = map[string]string{"from": "20", "to": "30"}
-var queryParametersAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
-var queryParametersAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
+var queryParams1020 = map[string]string{"from": "10", "to": "20"}
+var queryParams2030 = map[string]string{"from": "20", "to": "30"}
+var queryParamsAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
+var queryParamsAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
 
 const bodyEmpty = "[]"
 const bodyExpiring = "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"
@@ -41,6 +41,15 @@ const errorJsonEnd = "unexpected end of JSON input"
 const errorJsonUndecodable = "invalid character ':' looking for beginning of object key string"
 const errorStrconvX = "strconv.ParseInt: parsing \"x\": invalid syntax"
 const errorStrconvY = "strconv.ParseInt: parsing \"y\": invalid syntax"
+
+var routeVarsInvalid = map[string]string{"collection": collectionIdInvalid}
+var routeVarsInvalidDoc = map[string]string{"collection": collectionIdInvalid, "id": documentId}
+var routeVarsIngredients = map[string]string{"collection": config.MongoCollectionIngredients}
+var routeVarsIngredientsDoc = map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}
+var routeVarsIngredientsDocInvalid = map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}
+var routeVarsIngredientsDocEncodeFail = map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdEncodeFail}
+var routeVarsRecipes = map[string]string{"collection": config.MongoCollectionRecipes}
+var routeVarsRecipesDoc = map[string]string{"collection": config.MongoCollectionRecipes, "id": documentId}
 
 func OverrideCollectionsErrorBasic(ctx context.Context) ([]string, error) {
 	return nil, fmt.Errorf(errorBasic)

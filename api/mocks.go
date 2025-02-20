@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/adlio/trello"
@@ -15,14 +16,11 @@ import (
 )
 
 // Frequently used test values/functions
-var queryParams1020 = map[string]string{"from": "10", "to": "20"}
-var queryParams2030 = map[string]string{"from": "20", "to": "30"}
-var queryParamsAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
-var queryParamsAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
-
 const bodyEmpty = "[]"
 const bodyExpiring = "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"
+
 const collectionIdInvalid = "dfhsrgaweg"
+
 const documentId = "6187e576abc057dac3e7d5dc"
 const documentIds = "[\"" + documentId + "\"]"
 const documentEmpty = "{}"
@@ -30,6 +28,7 @@ const documentBasic = "{\"_id\": \"" + documentId + "\", \"name\": \"Document\"}
 const documentsBasic = "[" + documentBasic + "]"
 const documentIdInvalid = "hello"
 const documentIdEncodeFail = "xxxxxxxxxxxxxxxxxxxxxxxx"
+
 const errorBasic = "failure"
 const errorCollectionIdInvalid = "collection not found: " + collectionIdInvalid
 const errorDecodeFail = "json: unsupported type: chan int"
@@ -41,6 +40,17 @@ const errorJsonEnd = "unexpected end of JSON input"
 const errorJsonUndecodable = "invalid character ':' looking for beginning of object key string"
 const errorStrconvX = "strconv.ParseInt: parsing \"x\": invalid syntax"
 const errorStrconvY = "strconv.ParseInt: parsing \"y\": invalid syntax"
+
+const http200 = http.StatusOK
+const http201 = http.StatusCreated
+const http400 = http.StatusBadRequest
+const http404 = http.StatusNotFound
+const http500 = http.StatusInternalServerError
+
+var queryParams1020 = map[string]string{"from": "10", "to": "20"}
+var queryParams2030 = map[string]string{"from": "20", "to": "30"}
+var queryParamsAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
+var queryParamsAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
 
 var routeVarsInvalid = map[string]string{"collection": collectionIdInvalid}
 var routeVarsInvalidDoc = map[string]string{"collection": collectionIdInvalid, "id": documentId}

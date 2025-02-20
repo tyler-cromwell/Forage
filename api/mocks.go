@@ -16,6 +16,8 @@ import (
 )
 
 // Frequently used test values/functions
+const bodyCookable = "{\"ingredients\":[\"hello\"],\"isCookable\":true}"
+const bodyCookables = "[{\"ingredients\":[\"hello\"],\"isCookable\":true}]"
 const bodyEmpty = "[]"
 const bodyExpiring = "[{\"_id\":1337,\"expirationDate\":25,\"haveStocked\":\"false\",\"name\":\"hello\",\"type\":\"thing\"}]"
 
@@ -38,6 +40,8 @@ const errorEmptyUpdateInstructions = "write exception: write errors: ['$set' is 
 const errorIoReadAll = "ioutil.ReadAll error"
 const errorJsonEnd = "unexpected end of JSON input"
 const errorJsonUndecodable = "invalid character ':' looking for beginning of object key string"
+const errorNoDocuments = "no documents found"
+const errorStrconvLol = "strconv.ParseBool: parsing \"lol\": invalid syntax"
 const errorStrconvX = "strconv.ParseInt: parsing \"x\": invalid syntax"
 const errorStrconvY = "strconv.ParseInt: parsing \"y\": invalid syntax"
 

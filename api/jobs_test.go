@@ -2,6 +2,8 @@ package api
 
 import (
 	"io"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -13,6 +15,11 @@ import (
 func TestJobs(t *testing.T) {
 	// Discard logging output
 	logrus.SetOutput(io.Discard)
+
+	// Capture logrus output so we can assert
+	_, hook := test.NewNullLogger()
+	logrus.AddHook(hook)
+	base := 0
 
 	subtests2 := []struct {
 		name         string
@@ -114,13 +121,8 @@ func TestJobs(t *testing.T) {
 		},
 	}
 
-	t.Run("checkExpirations", func(t *testing.T) {
-		// Capture logrus output so we can assert
-		_, hook := test.NewNullLogger()
-		logrus.AddHook(hook)
-		base := 0
-
-		for _, st := range subtests2 {
+	for _, st := range subtests2 {
+		t.Run(st.name, func(t *testing.T) {
 			// Arrange
 			configuration.Mongo = &st.mongoClient
 			configuration.Trello = &st.mocksClient
@@ -146,9 +148,9 @@ func TestJobs(t *testing.T) {
 			}
 
 			base += len(st.logLevels)
-		}
+		})
 
-		// Rever logrus output change
-		logrus.SetOutput(io.Discard)
-	})
+		// Reverse logrus output change
+		log.SetOutput(os.Stdout)
+	}
 }

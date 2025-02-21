@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -45,4 +47,7 @@ func TestLibrary(t *testing.T) {
 			}
 		}
 	})
+
+	// Reverse logrus output change
+	log.SetOutput(os.Stdout)
 }

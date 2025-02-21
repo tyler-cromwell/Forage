@@ -3,8 +3,10 @@ package api
 import (
 	"errors"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -175,4 +177,7 @@ func TestAPI(t *testing.T) {
 			}
 		})
 	}
+
+	// Reverse logrus output change
+	log.SetOutput(os.Stdout)
 }

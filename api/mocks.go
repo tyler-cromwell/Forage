@@ -45,10 +45,6 @@ const errorStrconvLol = "strconv.ParseBool: parsing \"lol\": invalid syntax"
 const errorStrconvX = "strconv.ParseInt: parsing \"x\": invalid syntax"
 const errorStrconvY = "strconv.ParseInt: parsing \"y\": invalid syntax"
 
-const http200 = http.StatusOK
-const http201 = http.StatusCreated
-const http400 = http.StatusBadRequest
-const http404 = http.StatusNotFound
 const http500 = http.StatusInternalServerError
 
 var queryParams1020 = map[string]string{"from": "10", "to": "20"}

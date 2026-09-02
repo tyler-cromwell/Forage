@@ -64,6 +64,8 @@ func TestAPI(t *testing.T) {
 	}{
 		{
 			/*
+			 * Obtained the serialized JSON representation of (3 of) the values in the app's global configuration.
+			 * Specifically: "lookahead", "silence", and "time".
 			 */
 			"getConfiguration200#1",
 			getConfiguration,
@@ -79,6 +81,8 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Changed (3 of) the values in the app's global configuration.
+			 * Specifically: "lookahead", "silence", and "time".
 			 */
 			"putConfiguration200#1",
 			putConfiguration,
@@ -94,6 +98,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to change the values in the app's global configuration due to an undecodable JSON string in the request body.
 			 */
 			"putConfiguration400#1",
 			putConfiguration,
@@ -110,6 +115,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to change the values in the app's global configuration due to an incomplete JSON string in the request body.
 			 */
 			"putConfiguration400#2",
 			putConfiguration,
@@ -126,6 +132,8 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to change the values in the app's global configuration due to invalid time format in the request body.
+			 * The time value is unmarshaled into a simple string, which is expected to be of the form "HH:MM".
 			 */
 			"putConfiguration400#3",
 			putConfiguration,
@@ -142,6 +150,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to read the request body for some unspecified reason.
 			 */
 			"putConfiguration500#1",
 			putConfiguration,
@@ -158,6 +167,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to JSON decode request body due to invalid value format.
 			 */
 			"putConfiguration500#2",
 			putConfiguration,
@@ -174,6 +184,8 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to update the expiration job schedule due to invalid hour or minute values.
+			 * gocron accepts the scheduling time of day as a string of the form "HH:MM", and then attempts to parse the hours & minutes as integers.
 			 */
 			"putConfiguration500#3",
 			putConfiguration,
@@ -190,6 +202,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of a list of recipe documents that can be cooked with the ingredients in stock.
 			 */
 			"getCookable200#1",
 			getCookable,
@@ -205,6 +218,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Generalized failure to query MongoDB for documents.
 			 */
 			"getCookable500#1",
 			getCookable,
@@ -222,6 +236,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to JSON encode documents after fetching and before returning.
 			 */
 			"getCookable500#2",
 			getCookable,
@@ -239,6 +254,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of ingredient documents that have since expired.
 			 */
 			"getExpired200#1",
 			getExpired,
@@ -254,6 +270,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Generalized failure to query MongoDB for documents.
 			 */
 			"getExpired500#1",
 			getExpired,
@@ -271,6 +288,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to JSON encode documents after fetching and before returning.
 			 */
 			"getExpired500#2",
 			getExpired,
@@ -288,6 +306,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of ingredient documents that will expire (no documents).
 			 */
 			"getExpiring200#1",
 			getExpiring,
@@ -304,6 +323,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of ingredient documents that will expire (some documents).
 			 */
 			"getExpiring200#2",
 			getExpiring,
@@ -322,6 +342,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to obtain expiring documents due to invalid value type in the query parameters (from).
 			 */
 			"getExpiring400#1",
 			getExpiring,
@@ -341,6 +362,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to obtain expiring documents due to invalid value type in the query parameters (to).
 			 */
 			"getExpiring400#2",
 			getExpiring,
@@ -360,6 +382,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Generalized failure to query MongoDB for documents.
 			 */
 			"getExpiring500#1",
 			getExpiring,
@@ -377,6 +400,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to JSON encode documents after fetching and before returning.
 			 */
 			"getExpiring500#2",
 			getExpiring,
@@ -394,6 +418,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of a single ingredient document.
 			 */
 			"getOneDocument200#1a",
 			getOneDocument,
@@ -410,6 +435,9 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Obtained the serialized JSON representation of a single recipe document.
+			 *
+			 * Side effect: Updates the documents cookable attribute value
 			 */
 			"getOneDocument200#1b",
 			getOneDocument,
@@ -429,6 +457,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to get document due to invalid document id.
 			 */
 			"getOneDocument400#1",
 			getOneDocument,
@@ -445,13 +474,14 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to get document due to invalid collection id.
 			 */
 			"getOneDocument404#1",
 			getOneDocument,
 			testRequest{
 				method:         "GET",
 				endpoint:       "/documents",
-				routeVariables: routeVarsInvalidDoc,
+				routeVariables: routeVarsInvalidWithDoc,
 			},
 			testResponse{
 				status: http.StatusNotFound,
@@ -461,6 +491,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to get document because it does not exist.
 			 */
 			"getOneDocument404#2",
 			getOneDocument,
@@ -479,6 +510,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failure to list collection names from the database.
 			 */
 			"getOneDocument500#1",
 			getOneDocument,
@@ -497,6 +529,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failure to parse route variable as a document id.
 			 */
 			"getOneDocument500#2",
 			getOneDocument,
@@ -513,6 +546,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Generalized failure to get the document from the database.
 			 */
 			"getOneDocument500#3",
 			getOneDocument,
@@ -531,6 +565,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failure to determine if recipe is Cookable (isCookable failed).
 			 */
 			"getOneDocument500#4",
 			getOneDocument,
@@ -550,6 +585,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failure to update the cookability of a recipe document.
 			 */
 			"getOneDocument500#5",
 			getOneDocument,
@@ -570,6 +606,7 @@ func TestAPI(t *testing.T) {
 		},
 		{
 			/*
+			 * Failed to JSON encode documents after fetching and before returning.
 			 */
 			"getOneDocument500#6",
 			getOneDocument,
@@ -738,7 +775,7 @@ func TestAPI(t *testing.T) {
 			testRequest{
 				method:          "GET",
 				endpoint:        "/documents",
-				routeVariables:  routeVarsInvalid,
+				routeVariables:  routeVarsInvalidCol,
 				queryParameters: queryParamsAll1020,
 			},
 			testResponse{
@@ -846,7 +883,7 @@ func TestAPI(t *testing.T) {
 		{
 			/*
 			 */
-			"postManyDocuments200#1a",
+			"postManyDocuments201#1a",
 			postManyDocuments,
 			testRequest{
 				method:         "POST",
@@ -862,7 +899,7 @@ func TestAPI(t *testing.T) {
 		{
 			/*
 			 */
-			"postManyDocuments200#1b",
+			"postManyDocuments201#1b",
 			postManyDocuments,
 			testRequest{
 				method:         "POST",
@@ -902,7 +939,7 @@ func TestAPI(t *testing.T) {
 			testRequest{
 				method:         "POST",
 				endpoint:       "/documents",
-				routeVariables: routeVarsInvalid,
+				routeVariables: routeVarsInvalidCol,
 				body:           io.NopCloser(strings.NewReader(documentsBasic)),
 			},
 			testResponse{
@@ -1078,7 +1115,7 @@ func TestAPI(t *testing.T) {
 			testRequest{
 				method:         "PUT",
 				endpoint:       "/documents",
-				routeVariables: routeVarsInvalidDoc,
+				routeVariables: routeVarsInvalidWithDoc,
 				body:           io.NopCloser(strings.NewReader(documentBasic)),
 			},
 			testResponse{
@@ -1232,7 +1269,7 @@ func TestAPI(t *testing.T) {
 			testRequest{
 				method:         "DELETE",
 				endpoint:       "/documents",
-				routeVariables: routeVarsInvalidDoc,
+				routeVariables: routeVarsInvalidWithDoc,
 			},
 			testResponse{
 				status: http.StatusNotFound,
@@ -1368,7 +1405,7 @@ func TestAPI(t *testing.T) {
 			testRequest{
 				method:         "DELETE",
 				endpoint:       "/documents",
-				routeVariables: routeVarsInvalid,
+				routeVariables: routeVarsInvalidCol,
 				body:           io.NopCloser(strings.NewReader(documentIds)),
 			},
 			testResponse{

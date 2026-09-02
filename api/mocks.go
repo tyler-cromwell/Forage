@@ -52,8 +52,8 @@ var queryParams2030 = map[string]string{"from": "20", "to": "30"}
 var queryParamsAll1020 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "10", "to": "20"}
 var queryParamsAll2030 = map[string]string{"name": "hello", "type": "thing", "haveStocked": "false", "from": "20", "to": "30"}
 
-var routeVarsInvalid = map[string]string{"collection": collectionIdInvalid}
-var routeVarsInvalidDoc = map[string]string{"collection": collectionIdInvalid, "id": documentId}
+var routeVarsInvalidCol = map[string]string{"collection": collectionIdInvalid}
+var routeVarsInvalidWithDoc = map[string]string{"collection": collectionIdInvalid, "id": documentId}
 var routeVarsIngredients = map[string]string{"collection": config.MongoCollectionIngredients}
 var routeVarsIngredientsDoc = map[string]string{"collection": config.MongoCollectionIngredients, "id": documentId}
 var routeVarsIngredientsDocInvalid = map[string]string{"collection": config.MongoCollectionIngredients, "id": documentIdInvalid}

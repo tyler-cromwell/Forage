@@ -1,4 +1,4 @@
-FROM golang:1.24.0-alpine3.21
+FROM golang:1.27.2-alpine3.24
 
 # Install project dependencies
 WORKDIR /root

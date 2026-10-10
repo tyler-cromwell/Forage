@@ -1,6 +1,6 @@
 module github.com/tyler-cromwell/forage
 
-go 1.22
+go 1.27
 
 require (
 	github.com/adlio/trello v1.9.0
